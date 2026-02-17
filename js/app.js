@@ -294,6 +294,7 @@ const App = {
 
   currentDungeonTab: 'endless',
   arenaOpponents: null,
+  selectedCampaignChapter: null, // null = current progress chapter
 
   // ===== NAVIGATION =====
   switchPage(page) {
@@ -375,9 +376,18 @@ const App = {
   },
 
   // ===== CAMPAIGN =====
+  selectCampaignChapter(chapterId) {
+    this.selectedCampaignChapter = chapterId;
+    this.renderCampaign();
+  },
+
   renderCampaign() {
-    const chapter = Campaign.getCurrentChapter();
     const progress = Storage.getCampaignProgress();
+    const viewChapterId = this.selectedCampaignChapter || progress.chapter;
+    const chapter = Campaign.CHAPTERS.find(c => c.id === viewChapterId) || Campaign.CHAPTERS[0];
+    const isCurrentChapter = chapter.id === progress.chapter;
+    const isPastChapter = chapter.id < progress.chapter;
+
     document.getElementById('campaign-title').textContent = chapter.icon + ' ' + chapter.name;
 
     const terrainEmojis = { plains: '🌾 平原', mountain: '⛰️ 山地', water: '🌊 水域', river: '🌊 水域', forest: '🌲 森林', castle: '🏰 城池' };
@@ -388,15 +398,60 @@ const App = {
     const list = document.getElementById('stage-list');
     list.innerHTML = '';
 
+    // Chapter selector tabs
+    const tabsDiv = document.createElement('div');
+    tabsDiv.style.cssText = 'display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding:4px 0;-webkit-overflow-scrolling:touch';
+    for (const ch of Campaign.CHAPTERS) {
+      const isUnlocked = ch.id <= progress.chapter;
+      const isActive = ch.id === viewChapterId;
+      const isCompleted = ch.id < progress.chapter;
+      const tab = document.createElement('div');
+      tab.style.cssText = 'min-width:58px;text-align:center;padding:8px 6px;border-radius:10px;flex-shrink:0;' +
+        'background:' + (isActive ? 'linear-gradient(135deg,rgba(212,168,67,.2),rgba(184,146,46,.15))' : 'var(--card2)') + ';' +
+        'border:1px solid ' + (isActive ? 'var(--gold)' : isCompleted ? 'rgba(34,197,94,.2)' : 'var(--border)') + ';' +
+        'opacity:' + (isUnlocked ? '1' : '.35') + ';' +
+        'cursor:' + (isUnlocked ? 'pointer' : 'default') + ';transition:.2s';
+      tab.innerHTML = '<div style="font-size:18px">' + ch.icon + '</div>' +
+        '<div style="font-size:10px;' + (isActive ? 'color:var(--gold);font-weight:600' : 'color:var(--dim)') + '">' +
+        (isCompleted ? '✅ ' + ch.id : isActive && isCurrentChapter ? '▶ ' + ch.id : ch.id) + '</div>';
+      if (isUnlocked) {
+        const chId = ch.id;
+        tab.onclick = () => this.selectCampaignChapter(chId);
+      }
+      tabsDiv.appendChild(tab);
+    }
+    list.appendChild(tabsDiv);
+
+    // Chapter description
+    const descDiv = document.createElement('div');
+    descDiv.className = 'card';
+    descDiv.style.cssText = 'padding:12px;margin-bottom:12px';
+    descDiv.innerHTML = '<div class="text-dim" style="font-size:13px;font-style:italic">' + chapter.desc + '</div>';
+    list.appendChild(descDiv);
+
+    // Stages
     for (const stage of chapter.stages) {
       if (stage.branch) {
         const choice = progress.choices[chapter.id];
         if (choice && choice !== stage.branch) continue;
         if (!choice && stage.branch === 'B') continue;
       }
-      const isCurrent = stage.id === progress.stage;
-      const isLocked = stage.id > progress.stage;
-      const isCompleted = stage.id < progress.stage;
+
+      let isCurrent, isLocked, isCompleted;
+      if (isPastChapter) {
+        isCurrent = false;
+        isLocked = false;
+        isCompleted = true;
+      } else if (isCurrentChapter) {
+        isCurrent = stage.id === progress.stage;
+        isLocked = stage.id > progress.stage;
+        isCompleted = stage.id < progress.stage;
+      } else {
+        // Future chapter
+        isCurrent = false;
+        isLocked = true;
+        isCompleted = false;
+      }
 
       const div = document.createElement('div');
       div.className = 'stage-item ' + (stage.boss ? 'boss ' : '') + (isCurrent ? 'current ' : '') + (isLocked ? 'locked' : '');
@@ -404,21 +459,32 @@ const App = {
         '<div class="stage-info"><div class="stage-name">' + stage.name + (isCompleted ? ' ✅' : '') + '</div>' +
         '<div class="stage-reward">💰' + stage.reward.gold + ' · ⭐' + stage.reward.exp + (stage.reward.hero_shard ? ' · 🧩碎片' : '') + '</div></div>' +
         (stage.elite ? '<span class="text-gold">精英</span>' : '');
-      if (!isLocked) div.onclick = () => this.enterStage(stage);
+      if (!isLocked) {
+        const stageRef = stage;
+        const chapterRef = chapter;
+        div.onclick = () => this.enterStage(stageRef, chapterRef);
+      }
       list.appendChild(div);
     }
   },
 
-  enterStage(stage) {
-    const chapter = Campaign.getCurrentChapter();
+  enterStage(stage, chapter) {
+    if (!chapter) chapter = Campaign.getCurrentChapter();
     const progress = Storage.getCampaignProgress();
-    for (const [chId, dc] of Object.entries(Campaign.DESTINY_CHOICES)) {
-      if (parseInt(chId) === chapter.id && stage.id === dc.trigger_after + 1 && !progress.choices[chapter.id]) {
-        this.showDestinyChoice(dc, chapter.id);
-        return;
+
+    // Only trigger destiny choices on current chapter's current progress
+    if (chapter.id === progress.chapter) {
+      for (const [chId, dc] of Object.entries(Campaign.DESTINY_CHOICES)) {
+        if (parseInt(chId) === chapter.id && stage.id === dc.trigger_after + 1 && !progress.choices[chapter.id]) {
+          this.showDestinyChoice(dc, chapter.id);
+          return;
+        }
       }
     }
+
+    // Store chapter info on stage for terrain/weather lookup
     this.currentStage = stage;
+    this.currentStage._chapter = chapter;
     this.prepareBattle(stage);
     this.switchPage('battle');
   },
@@ -461,7 +527,7 @@ const App = {
     document.getElementById('btn-battle-start').classList.remove('hidden');
 
     // Use stage-specific terrain/weather, fall back to chapter defaults
-    const chapter = Campaign.getCurrentChapter();
+    const chapter = stage._chapter || Campaign.getCurrentChapter();
     const terrain = stage.terrain || stage._terrain || chapter.terrain || 'plains';
     const weather = stage.weather || stage._weather || chapter.weather || 'clear';
     const enemyScale = stage._scaleMult || 1;
@@ -845,16 +911,34 @@ const App = {
     const result = Gacha.makeChoice(this.currentVisitHero, idx);
     if (!result) return;
 
+    // Update sincerity display without overwriting dialogue
+    const visit = Gacha.VISITS[this.currentVisitHero];
+    const maxSincerity = visit.rarity === 5 ? 90 : visit.rarity === 4 ? 60 : 40;
+    document.getElementById('visit-sincerity').textContent = result.sincerity;
+    document.getElementById('visit-sincerity-bar').style.width = Math.min(100, result.sincerity / maxSincerity * 100) + '%';
+
+    const box = document.getElementById('visit-dialogue');
+
     if (result.recruited) {
       const hero = HEROES[this.currentVisitHero];
+      box.innerHTML = '<div class="dialogue-text" style="color:var(--gold);font-size:15px">' + result.response + '</div>' +
+        '<div class="recruit-success" style="font-size:48px;text-align:center;margin:16px 0">🎉</div>' +
+        '<div class="text-center" style="font-size:16px;font-weight:700;color:var(--gold)">' + hero.name + ' 加入了你的队伍！</div>' +
+        '<button class="btn btn-gold btn-block mt-16" onclick="App.switchPage(\'roster\')">查看武将</button>';
       this.toast('🎉 ' + hero.name + ' 加入了你的队伍！', 4000);
-      setTimeout(() => this.switchPage('roster'), 2000);
     } else {
-      const box = document.getElementById('visit-dialogue');
+      // Show response first — player must click "继续" to advance
       box.innerHTML = '<div class="dialogue-text">' + result.response + '</div>' +
-        '<div class="text-dim text-center mt-8" style="font-size:12px">诚意度 ' + (result.sincerity >= 0 ? '+' : '') + result.choice.sincerity + '</div>' +
-        '<button class="btn btn-primary btn-block mt-16" onclick="App.updateVisitUI()">继续</button>';
-      this.updateVisitUI();
+        '<div class="text-dim text-center mt-8" style="font-size:12px">诚意度 ' + (result.choice.sincerity >= 0 ? '+' : '') + result.choice.sincerity + '</div>' +
+        (result.visitComplete
+          ? '<div class="text-center mt-16">' +
+              '<div style="font-size:14px;font-weight:600;color:var(--hp)">招募失败</div>' +
+              '<div class="text-dim mt-8">诚意不足，下次再努力！</div>' +
+              '<button class="btn btn-gold btn-block mt-16" onclick="App.startVisit(\'' + this.currentVisitHero + '\')">再次拜访 (💰' + visit.cost + ')</button>' +
+              '<button class="btn btn-sm btn-block mt-8" onclick="App.switchPage(\'gacha\')" style="background:var(--card2);color:var(--text)">返回求贤馆</button>' +
+            '</div>'
+          : '<button class="btn btn-primary btn-block mt-16" onclick="App.updateVisitUI()">继续</button>'
+        );
     }
     this.updateHeader();
   },
@@ -1210,14 +1294,29 @@ const App = {
     if (team.length === 0) { this.toast('请先编队！'); this.switchPage('team'); return; }
 
     const boss = Dungeon.getCurrentRaidBoss();
-    // Use strong enemies as boss encounter
+    // Map raid boss IDs to actual hero IDs for battle
+    const bossHeroMap = {
+      'raid_dongzhuo': 'dongzhuo',
+      'raid_yuanshao': 'yuanshao',
+      'raid_lvbu_rage': 'lvbu',
+      'raid_guandu': 'caocao',
+      'raid_chibi': 'zhouyu',
+      'raid_wuzhang': 'simayi',
+      'raid_hulao': 'lvbu',
+      'raid_nanman': 'zhangjiao',  // Use Zhang Jiao as tanky mage stand-in
+      'raid_yiling': 'luXun',
+      'raid_sima': 'simayi',
+    };
+    const bossHeroId = bossHeroMap[boss.id] || 'lvbu';
+    const bossWeather = boss.element === 'fire' ? 'fire' : boss.element === 'dark' ? 'fog' : 'clear';
+
     this.currentStage = {
       name: '讨伐 ' + boss.name,
-      enemies: ['elite_cavalry', 'strategist', boss.id.replace('raid_', ''), 'crossbow_corps', 'elite_spear'].map(e => HEROES[e] ? e : 'elite_cavalry'),
+      enemies: ['elite_cavalry', 'strategist', bossHeroId, 'crossbow_corps', 'elite_spear'],
       reward: { gold: 3000, exp: 2000 },
       boss: true,
       terrain: 'plains',
-      weather: 'clear',
+      weather: bossWeather,
       _raidBoss: true,
       _scaleMult: 3.0,
     };
@@ -1908,6 +2007,8 @@ App.startBattle = async function() {
       const ratingGain = arenaState.history[0]?.ratingChange || 0;
       detailText += ' · Rating +' + ratingGain;
       this.arenaOpponents = null; // Regenerate opponents
+      // Add season pass XP for arena
+      if (typeof Seasonal !== 'undefined') Seasonal.addPassXP(30);
     } else if (stage._raidBoss) {
       // Calculate damage dealt as total enemy HP - remaining HP
       const totalDmg = Battle.state.enemy.reduce((sum, f) => {
@@ -1920,9 +2021,11 @@ App.startBattle = async function() {
     } else {
       // Normal campaign
       Campaign.completeStage(stage.id);
+      // Season pass XP for campaign
+      if (typeof Seasonal !== 'undefined') Seasonal.addPassXP(stage.boss ? 100 : 40);
       // Equipment drop from campaign
       if (typeof Equipment !== 'undefined') {
-        const chapter = Campaign.getCurrentChapter();
+        const chapter = stage._chapter || Campaign.getCurrentChapter();
         const drop = Equipment.generateDrop(chapter.id, !!stage.boss);
         if (drop) {
           Storage.addEquipment(drop);
@@ -1983,18 +2086,18 @@ App.closeResult = function() {
   document.getElementById('result-modal').classList.add('hidden');
   const stage = this.currentStage;
   if (stage._dungeonFloor) {
+    this.currentDungeonTab = 'endless';
     this.switchPage('dungeon');
-    if (Dungeon.getState().active) this.renderDungeon();
   } else if (stage._dailyDungeon) {
+    this.currentDungeonTab = 'daily';
     this.switchPage('dungeon');
   } else if (stage._arenaFight) {
     this.switchPage('arena');
   } else if (stage._raidBoss) {
-    this.switchPage('dungeon');
     this.currentDungeonTab = 'raid';
+    this.switchPage('dungeon');
   } else {
     this.switchPage('campaign');
-    this.renderCampaign();
   }
 };
 

@@ -150,8 +150,16 @@ const Dungeon = {
     };
   },
 
-  // Process event effects
+  // Process event effects (with duplication prevention)
   processEvent(event, floorNumber) {
+    const state = this.getState();
+    if (!state.processedEvents) state.processedEvents = {};
+    if (state.processedEvents[floorNumber]) {
+      return { message: '此事件已处理过', rewards: {}, effects: [], alreadyProcessed: true };
+    }
+    state.processedEvents[floorNumber] = true;
+    this.saveState(state);
+
     const results = { message: '', rewards: {}, effects: [] };
     switch (event.type) {
       case 'merchant':
@@ -195,6 +203,7 @@ const Dungeon = {
       highestFloor: 0,
       totalRuns: 0,
       active: false,
+      processedEvents: {}, // Track processed floor events
     });
   },
 
@@ -205,6 +214,7 @@ const Dungeon = {
     state.currentFloor = 1;
     state.active = true;
     state.totalRuns++;
+    state.processedEvents = {}; // Reset processed events for new run
     this.saveState(state);
     return state;
   },

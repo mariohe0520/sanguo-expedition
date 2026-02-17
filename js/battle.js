@@ -46,6 +46,7 @@ const Battle = {
     let baseINT = Math.floor(hero.baseStats.int * mult) + eqINT;
 
     // Apply skill tree bonuses for player heroes
+    let specials = [];
     if (side === 'player' && typeof SkillTree !== 'undefined') {
       const stBonuses = SkillTree.getStatBonuses(hero.id);
       if (stBonuses.atk_pct) baseATK = Math.floor(baseATK * (1 + stBonuses.atk_pct / 100));
@@ -56,6 +57,10 @@ const Battle = {
       // Merge skill tree combat effects into equipEffects
       if (stBonuses.crit_pct)      equipEffects.crit_pct      += stBonuses.crit_pct;
       if (stBonuses.skill_dmg_pct) equipEffects.skill_dmg_pct += stBonuses.skill_dmg_pct;
+      if (stBonuses.crit_dmg_pct)  equipEffects.crit_dmg_pct  = (equipEffects.crit_dmg_pct || 0) + stBonuses.crit_dmg_pct;
+      if (stBonuses.dodge_pct)     equipEffects.dodge_pct     = (equipEffects.dodge_pct || 0) + stBonuses.dodge_pct;
+      // Collect special abilities from skill tree
+      specials = SkillTree.getSpecials(hero.id);
     }
 
     return {
@@ -81,6 +86,7 @@ const Battle = {
       debuffs: [],
       effects: [], // stun, charm, invincible
       equipEffects, // from equipment sets
+      _specials: specials, // from skill tree
     };
   },
 
@@ -154,6 +160,34 @@ const Battle = {
   // ===== COMBAT MECHANICS =====
   doAttack(attacker, defender) {
     if (!defender?.alive) return;
+
+    // Dodge check from skill tree
+    if (defender._specials) {
+      let dodgeChance = 0;
+      if (defender._specials.includes('dodge_pct')) dodgeChance += 10;
+      const dodgeBonuses = defender.equipEffects?.dodge_pct || 0;
+      dodgeChance += dodgeBonuses;
+      // Emergency dodge at low HP
+      if (defender._specials.includes('emergency_dodge') && defender.hp < defender.maxHp * 0.4) dodgeChance += 30;
+      if (dodgeChance > 0 && Math.random() * 100 < dodgeChance) {
+        this.addLog(`💨 ${defender.name} 闪避了攻击！`);
+        // Dodge heal
+        if (defender._specials.includes('dodge_heal')) {
+          const heal = Math.floor(defender.maxHp * 0.05);
+          defender.hp = Math.min(defender.maxHp, defender.hp + heal);
+        }
+        // Dodge counter
+        if (defender._specials.includes('dodge_counter') && attacker.alive) {
+          const counterDmg = Math.floor(this.getEffStat(defender, 'atk'));
+          attacker.hp = Math.max(0, attacker.hp - counterDmg);
+          this.addLog(`⚡ ${defender.name} 闪避反击！${counterDmg}伤害`);
+          if (attacker.hp <= 0) attacker.alive = false;
+        }
+        defender.rage = Math.min(defender.maxRage, (defender.rage || 0) + 5);
+        return;
+      }
+    }
+
     let dmg = this.calcDamage(attacker, defender);
     
     // Unit type advantage
@@ -169,8 +203,32 @@ const Battle = {
     // Apply damage
     defender.hp = Math.max(0, defender.hp - dmg);
     if (defender.hp <= 0) {
-      defender.alive = false;
-      this.addLog(`${attacker.emoji} ${attacker.name} 击杀了 ${defender.emoji} ${defender.name}！`);
+      // Cheat death from skill tree or passive
+      let cheated = false;
+      if (defender._specials?.includes('cheat_death') || defender._specials?.includes('cheat_death_50') || defender._specials?.includes('undying_once')) {
+        const chance = defender._specials.includes('undying_once') ? 100 : 50;
+        if (!defender._cheatedDeath && Math.random() * 100 < chance) {
+          defender.hp = 1;
+          defender.alive = true;
+          defender._cheatedDeath = true;
+          cheated = true;
+          this.addLog(`💀 ${defender.name} 不屈意志！以1HP存活！`);
+        }
+      }
+      // Sima Yi passive: on_lethal
+      if (!cheated && defender.passive?.condition === 'on_lethal' && !defender._cheatedDeath) {
+        if (Math.random() * 100 < (defender.passive.chance || 0)) {
+          defender.hp = 1;
+          defender.alive = true;
+          defender._cheatedDeath = true;
+          cheated = true;
+          this.addLog(`🦅 ${defender.name} 隐忍！以1HP存活！`);
+        }
+      }
+      if (!cheated) {
+        defender.alive = false;
+        this.addLog(`${attacker.emoji} ${attacker.name} 击杀了 ${defender.emoji} ${defender.name}！`);
+      }
     } else {
       this.addLog(`${attacker.emoji} ${attacker.name} → ${defender.emoji} ${defender.name} ${dmg}伤害${advMult > 1 ? ' (克制!)' : ''}`);
     }
@@ -189,6 +247,35 @@ const Battle = {
     attacker.rage = Math.min(attacker.maxRage, attacker.rage + 20);
     defender.rage = Math.min(defender.maxRage, (defender.rage || 0) + 10);
 
+    // Skill tree specials: lifesteal
+    if (attacker.alive && attacker._specials) {
+      if (attacker._specials.includes('lifesteal_10') || attacker._specials.includes('lifesteal_8')) {
+        const pct = attacker._specials.includes('lifesteal_10') ? 10 : 8;
+        const heal = Math.floor(dmg * pct / 100);
+        if (heal > 0) {
+          attacker.hp = Math.min(attacker.maxHp, attacker.hp + heal);
+          this.addLog(`🩸 ${attacker.name} 吸血 +${heal} HP`);
+        }
+      }
+      // Stun on hit
+      if (defender.alive && (attacker._specials.includes('stun_on_hit') || attacker._specials.includes('stun_on_hit_15'))) {
+        const chance = attacker._specials.includes('stun_on_hit') ? 20 : 15;
+        if (Math.random() * 100 < chance && !defender.effects.some(e => e.type === 'invincible')) {
+          defender.effects.push({ type: 'stun', duration: 1 });
+          this.addLog(`💫 ${defender.name} 被眩晕！`);
+        }
+      }
+      // Double strike
+      if (defender.alive && (attacker._specials.includes('double_strike') || attacker._specials.includes('double_strike_20'))) {
+        if (Math.random() * 100 < 20) {
+          const extraDmg = Math.floor(dmg * 0.5);
+          defender.hp = Math.max(0, defender.hp - extraDmg);
+          this.addLog(`⚔️ ${attacker.name} 连击！额外 ${extraDmg} 伤害`);
+          if (defender.hp <= 0) { defender.alive = false; }
+        }
+      }
+    }
+
     // Check counter-attack passive
     if (defender.alive && defender.passive?.condition === 'on_hit' && Math.random() * 100 < (defender.passive.chance || 0)) {
       const counterDmg = Math.floor(this.calcDamage(defender, attacker) * (defender.passive.value || 0.5));
@@ -196,18 +283,41 @@ const Battle = {
       this.addLog(`${defender.emoji} ${defender.name} 反击！${counterDmg}伤害`);
       if (attacker.hp <= 0) attacker.alive = false;
     }
+
+    // Skill tree specials: counter on defend
+    if (defender.alive && defender._specials) {
+      const counterChance =
+        defender._specials.includes('counter_50') ? 50 :
+        defender._specials.includes('counter_40') ? 40 :
+        defender._specials.includes('counter_30') ? 30 : 0;
+      if (counterChance > 0 && Math.random() * 100 < counterChance && !defender.effects.some(e => e.type === 'stun')) {
+        const counterDmg = Math.floor(this.calcDamage(defender, attacker) * 0.8);
+        attacker.hp = Math.max(0, attacker.hp - counterDmg);
+        this.addLog(`🔄 ${defender.name} 天赋反击！${counterDmg}伤害`);
+        if (attacker.hp <= 0) attacker.alive = false;
+      }
+    }
   },
 
   calcDamage(atk, def) {
     const atkStat = this.getEffStat(atk, 'atk');
-    const defStat = this.getEffStat(def, 'def');
+    let defStat = this.getEffStat(def, 'def');
+    // Armor penetration from skill tree
+    if (atk._specials) {
+      const armorPenPcts = atk._specials.filter(s => s === 'armor_pen_pct').length;
+      // Check stat bonuses for armor_pen_pct (accumulated in SkillTree.getStatBonuses)
+      // For simplicity, check _specials strings
+    }
     const base = Math.max(1, atkStat - defStat * 0.5);
     const variance = 0.9 + Math.random() * 0.2;
     // Crit chance: 10% base + buff + equipment set bonus
     const equipCrit = atk.equipEffects?.crit_pct || 0;
     const critChance = 10 + (atk.buffs.find(b => b.stat === 'crit')?.pct || 0) + equipCrit;
     const isCrit = Math.random() * 100 < critChance;
-    return Math.floor(base * variance * (isCrit ? 1.5 : 1));
+    // Crit damage bonus from skill tree
+    let critMult = 1.5;
+    if (isCrit && atk.equipEffects?.crit_dmg_pct) critMult += atk.equipEffects.crit_dmg_pct / 100;
+    return Math.floor(base * variance * (isCrit ? critMult : 1));
   },
 
   getEffStat(fighter, stat) {

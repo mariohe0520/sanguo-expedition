@@ -14,8 +14,11 @@ const Idle = {
     
     if (elapsed < 1) return null;
 
-    const gold = Math.floor(elapsed * this.RATES.goldPerMin);
-    const exp = Math.floor(elapsed * this.RATES.expPerMin);
+    // Scale rewards with player level
+    const player = Storage.getPlayer();
+    const levelMult = 1 + (player.level - 1) * 0.15;
+    const gold = Math.floor(elapsed * this.RATES.goldPerMin * levelMult);
+    const exp = Math.floor(elapsed * this.RATES.expPerMin * levelMult);
     const hours = elapsed / 60;
     const lootRolls = Math.floor(hours);
     let loot = [];
