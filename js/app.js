@@ -380,8 +380,8 @@ const App = {
     const progress = Storage.getCampaignProgress();
     document.getElementById('campaign-title').textContent = chapter.icon + ' ' + chapter.name;
 
-    const terrainEmojis = { plains: '🌾 平原', mountain: '⛰️ 山地', water: '🌊 水域', castle: '🏰 城池' };
-    const weatherEmojis = { clear: '☀️ 晴天', rain: '🌧️ 雨天', fog: '🌫️ 雾天', fire: '🔥 火烧' };
+    const terrainEmojis = { plains: '🌾 平原', mountain: '⛰️ 山地', water: '🌊 水域', river: '🌊 水域', forest: '🌲 森林', castle: '🏰 城池' };
+    const weatherEmojis = { clear: '☀️ 晴天', rain: '🌧️ 雨天', fog: '🌫️ 雾天', fire: '🔥 火烧', wind: '🌬️ 大风' };
     document.getElementById('campaign-terrain').textContent = terrainEmojis[chapter.terrain] || '🌾 平原';
     document.getElementById('campaign-weather').textContent = weatherEmojis[chapter.weather] || '☀️ 晴天';
 
@@ -460,8 +460,12 @@ const App = {
     document.getElementById('battle-log').innerHTML = '<div class="text-dim text-center">准备战斗...</div>';
     document.getElementById('btn-battle-start').classList.remove('hidden');
 
+    // Use stage-specific terrain/weather, fall back to chapter defaults
     const chapter = Campaign.getCurrentChapter();
-    Battle.init(team, stage.enemies, chapter.terrain, chapter.weather);
+    const terrain = stage.terrain || stage._terrain || chapter.terrain || 'plains';
+    const weather = stage.weather || stage._weather || chapter.weather || 'clear';
+    const enemyScale = stage._scaleMult || 1;
+    Battle.init(team, stage.enemies, terrain, weather, enemyScale);
     this.renderBattleField();
   },
 
@@ -666,7 +670,10 @@ const App = {
       '</div>' +
 
       // v3: Equipment slots
-      this._renderHeroEquipSection(heroId);
+      this._renderHeroEquipSection(heroId) +
+
+      // v5: Skill Tree
+      this._renderHeroSkillTreeSection(heroId);
   },
 
   doLevelUp(heroId) {
@@ -1002,7 +1009,7 @@ const App = {
           (floorData.isBossFloor ? '💀 ' : '⚔️ ') + floorData.name +
         '</div>' +
         '<div class="text-dim" style="font-size:12px;margin-bottom:8px">' +
-          '地形: ' + floorData.terrain + ' · 天气: ' + floorData.weather + ' · 难度x' + floorData.scaleMult.toFixed(2) +
+          '地形: ' + ({plains:'平原',mountain:'山地',river:'水域',forest:'森林',castle:'城池'}[floorData.terrain]||floorData.terrain) + ' · 天气: ' + ({clear:'晴天',rain:'雨天',fog:'雾天',wind:'大风',fire:'火烧'}[floorData.weather]||floorData.weather) + ' · 难度x' + floorData.scaleMult.toFixed(2) +
         '</div>';
 
       if (floorData.isEventFloor && floorData.event) {
@@ -1075,6 +1082,8 @@ const App = {
       enemies: floorData.enemies,
       reward: floorData.reward,
       boss: floorData.isBossFloor,
+      terrain: floorData.terrain,
+      weather: floorData.weather,
       _dungeonFloor: true,
       _scaleMult: floorData.scaleMult,
     };
@@ -1146,6 +1155,8 @@ const App = {
       enemies: data.enemies,
       reward: { gold: reward.gold || 0, exp: reward.exp || 0 },
       boss: false,
+      terrain: 'plains',
+      weather: 'clear',
       _dailyDungeon: type,
       _scaleMult: data.scaleMult,
     };
@@ -1205,6 +1216,8 @@ const App = {
       enemies: ['elite_cavalry', 'strategist', boss.id.replace('raid_', ''), 'crossbow_corps', 'elite_spear'].map(e => HEROES[e] ? e : 'elite_cavalry'),
       reward: { gold: 3000, exp: 2000 },
       boss: true,
+      terrain: 'plains',
+      weather: 'clear',
       _raidBoss: true,
       _scaleMult: 3.0,
     };
@@ -1394,8 +1407,11 @@ const App = {
       enemies: opp.team,
       reward: { gold: 100 + Math.floor(opp.rating / 10), exp: 50 + Math.floor(opp.rating / 20) },
       boss: false,
+      terrain: 'plains',
+      weather: 'clear',
       _arenaFight: true,
       _arenaOpponent: opp,
+      _scaleMult: opp.scaleMult || 1,
     };
     this.prepareBattle(this.currentStage);
     this.switchPage('battle');
@@ -1619,6 +1635,72 @@ const App = {
 
     html += '</div>';
     return html;
+  },
+
+  // ===== SKILL TREE SECTION (Hero Detail) =====
+  _renderHeroSkillTreeSection(heroId) {
+    if (typeof SkillTree === 'undefined') return '';
+    const tree = SkillTree.getTree(heroId);
+    if (!tree) return '';
+    const state = SkillTree.getUnlocked(heroId);
+    const available = SkillTree.getAvailablePoints(heroId);
+
+    let html = '<div class="card">' +
+      '<div class="flex justify-between items-center mb-8">' +
+        '<div style="font-size:14px;font-weight:600">🌳 天赋树</div>' +
+        '<div style="font-size:12px;color:var(--gold)">可用点数: ' + available + '</div>' +
+      '</div>';
+
+    for (let bi = 0; bi < tree.branches.length; bi++) {
+      const branch = tree.branches[bi];
+      const unlocked = state[branch.id] || [];
+      html += '<div style="margin-bottom:12px">' +
+        '<div style="font-size:13px;font-weight:600;margin-bottom:6px">' + branch.icon + ' ' + branch.name + ' <span class="text-dim" style="font-size:11px">' + branch.desc + '</span></div>' +
+        '<div style="display:flex;gap:4px;overflow-x:auto">';
+
+      for (let ni = 0; ni < branch.nodes.length; ni++) {
+        const node = branch.nodes[ni];
+        const isUnlocked = unlocked.includes(ni);
+        const canUnlock = !isUnlocked && available > 0 && (ni === 0 || unlocked.includes(ni - 1));
+        const isUltimate = ni === branch.nodes.length - 1;
+
+        html += '<div style="min-width:62px;text-align:center;padding:6px 4px;border-radius:8px;font-size:10px;' +
+          'background:' + (isUnlocked ? 'rgba(212,168,67,.2)' : 'var(--card2)') + ';' +
+          'border:1px solid ' + (isUnlocked ? 'var(--gold)' : canUnlock ? 'var(--accent)' : 'var(--border)') + ';' +
+          (canUnlock ? 'cursor:pointer' : '') + '"' +
+          (canUnlock ? ' onclick="App.unlockSkillNode(\'' + heroId + '\',' + bi + ',' + ni + ')"' : '') + '>' +
+          '<div style="font-size:' + (isUltimate ? '11px' : '10px') + ';font-weight:600;' + (isUltimate ? 'color:var(--gold)' : '') + '">' + node.name + '</div>' +
+          '<div style="font-size:9px;color:var(--dim);margin-top:2px">' + node.desc + '</div>' +
+          (isUnlocked ? '<div style="font-size:9px;color:var(--shu);margin-top:2px">✅</div>' : '') +
+        '</div>';
+      }
+      html += '</div></div>';
+    }
+
+    // Respec button
+    const spent = SkillTree._getSpentPoints(heroId);
+    if (spent > 0) {
+      const respecCost = spent * 200;
+      html += '<button class="btn btn-sm btn-block mt-8" onclick="App.respecSkillTree(\'' + heroId + '\')" style="background:var(--card2);color:var(--hp);font-size:11px">🔄 重置天赋 (💰' + respecCost + ')</button>';
+    }
+
+    html += '</div>';
+    return html;
+  },
+
+  unlockSkillNode(heroId, branchIdx, nodeIdx) {
+    const result = SkillTree.unlockNode(heroId, branchIdx, nodeIdx);
+    if (result.error) { this.toast('❌ ' + result.error); return; }
+    this.toast('✅ 解锁天赋: ' + result.node.name);
+    this.renderHeroDetail(heroId);
+  },
+
+  respecSkillTree(heroId) {
+    const result = SkillTree.respec(heroId);
+    if (result.error) { this.toast('❌ ' + result.error); return; }
+    this.toast('🔄 天赋已重置，返还 ' + result.refunded + ' 点');
+    this.renderHeroDetail(heroId);
+    this.updateHeader();
   },
 
   equipItem(heroId, equipUid) {
@@ -1920,17 +2002,18 @@ App.closeResult = function() {
 const _originalInit = App.init;
 App.init = function() {
   Storage.trackPlayTime();
+
+  // Wrap renderRoster BEFORE calling original init so first render includes extended content
+  const origRenderRoster = App.renderRoster;
+  App.renderRoster = function() {
+    origRenderRoster.call(this);
+    this.renderRosterExtended();
+  };
+
   _originalInit.call(this);
 
   // Show tutorial for new players
   this.showTutorialIfNew();
-
-  // After original roster render, add coming soon heroes
-  const origRenderRoster = this.renderRoster.bind(this);
-  this.renderRoster = function() {
-    origRenderRoster();
-    this.renderRosterExtended();
-  };
 };
 
 // Boot

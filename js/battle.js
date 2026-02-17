@@ -7,26 +7,28 @@ const Battle = {
   onUpdate: null, // UI callback
 
   // Create battle state
-  init(playerTeam, enemyTeam, terrain='plains', weather='clear') {
+  init(playerTeam, enemyTeam, terrain='plains', weather='clear', enemyScale=1) {
     this.log = [];
     this.state = {
       turn: 0,
       phase: 'ready', // ready, fighting, victory, defeat
       terrain, weather,
       player: playerTeam.map((h,i) => this.createFighter(h, 'player', i)),
-      enemy: enemyTeam.map((h,i) => this.createFighter(h, 'enemy', i)),
+      enemy: enemyTeam.map((h,i) => this.createFighter(h, 'enemy', i, enemyScale)),
     };
     // Apply passives
     this.applyBattleStartPassives();
     return this.state;
   },
 
-  createFighter(heroId, side, pos) {
+  createFighter(heroId, side, pos, enemyScale) {
     const hero = typeof heroId === 'string' ? HEROES[heroId] : heroId;
     if (!hero) return null;
     const level = side === 'player' ? (Storage?.getHeroLevel?.(hero.id) || 1) : 1;
     const stars = side === 'player' ? (Storage?.getHeroStars?.(hero.id) || hero.rarity || 1) : (hero.rarity || 1);
-    const mult = (1 + (level - 1) * 0.08) * (1 + (stars - 1) * 0.15);
+    let mult = (1 + (level - 1) * 0.08) * (1 + (stars - 1) * 0.15);
+    // Scale enemy fighters for dungeon/arena/raid
+    if (side === 'enemy' && enemyScale > 1) mult *= enemyScale;
 
     let eqHP=0, eqATK=0, eqDEF=0, eqSPD=0, eqINT=0;
     let equipEffects = { crit_pct:0, skill_dmg_pct:0, reflect_pct:0 };
@@ -37,11 +39,24 @@ const Battle = {
       equipEffects = Equipment.getHeroBattleEffects(hero.id);
     }
 
-    const baseHP  = Math.floor(hero.baseStats.hp * mult)  + eqHP;
-    const baseATK = Math.floor(hero.baseStats.atk * mult) + eqATK;
-    const baseDEF = Math.floor(hero.baseStats.def * mult) + eqDEF;
-    const baseSPD = Math.floor(hero.baseStats.spd * mult) + eqSPD;
-    const baseINT = Math.floor(hero.baseStats.int * mult) + eqINT;
+    let baseHP  = Math.floor(hero.baseStats.hp * mult)  + eqHP;
+    let baseATK = Math.floor(hero.baseStats.atk * mult) + eqATK;
+    let baseDEF = Math.floor(hero.baseStats.def * mult) + eqDEF;
+    let baseSPD = Math.floor(hero.baseStats.spd * mult) + eqSPD;
+    let baseINT = Math.floor(hero.baseStats.int * mult) + eqINT;
+
+    // Apply skill tree bonuses for player heroes
+    if (side === 'player' && typeof SkillTree !== 'undefined') {
+      const stBonuses = SkillTree.getStatBonuses(hero.id);
+      if (stBonuses.atk_pct) baseATK = Math.floor(baseATK * (1 + stBonuses.atk_pct / 100));
+      if (stBonuses.def_pct) baseDEF = Math.floor(baseDEF * (1 + stBonuses.def_pct / 100));
+      if (stBonuses.hp_pct)  baseHP  = Math.floor(baseHP  * (1 + stBonuses.hp_pct / 100));
+      if (stBonuses.spd_pct) baseSPD = Math.floor(baseSPD * (1 + stBonuses.spd_pct / 100));
+      if (stBonuses.int_pct) baseINT = Math.floor(baseINT * (1 + stBonuses.int_pct / 100));
+      // Merge skill tree combat effects into equipEffects
+      if (stBonuses.crit_pct)      equipEffects.crit_pct      += stBonuses.crit_pct;
+      if (stBonuses.skill_dmg_pct) equipEffects.skill_dmg_pct += stBonuses.skill_dmg_pct;
+    }
 
     return {
       id: hero.id,
@@ -230,6 +245,8 @@ const Battle = {
       plains:  { cavalry: 1.2, spear: 1.0, archer: 1.0, shield: 1.0, mage: 1.0 },
       mountain:{ cavalry: 0.8, spear: 1.0, archer: 1.2, shield: 1.1, mage: 1.0 },
       water:   { cavalry: 0.7, spear: 0.9, archer: 1.0, shield: 0.8, mage: 1.3 },
+      river:   { cavalry: 0.7, spear: 0.9, archer: 1.0, shield: 0.8, mage: 1.3 },
+      forest:  { cavalry: 0.8, spear: 1.1, archer: 1.2, shield: 0.9, mage: 1.1 },
       castle:  { cavalry: 0.8, spear: 1.0, archer: 1.1, shield: 1.3, mage: 1.0 }
     };
     return bonuses[terrain]?.[unit] || 1;
@@ -240,6 +257,8 @@ const Battle = {
     if (weather === 'rain' && isSkill && fighter.skill?.type === 'magic') return 0.5;
     if (weather === 'fog') return Math.random() > 0.3 ? 1 : 0.5; // 30% miss in fog
     if (weather === 'fire' && fighter.unit === 'mage') return 1.2;
+    if (weather === 'wind' && fighter.unit === 'archer') return 1.15; // Wind aids arrows
+    if (weather === 'wind' && isSkill && fighter.skill?.type === 'magic') return 1.1; // Wind fans magical flames
     return 1;
   },
 

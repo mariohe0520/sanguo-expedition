@@ -291,3 +291,12 @@ body { font-family:-apple-system,system-ui,sans-serif; background:var(--bg); col
 /* Scroll snap for pass rewards */
 #dungeon-content [style*="overflow-x"] { -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory; }
 #dungeon-content [style*="overflow-x"] > div { scroll-snap-align:start; }
+
+/* ===== v5: KINGDOM WAR ===== */
+.kw-row { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+.kw-row:last-child { border-bottom:none; }
+.kw-mine { background:rgba(99,102,241,.08); border-radius:8px; padding:8px; margin:-2px -4px; }
+.kw-rank { min-width:28px; text-align:center; font-size:16px; font-weight:700; }
+.kw-emoji { font-size:20px; min-width:28px; text-align:center; }
+.kw-name { flex:1; font-size:13px; font-weight:600; }
+.kw-power { font-size:12px; color:var(--gold); min-width:60px; text-align:right; }

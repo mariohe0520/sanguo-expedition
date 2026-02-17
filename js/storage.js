@@ -93,6 +93,10 @@ const Storage = {
   getDailyMissions() { return this._get('dailyMissions', null); },
   saveDailyMissions(m) { this._set('dailyMissions', m); },
 
+  // === v4: Skill Tree ===
+  getSkillTreeState(heroId) { return this._get('skillTree_' + heroId, {}); },
+  saveSkillTreeState(heroId, state) { this._set('skillTree_' + heroId, state); },
+
   // === v3: Equipment Inventory ===
   getEquipmentInventory() { return this._get('equipInv', []); },
   saveEquipmentInventory(arr) { this._set('equipInv', arr); },

@@ -80,7 +80,7 @@ const Arena = {
     // Pick heroes from pool, weighted by opponent rating
     const heroPool = Object.keys(HEROES).filter(id => {
       const h = HEROES[id];
-      return h.rarity >= 2 && !id.startsWith('raid_');
+      return h.rarity >= 2 && !id.startsWith('raid_') && !h.mystery && !h.locked;
     });
 
     const teamSize = 5;
