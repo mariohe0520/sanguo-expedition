@@ -25,7 +25,8 @@ const Battle = {
     const hero = typeof heroId === 'string' ? HEROES[heroId] : heroId;
     if (!hero) return null;
     const level = side === 'player' ? (Storage?.getHeroLevel?.(hero.id) || 1) : 1;
-    const mult = 1 + (level - 1) * 0.08;
+    const stars = side === 'player' ? (Storage?.getHeroStars?.(hero.id) || hero.rarity || 1) : (hero.rarity || 1);
+    const mult = (1 + (level - 1) * 0.08) * (1 + (stars - 1) * 0.15);
     return {
       id: hero.id,
       name: hero.name,
@@ -206,9 +207,9 @@ const Battle = {
     return bonuses[terrain]?.[unit] || 1;
   },
 
-  // Weather effects
-  getWeatherMult(fighter, weather) {
-    if (weather === 'rain' && fighter.skill?.type === 'magic' && fighter.skill?.name?.includes('火')) return 0.5;
+  // Weather effects (isSkill=true when casting a skill, false for normal attacks)
+  getWeatherMult(fighter, weather, isSkill = false) {
+    if (weather === 'rain' && isSkill && fighter.skill?.type === 'magic') return 0.5;
     if (weather === 'fog') return Math.random() > 0.3 ? 1 : 0.5; // 30% miss in fog
     if (weather === 'fire' && fighter.unit === 'mage') return 1.2;
     return 1;
@@ -230,26 +231,32 @@ const Battle = {
         if (s.target === 'single_enemy') targets = [enemies.sort((a,b) => a.hp - b.hp)[0]]; // lowest HP
         else if (s.target === 'all_enemy') targets = enemies;
         else if (s.target === 'back_row') targets = enemies.filter(f => f.pos >= 2).length > 0 ? enemies.filter(f => f.pos >= 2) : enemies;
+        else if (s.target === 'front_row') targets = enemies.filter(f => f.pos < 2).length > 0 ? enemies.filter(f => f.pos < 2) : enemies;
         else targets = [enemies[0]];
 
         for (const t of targets) {
           const hits = s.hits || 1;
           for (let h = 0; h < hits; h++) {
-            let dmg = Math.floor(this.getEffStat(fighter, 'atk') * s.value / hits);
+            let dmg = Math.floor(this.getEffStat(fighter, 'atk') * s.value);
             if (s.guaranteed_crit) dmg = Math.floor(dmg * 1.5);
             t.hp = Math.max(0, t.hp - dmg);
             this.addLog(`  → ${t.emoji} ${t.name} -${dmg} HP`);
             if (t.hp <= 0) { t.alive = false; break; }
           }
         }
-        // Self buff (e.g. Zhao Yun invincible)
-        if (s.selfBuff) fighter.effects.push({ type: s.selfBuff.effect, duration: s.selfBuff.duration });
+        // Self buff (e.g. Zhao Yun invincible, shield militia DEF up)
+        if (s.selfBuff) {
+          if (s.selfBuff.effect) fighter.effects.push({ type: s.selfBuff.effect, duration: s.selfBuff.duration });
+          if (s.selfBuff.stat) fighter.buffs.push({ stat: s.selfBuff.stat, pct: s.selfBuff.pct, duration: s.selfBuff.duration });
+        }
         break;
       }
       case 'magic': {
-        const targets = s.target === 'all_enemy' ? enemies : [enemies[0]];
+        const targets = s.target === 'all_enemy' ? enemies : [enemies.sort((a,b) => a.hp - b.hp)[0]];
         for (const t of targets) {
-          const dmg = Math.floor(this.getEffStat(fighter, 'int') * s.value);
+          let dmg = Math.floor(this.getEffStat(fighter, 'int') * s.value);
+          // Weather affects magic skills (e.g. rain weakens fire magic)
+          dmg = Math.floor(dmg * this.getWeatherMult(fighter, this.state.weather, true));
           t.hp = Math.max(0, t.hp - dmg);
           this.addLog(`  → ${t.emoji} ${t.name} -${dmg} 法伤`);
           if (t.hp <= 0) t.alive = false;

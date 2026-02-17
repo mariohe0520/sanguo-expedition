@@ -145,3 +145,48 @@ body { font-family:-apple-system,system-ui,sans-serif; background:var(--bg); col
 /* Damage number popup */
 .dmg-popup { position:absolute; top:-10px; right:10px; font-size:16px; font-weight:700; color:var(--hp); animation:dmgFloat 1s forwards; pointer-events:none; }
 @keyframes dmgFloat { from{opacity:1;transform:translateY(0)} to{opacity:0;transform:translateY(-30px)} }
+
+/* Battle log scrollbar */
+.battle-log::-webkit-scrollbar { width:3px; }
+.battle-log::-webkit-scrollbar-track { background:transparent; }
+.battle-log::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+.battle-log { scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
+
+/* Status effects on fighters */
+.fighter-row.acting { box-shadow:0 0 12px rgba(251,191,36,.4); transform:scale(1.02); }
+
+/* Remove button for team editing */
+.remove-btn { cursor:pointer; transition:.2s; }
+.remove-btn:hover { transform:scale(1.2); }
+
+/* Owned hero in gacha */
+.hero-card.owned { opacity:.65; }
+.hero-card.owned:active { transform:none; }
+
+/* Tutorial / Onboarding Overlay */
+.tutorial-overlay { position:fixed; inset:0; background:rgba(10,10,18,.97); z-index:500; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeIn .5s; }
+.tutorial-content { max-width:380px; width:100%; text-align:center; position:relative; }
+.tutorial-step { display:none; animation:fadeIn .4s; }
+.tutorial-step.active { display:block; }
+.tutorial-features { display:flex; flex-direction:column; gap:12px; margin-bottom:24px; text-align:left; }
+.tutorial-feature { display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--card); border-radius:12px; font-size:13px; border:1px solid var(--border); }
+.tutorial-feature span:first-child { font-size:24px; width:36px; text-align:center; flex-shrink:0; }
+.step-dots { display:flex; justify-content:center; gap:8px; margin-top:20px; }
+.step-dot { width:8px; height:8px; border-radius:50%; background:var(--border); transition:.3s; }
+.step-dot.active { background:var(--gold); width:24px; border-radius:4px; }
+
+/* Safe area padding for top */
+.page-header { padding-top:env(safe-area-inset-top, 0); }
+
+/* Improve touch targets — min 44px */
+.dialogue-option { min-height:44px; display:flex; align-items:center; }
+.stage-item { min-height:52px; }
+.nav-item { min-height:44px; }
+
+/* Animated gold text */
+@keyframes goldPulse { 0%,100%{color:var(--gold)} 50%{color:#fff} }
+.gold-pulse { animation:goldPulse 1.5s ease-in-out; }
+
+/* Page transition */
+@keyframes slideIn { from{opacity:0;transform:translateX(12px)} to{opacity:1;transform:translateX(0)} }
+.page.active { animation:slideIn .25s ease-out; }

@@ -90,6 +90,19 @@ const Campaign = {
     if (stageId >= progress.stage) {
       progress.stage = stageId + 1;
     }
+    // Check chapter completion — advance to next chapter if all stages done
+    const chapter = this.CHAPTERS.find(c => c.id === progress.chapter);
+    if (chapter) {
+      const maxStage = Math.max(...chapter.stages.map(s => s.id));
+      if (progress.stage > maxStage) {
+        const nextChapter = this.CHAPTERS.find(c => c.id === progress.chapter + 1);
+        if (nextChapter) {
+          progress.chapter = nextChapter.id;
+          progress.stage = 1;
+        }
+        // else: last chapter — stay at max
+      }
+    }
     Storage.saveCampaignProgress?.(progress);
     return progress;
   },

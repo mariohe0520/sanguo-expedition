@@ -32,6 +32,15 @@
     </div>
   </div>
 
+  <!-- Daily Missions -->
+  <div class="card" id="daily-missions-card">
+    <div class="flex justify-between items-center mb-8">
+      <div style="font-size:15px;font-weight:600">📋 每日任务</div>
+      <div class="text-dim" style="font-size:11px" id="daily-reset-time">午夜重置</div>
+    </div>
+    <div id="daily-missions-list"></div>
+  </div>
+
   <!-- Player Info -->
   <div class="card">
     <div class="flex justify-between items-center">
@@ -62,9 +71,9 @@
         <span style="font-size:28px">🛡️</span>
         <span style="font-size:14px;font-weight:600">武将</span>
       </div>
-      <div class="hero-card" onclick="App.switchPage('team')" style="margin:0;justify-content:center">
-        <span style="font-size:28px">📋</span>
-        <span style="font-size:14px;font-weight:600">编队</span>
+      <div class="hero-card" onclick="App.switchPage('leaderboard')" style="margin:0;justify-content:center">
+        <span style="font-size:28px">🏆</span>
+        <span style="font-size:14px;font-weight:600">排行</span>
       </div>
     </div>
   </div>
@@ -114,8 +123,18 @@
 <div id="page-roster" class="page">
   <div class="page-header">
     <div class="page-title">武将</div>
+    <div class="text-dim" style="font-size:12px">点击查看详情</div>
   </div>
   <div id="roster-list"></div>
+</div>
+
+<!-- ===== PAGE: HERO DETAIL ===== -->
+<div id="page-hero-detail" class="page">
+  <div class="page-header">
+    <div class="page-title" id="hd-title">武将详情</div>
+    <button class="btn btn-sm" onclick="App.switchPage('roster')" style="background:var(--card2);color:var(--text)">← 返回</button>
+  </div>
+  <div id="hero-detail-content"></div>
 </div>
 
 <!-- ===== PAGE: TEAM ===== -->
@@ -124,6 +143,10 @@
     <div class="page-title">编队</div>
     <div class="text-dim" style="font-size:12px">前排2 + 后排3</div>
   </div>
+  <div style="margin-bottom:12px">
+    <button class="btn btn-primary btn-block" onclick="App.autoFormation()" style="background:linear-gradient(135deg,#059669,#10b981)">🤖 智能编队</button>
+  </div>
+  <div id="formation-advice" class="hidden"></div>
   <div style="margin-bottom:12px;font-size:13px;color:var(--dim)">点击空位添加武将，点击已有武将移除</div>
   <div id="team-slots" style="display:flex;flex-direction:column;gap:8px"></div>
   <div class="mt-16" style="font-size:14px;font-weight:600">可用武将</div>
@@ -156,6 +179,18 @@
   <div class="dialogue-box" id="visit-dialogue"></div>
 </div>
 
+<!-- ===== PAGE: LEADERBOARD ===== -->
+<div id="page-leaderboard" class="page">
+  <div class="page-header">
+    <div class="page-title">🏆 天下排行</div>
+    <div class="text-dim" style="font-size:12px" id="lb-reset">本周剩余: --</div>
+  </div>
+  <div class="card" style="text-align:center;padding:12px">
+    <div style="font-size:12px;color:var(--gold)">⏰ 每周一凌晨刷新排名</div>
+  </div>
+  <div id="leaderboard-list" style="margin-top:8px"></div>
+</div>
+
 <!-- ===== DESTINY CHOICE OVERLAY ===== -->
 <div id="destiny-modal" class="destiny-modal hidden">
   <div class="destiny-content">
@@ -176,6 +211,55 @@
   </div>
 </div>
 
+<!-- ===== TUTORIAL / ONBOARDING ===== -->
+<div id="tutorial-overlay" class="tutorial-overlay hidden">
+  <div class="tutorial-content">
+    <!-- Step 1 -->
+    <div class="tutorial-step active">
+      <div style="font-size:64px;margin-bottom:16px">⚔️</div>
+      <h1 style="font-size:24px;font-weight:700;margin-bottom:8px;color:var(--gold)">三国·天命</h1>
+      <p style="color:var(--dim);margin-bottom:24px;font-size:14px;line-height:1.6">乱世之中，你将书写自己的三国传奇。<br>每一个选择，都会改变命运的走向。</p>
+      <div class="tutorial-features">
+        <div class="tutorial-feature"><span>🛡️</span><div><b>编队</b><br><span class="text-dim">排兵布阵，兵种克制</span></div></div>
+        <div class="tutorial-feature"><span>⚔️</span><div><b>征战</b><br><span class="text-dim">闯关推图，天命抉择</span></div></div>
+        <div class="tutorial-feature"><span>🏯</span><div><b>求贤</b><br><span class="text-dim">三顾茅庐，以诚招贤</span></div></div>
+        <div class="tutorial-feature"><span>💰</span><div><b>挂机</b><br><span class="text-dim">离线也能积累资源</span></div></div>
+      </div>
+      <button class="btn btn-gold btn-block" onclick="App.advanceTutorial()">了解更多</button>
+    </div>
+    <!-- Step 2 -->
+    <div class="tutorial-step">
+      <div style="font-size:48px;margin-bottom:12px">🗡️🏹</div>
+      <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">你的起始武将</h2>
+      <p style="color:var(--dim);margin-bottom:16px;font-size:13px">你已经拥有 <b>新兵</b> 和 <b>弓手</b> 两名武将。<br>兵种之间存在克制关系：</p>
+      <div style="background:var(--card2);border-radius:12px;padding:16px;margin-bottom:20px;font-size:14px;text-align:center;line-height:2">
+        🐴骑 → 🏹弓 → 🔱枪 → 🛡️盾 → 🔮术 → 🐴骑<br>
+        <span class="text-dim" style="font-size:12px">克制 ×1.3 伤害 · 被克 ×0.7 伤害</span>
+      </div>
+      <button class="btn btn-gold btn-block" onclick="App.advanceTutorial()">继续</button>
+    </div>
+    <!-- Step 3 -->
+    <div class="tutorial-step">
+      <div style="font-size:48px;margin-bottom:12px">🎯</div>
+      <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">开始你的征途</h2>
+      <div style="background:var(--card2);border-radius:12px;padding:16px;margin-bottom:20px;font-size:13px;line-height:1.8;color:var(--dim)">
+        <div>1️⃣ 先去 <b style="color:var(--text)">编队</b> 确认阵容</div>
+        <div>2️⃣ 进入 <b style="color:var(--text)">征战</b> 挑战关卡</div>
+        <div>3️⃣ 赚取金币后去 <b style="color:var(--text)">求贤馆</b> 招募名将</div>
+        <div>4️⃣ 每次关卡通关都有 <b style="color:var(--gold)">天命抉择</b>，影响后续剧情</div>
+      </div>
+      <div style="font-size:12px;color:var(--gold);font-style:italic;margin-bottom:16px;text-align:center">「选择塑造命运。没有对错，只有不同的三国。」</div>
+      <button class="btn btn-gold btn-block" onclick="App.closeTutorial()">开始征途！</button>
+    </div>
+    <!-- Step indicators -->
+    <div class="step-dots">
+      <span class="step-dot active"></span>
+      <span class="step-dot"></span>
+      <span class="step-dot"></span>
+    </div>
+  </div>
+</div>
+
 <!-- ===== TOAST ===== -->
 <div id="toast" class="toast hidden"></div>
 
@@ -186,6 +270,7 @@
   <div class="nav-item" onclick="App.switchPage('gacha')"><span class="icon">🏯</span>求贤</div>
   <div class="nav-item" onclick="App.switchPage('roster')"><span class="icon">🛡️</span>武将</div>
   <div class="nav-item" onclick="App.switchPage('team')"><span class="icon">📋</span>编队</div>
+  <div class="nav-item" onclick="App.switchPage('leaderboard')"><span class="icon">🏆</span>排行</div>
 </nav>
 
 <!-- Scripts -->
