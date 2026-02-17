@@ -1,10 +1,10 @@
-/* 三国·天命 — Main Stylesheet */
+/* 三国·天命 — Main Stylesheet (Structural Base) */
 :root {
-  --bg: #0a0a12; --card: #12121e; --card2: #1a1a2e;
-  --text: #e8e8f0; --dim: #888; --border: #2a2a3e;
-  --shu: #22c55e; --wei: #3b82f6; --wu: #ef4444; --qun: #a855f7;
-  --gold: #fbbf24; --hp: #ef4444; --rage: #f97316;
-  --accent: #6366f1; --accent2: #8b5cf6;
+  --bg: #0a0e1a; --card: #111827; --card2: #1a1e2e;
+  --text: #f0e6d3; --dim: #8a7e6d; --border: #2a2a3a;
+  --shu: #4a8c6f; --wei: #5a8fc7; --wu: #c04040; --qun: #9a6dd7;
+  --gold: #d4a843; --hp: #c04040; --rage: #d4a843;
+  --accent: #d4a843; --accent2: #b8922e;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family:-apple-system,system-ui,sans-serif; background:var(--bg); color:var(--text); max-width:430px; margin:0 auto; min-height:100vh; overflow-x:hidden; -webkit-tap-highlight-color:transparent; }
