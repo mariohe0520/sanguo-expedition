@@ -328,7 +328,7 @@ const App = {
 
   toast(msg, duration = 2500) {
     const t = document.getElementById('toast');
-    t.textContent = msg;
+    t.innerHTML = msg;
     t.classList.remove('hidden');
     setTimeout(() => t.classList.add('hidden'), duration);
   },
@@ -586,7 +586,7 @@ const App = {
       Storage.addGold(stage.reward.gold);
       Storage.addExp(stage.reward.exp);
       if (stage.reward.hero_shard) Storage.addShards(stage.reward.hero_shard, 3);
-      Campaign.completeStage(stage.id);
+      Campaign.completeStage(stage.id, (stage._chapter || Campaign.getCurrentChapter()).id);
 
       let resultText = '+' + stage.reward.gold + '金 +' + stage.reward.exp + '经验' + (stage.reward.hero_shard ? ' +3碎片' : '');
 
@@ -1794,7 +1794,13 @@ const App = {
       html += '</div>';
 
       if (tmpl) {
+        const maxLevel = (tmpl.rarity || 1) * 3;
+        html += '<div style="display:flex;flex-direction:column;gap:4px">';
+        if (item.level < maxLevel) {
+          html += '<button class="btn btn-sm" onclick="App.showEnhanceDialog(\'' + heroId + '\',\'' + item.uid + '\')" style="background:var(--card);color:var(--gold);font-size:11px">强化</button>';
+        }
         html += '<button class="btn btn-sm" onclick="App.unequipItem(\'' + heroId + '\',\'' + slot + '\')" style="background:var(--card);color:var(--hp);font-size:11px">卸下</button>';
+        html += '</div>';
       }
       html += '</div>';
     }
@@ -1930,6 +1936,76 @@ const App = {
   unequipItem(heroId, slot) {
     Equipment.unequipFromHero(heroId, slot);
     this.toast('已卸下装备');
+    this.renderHeroDetail(heroId);
+  },
+
+  showEnhanceDialog(heroId, equipUid) {
+    const inv = Storage.getEquipmentInventory();
+    const target = inv.find(e => e.uid === equipUid);
+    if (!target) return;
+    const tmpl = Equipment.TEMPLATES[target.templateId];
+    if (!tmpl) return;
+
+    // Find materials (unequipped items, exclude the target itself)
+    const allHeroes = Object.keys(Storage.getRoster());
+    const equippedUids = new Set();
+    for (const hid of allHeroes) {
+      const eq = Storage.getEquipped(hid);
+      Object.values(eq).forEach(uid => { if (uid) equippedUids.add(uid); });
+    }
+    const materials = inv.filter(e => e.uid !== equipUid && !equippedUids.has(e.uid));
+
+    if (materials.length === 0) {
+      this.toast('没有可用的强化材料（需要未装备的装备）');
+      return;
+    }
+
+    const maxLevel = (tmpl.rarity || 1) * 3;
+    const rarInfo = Equipment.RARITIES[tmpl.rarity];
+
+    // Show inline material selection
+    let html = '<div class="card card-glow" style="border-color:var(--gold)">' +
+      '<div style="font-size:14px;font-weight:600;margin-bottom:8px">强化 ' + tmpl.name + ' +' + target.level + '/' + maxLevel + '</div>' +
+      '<div class="text-dim" style="font-size:12px;margin-bottom:12px">选择一件装备作为材料（同类装备100%成功率，不同70%）</div>';
+
+    for (const mat of materials.slice(0, 8)) {
+      const matTmpl = Equipment.TEMPLATES[mat.templateId];
+      if (!matTmpl) continue;
+      const matRar = Equipment.RARITIES[matTmpl.rarity];
+      const isSame = mat.templateId === target.templateId;
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--card2);border-radius:8px;margin-bottom:4px;cursor:pointer;border-left:3px solid ' + (matRar?.color || 'var(--border)') + '"' +
+        ' onclick="App.doEnhance(\'' + heroId + '\',\'' + equipUid + '\',\'' + mat.uid + '\')">' +
+        '<span>' + Visuals.equipItemIcon(mat.templateId, matTmpl.rarity) + '</span>' +
+        '<div style="flex:1"><div style="font-size:12px;color:' + (matRar?.color || 'var(--dim)') + '">' + matTmpl.name + ' +' + mat.level + '</div></div>' +
+        '<div style="font-size:11px;color:' + (isSame ? 'var(--shu)' : 'var(--dim)') + '">' + (isSame ? '100%' : '70%') + '</div>' +
+      '</div>';
+    }
+
+    html += '<button class="btn btn-sm btn-block mt-8" onclick="App.renderHeroDetail(\'' + heroId + '\')" style="background:var(--card2);color:var(--text)">取消</button>' +
+    '</div>';
+
+    // Replace equipment section temporarily
+    const content = document.getElementById('hero-detail-content');
+    // Append dialog at end
+    const dialog = document.createElement('div');
+    dialog.id = 'enhance-dialog';
+    dialog.innerHTML = html;
+    const existing = document.getElementById('enhance-dialog');
+    if (existing) existing.remove();
+    content.appendChild(dialog);
+    dialog.scrollIntoView({ behavior: 'smooth' });
+  },
+
+  doEnhance(heroId, equipUid, materialUid) {
+    const result = Equipment.enhance(equipUid, materialUid);
+    if (result.error) { this.toast(result.error); return; }
+    if (result.success) {
+      this.toast('强化成功！+' + result.newLevel);
+    } else {
+      this.toast(result.message || '强化失败！材料已消耗');
+    }
+    const dialog = document.getElementById('enhance-dialog');
+    if (dialog) dialog.remove();
     this.renderHeroDetail(heroId);
   },
 
@@ -2136,13 +2212,13 @@ App.startBattle = async function() {
       detailText += ' · 造成 ' + totalDmg.toLocaleString() + ' 伤害';
       if (raidState.defeated) detailText += ' Boss已击败！';
     } else {
-      // Normal campaign
-      Campaign.completeStage(stage.id);
+      // Normal campaign — pass chapter ID to prevent replay corruption
+      const chapter = stage._chapter || Campaign.getCurrentChapter();
+      Campaign.completeStage(stage.id, chapter.id);
       // Season pass XP for campaign
       if (typeof Seasonal !== 'undefined') Seasonal.addPassXP(stage.boss ? 100 : 40);
       // Equipment drop from campaign
       if (typeof Equipment !== 'undefined') {
-        const chapter = stage._chapter || Campaign.getCurrentChapter();
         const drop = Equipment.generateDrop(chapter.id, !!stage.boss);
         if (drop) {
           Storage.addEquipment(drop);
@@ -2235,6 +2311,21 @@ App.init = function() {
   // Show tutorial for new players
   this.showTutorialIfNew();
 };
+
+// ===== BUTTON RIPPLE EFFECT =====
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.btn');
+  if (!btn || btn.disabled) return;
+  const ripple = document.createElement('span');
+  ripple.className = 'ripple';
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height) * 2;
+  ripple.style.width = ripple.style.height = size + 'px';
+  ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+  ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+  btn.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 600);
+});
 
 // Boot
 document.addEventListener('DOMContentLoaded', () => App.init());

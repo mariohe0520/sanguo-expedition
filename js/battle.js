@@ -415,6 +415,15 @@ const Battle = {
             if (t.hp <= 0) { t.alive = false; break; }
           }
         }
+        // Apply debuff to targets (e.g. Xu Huang armor break, Dong Zhuo fear)
+        if (s.debuff) {
+          for (const t of targets) {
+            if (t.alive && !t.effects.some(e => e.type === 'invincible')) {
+              t.debuffs.push({ stat: s.debuff.stat, pct: s.debuff.pct, duration: s.debuff.duration });
+              this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} ${s.debuff.stat}${s.debuff.pct}% ${s.debuff.duration}回合`);
+            }
+          }
+        }
         // Self buff (e.g. Zhao Yun invincible, shield militia DEF up)
         if (s.selfBuff) {
           if (s.selfBuff.effect) fighter.effects.push({ type: s.selfBuff.effect, duration: s.selfBuff.duration });
@@ -467,6 +476,53 @@ const Battle = {
           } else {
             t.effects.push({ type: s.effect, duration: s.duration });
             this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} 被${s.effect === 'stun' ? '眩晕' : '魅惑'}${s.duration}回合！`);
+          }
+        }
+        break;
+      }
+      case 'debuff': {
+        // Apply debuffs to enemies (e.g. Guo Jia's 十胜十败)
+        const debuffTargets = s.target === 'all_enemy' ? enemies : [enemies[0]];
+        for (const t of debuffTargets) {
+          if (t.effects.some(e => e.type === 'invincible')) {
+            this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} 无敌，免疫减益！`);
+            continue;
+          }
+          if (s.all_pct) {
+            // Debuff all stats
+            for (const stat of ['atk', 'def', 'spd', 'int']) {
+              t.debuffs.push({ stat, pct: s.all_pct, duration: s.duration });
+            }
+            this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} 全属性${s.all_pct}% ${s.duration}回合`);
+          } else if (s.stat) {
+            t.debuffs.push({ stat: s.stat, pct: s.pct, duration: s.duration });
+            this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} ${s.stat}${s.pct}% ${s.duration}回合`);
+          }
+        }
+        break;
+      }
+      case 'mirror': {
+        // Copy the strongest enemy's skill and use it against them
+        const strongest = enemies.sort((a,b) => (b.atk + b.int) - (a.atk + a.int))[0];
+        if (strongest && strongest.skill) {
+          const copiedSkill = strongest.skill;
+          this.addLog(`  → 复制了 ${Visuals.heroTag(strongest.id)} ${strongest.name} 的【${copiedSkill.name}】！`);
+          // Execute the copied skill as a damage/magic effect
+          const copyDmg = copiedSkill.type === 'magic'
+            ? Math.floor(this.getEffStat(fighter, 'int') * (copiedSkill.value || 1.5))
+            : Math.floor(this.getEffStat(fighter, 'atk') * (copiedSkill.value || 1.5));
+          const dmgWithBonus = Math.floor(copyDmg * (1 + skillDmgBonus / 100));
+          strongest.hp = Math.max(0, strongest.hp - dmgWithBonus);
+          this.addLog(`  → ${Visuals.heroTag(strongest.id)} ${strongest.name} -${dmgWithBonus} ${copiedSkill.type === 'magic' ? '法伤' : '伤害'}`);
+          if (strongest.hp <= 0) strongest.alive = false;
+        } else {
+          // Fallback: deal INT-based damage
+          const fallbackDmg = Math.floor(this.getEffStat(fighter, 'int') * 2.0);
+          const target = enemies[0];
+          if (target) {
+            target.hp = Math.max(0, target.hp - fallbackDmg);
+            this.addLog(`  → ${Visuals.heroTag(target.id)} ${target.name} -${fallbackDmg} 法伤`);
+            if (target.hp <= 0) target.alive = false;
           }
         }
         break;

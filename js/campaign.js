@@ -209,14 +209,37 @@ const Campaign = {
     });
   },
 
-  completeStage(stageId) {
+  completeStage(stageId, chapterId) {
     const progress = Storage.getCampaignProgress?.() || { chapter: 1, stage: 1, choices: {} };
+    if (!progress.choices) progress.choices = {};
+
+    // Only advance if this stage belongs to the current chapter (prevent replay corruption)
+    if (chapterId && chapterId !== progress.chapter) {
+      return progress;
+    }
+
     if (stageId >= progress.stage) {
       progress.stage = stageId + 1;
     }
+
     // Check chapter completion — advance to next chapter if all stages done
     const chapter = this.CHAPTERS.find(c => c.id === progress.chapter);
     if (chapter) {
+      // Skip over branch stages that don't match the player's destiny choice
+      const choice = progress.choices[chapter.id];
+      if (choice) {
+        let safety = 0;
+        while (safety++ < 20) {
+          const nextStage = chapter.stages.find(s => s.id === progress.stage);
+          if (!nextStage) break;
+          if (nextStage.branch && nextStage.branch !== choice) {
+            progress.stage++;
+          } else {
+            break;
+          }
+        }
+      }
+
       const maxStage = Math.max(...chapter.stages.map(s => s.id));
       if (progress.stage > maxStage) {
         const nextChapter = this.CHAPTERS.find(c => c.id === progress.chapter + 1);
