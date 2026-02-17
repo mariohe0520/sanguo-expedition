@@ -11,6 +11,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/premium.css">
+<link rel="stylesheet" href="css/visuals.css">
 </head>
 <body>
 
@@ -19,8 +20,8 @@
   <div class="page-header">
     <div class="page-title">三国·天命</div>
     <div class="resource-bar">
-      <span>💰 <b id="hdr-gold">0</b></span>
-      <span>💎 <b id="hdr-gems">0</b></span>
+      <span><svg class="res-icon ri-gold" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#d4a843"/><circle cx="8" cy="8" r="5" fill="none" stroke="#b8922e" stroke-width="1"/><text x="8" y="11" text-anchor="middle" font-size="8" font-weight="700" fill="#0a0e1a">¥</text></svg> <b id="hdr-gold">0</b></span>
+      <span><svg class="res-icon ri-gem" viewBox="0 0 16 16"><polygon points="8,1 14,6 8,15 2,6" fill="#6366f1"/><polygon points="8,1 11,6 8,10 5,6" fill="#818cf8"/><line x1="2" y1="6" x2="14" y2="6" stroke="#4f46e5" stroke-width=".5"/></svg> <b id="hdr-gems">0</b></span>
     </div>
   </div>
 
@@ -36,7 +37,7 @@
   <!-- Daily Missions -->
   <div class="card" id="daily-missions-card">
     <div class="flex justify-between items-center mb-8">
-      <div style="font-size:15px;font-weight:600">📋 每日任务</div>
+      <div style="font-size:15px;font-weight:600"><svg class="sec-icon" viewBox="0 0 20 20"><rect x="3" y="2" width="14" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> 每日任务</div>
       <div class="text-dim" style="font-size:11px" id="daily-reset-time">午夜重置</div>
     </div>
     <div id="daily-missions-list"></div>
@@ -61,27 +62,27 @@
     <div style="font-size:15px;font-weight:600;margin-bottom:12px">快捷入口</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
       <div class="hero-card" onclick="App.switchPage('campaign')" style="margin:0;justify-content:center">
-        <span style="font-size:24px">⚔️</span>
+        <span class="qa-icon"><svg viewBox="0 0 24 24"><path d="M6 2l6 6 6-6M5 8v12l7-4 7 4V8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         <span style="font-size:12px;font-weight:600">战役</span>
       </div>
       <div class="hero-card" onclick="App.switchPage('dungeon')" style="margin:0;justify-content:center">
-        <span style="font-size:24px">🏔️</span>
+        <span class="qa-icon"><svg viewBox="0 0 24 24"><path d="M2 20l5-8 4 4 4-6 5 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="17" cy="6" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span>
         <span style="font-size:12px;font-weight:600">副本</span>
       </div>
       <div class="hero-card" onclick="App.switchPage('arena')" style="margin:0;justify-content:center">
-        <span style="font-size:24px">🏟️</span>
+        <span class="qa-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3v4m0 10v4M3 12h4m10 0h4" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="3" fill="currentColor" opacity=".6"/></svg></span>
         <span style="font-size:12px;font-weight:600">竞技</span>
       </div>
       <div class="hero-card" onclick="App.switchPage('gacha')" style="margin:0;justify-content:center">
-        <span style="font-size:24px">🏯</span>
+        <span class="qa-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16v4l-3 3 3 3v6H4v-6l3-3-3-3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M4 8h16" stroke="currentColor" stroke-width="1.5"/></svg></span>
         <span style="font-size:12px;font-weight:600">求贤</span>
       </div>
       <div class="hero-card" onclick="App.switchPage('roster')" style="margin:0;justify-content:center">
-        <span style="font-size:24px">🛡️</span>
+        <span class="qa-icon"><svg viewBox="0 0 24 24"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         <span style="font-size:12px;font-weight:600">英雄</span>
       </div>
       <div class="hero-card" onclick="App.switchPage('profile')" style="margin:0;justify-content:center">
-        <span style="font-size:24px">📊</span>
+        <span class="qa-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" fill="currentColor" opacity=".7"/><rect x="14" y="3" width="7" height="7" rx="1" fill="currentColor" opacity=".5"/><rect x="3" y="14" width="7" height="7" rx="1" fill="currentColor" opacity=".5"/><rect x="14" y="14" width="7" height="7" rx="1" fill="currentColor" opacity=".3"/></svg></span>
         <span style="font-size:12px;font-weight:600">档案</span>
       </div>
     </div>
@@ -102,8 +103,8 @@
   <div class="page-header">
     <div class="page-title" id="campaign-title">黄巾之乱</div>
     <div class="resource-bar">
-      <span id="campaign-terrain">🌾 平原</span>
-      <span id="campaign-weather">☀️ 晴天</span>
+      <span id="campaign-terrain"></span>
+      <span id="campaign-weather"></span>
     </div>
   </div>
   <div class="stage-list" id="stage-list"></div>
@@ -117,7 +118,7 @@
   </div>
   <div class="battle-field" id="battle-field">
     <div class="team-col" id="team-player"></div>
-    <div class="vs-icon">⚔️</div>
+    <div id="vs-icon-container"></div>
     <div class="team-col" id="team-enemy"></div>
   </div>
   <div class="card mt-16">
@@ -153,7 +154,7 @@
     <div class="text-dim" style="font-size:12px">前排2 + 后排3</div>
   </div>
   <div style="margin-bottom:12px">
-    <button class="btn btn-primary btn-block" onclick="App.autoFormation()" style="background:linear-gradient(135deg,#059669,#10b981)">🤖 智能编队</button>
+    <button class="btn btn-primary btn-block" onclick="App.autoFormation()" style="background:linear-gradient(135deg,#059669,#10b981)">智能编队</button>
   </div>
   <div id="formation-advice" class="hidden"></div>
   <div style="margin-bottom:12px;font-size:13px;color:var(--dim)">点击空位添加武将，点击已有武将移除</div>
@@ -165,7 +166,7 @@
 <!-- ===== PAGE: GACHA ===== -->
 <div id="page-gacha" class="page">
   <div class="page-header">
-    <div class="page-title">🏯 求贤馆</div>
+    <div class="page-title">求贤馆</div>
   </div>
   <div style="font-size:13px;color:var(--dim);margin-bottom:16px">三顾茅庐 — 以诚意打动英雄加入</div>
   <div id="gacha-list"></div>
@@ -191,11 +192,8 @@
 <!-- ===== PAGE: LEADERBOARD ===== -->
 <div id="page-leaderboard" class="page">
   <div class="page-header">
-    <div class="page-title">🏆 天下排行</div>
+    <div class="page-title">天下排行</div>
     <div class="text-dim" style="font-size:12px" id="lb-reset">本周剩余: --</div>
-  </div>
-  <div class="card" style="text-align:center;padding:12px">
-    <div style="font-size:12px;color:var(--gold)">⏰ 每周一凌晨刷新排名</div>
   </div>
   <div id="leaderboard-list" style="margin-top:8px"></div>
 </div>
@@ -213,7 +211,7 @@
 <!-- ===== BATTLE RESULT OVERLAY ===== -->
 <div id="result-modal" class="destiny-modal hidden">
   <div class="destiny-content text-center">
-    <div style="font-size:48px" id="result-icon">⚔️</div>
+    <div style="font-size:48px" id="result-icon"></div>
     <div style="font-size:22px;font-weight:700;margin:12px 0" id="result-title">战斗结果</div>
     <div style="font-size:14px;color:var(--dim)" id="result-detail"></div>
     <button class="btn btn-primary btn-block mt-16" onclick="App.closeResult()">继续</button>
@@ -225,42 +223,44 @@
   <div class="tutorial-content">
     <!-- Step 1 -->
     <div class="tutorial-step active">
-      <div style="font-size:64px;margin-bottom:16px">⚔️</div>
+      <div style="margin-bottom:16px" class="hp-detail-bg r5"><div class="hp hp-lg hp-r5 hp-f-shu" style="--hc1:#2d6a4f;--hc2:#52b788"><div class="hp-bg"></div><div class="hp-pat hp-pat-lance"></div><span class="hp-ch">命</span><div class="hp-frame"></div></div></div>
       <h1 style="font-size:24px;font-weight:700;margin-bottom:8px;color:var(--gold)">三国·天命</h1>
       <p style="color:var(--dim);margin-bottom:24px;font-size:14px;line-height:1.6">乱世之中，你将书写自己的三国传奇。<br>每一个选择，都会改变命运的走向。</p>
       <div class="tutorial-features">
-        <div class="tutorial-feature"><span>🛡️</span><div><b>编队</b><br><span class="text-dim">排兵布阵，兵种克制</span></div></div>
-        <div class="tutorial-feature"><span>⚔️</span><div><b>征战</b><br><span class="text-dim">闯关推图，天命抉择</span></div></div>
-        <div class="tutorial-feature"><span>🏯</span><div><b>求贤</b><br><span class="text-dim">三顾茅庐，以诚招贤</span></div></div>
-        <div class="tutorial-feature"><span>💰</span><div><b>挂机</b><br><span class="text-dim">离线也能积累资源</span></div></div>
+        <div class="tutorial-feature"><span class="qa-icon"><svg viewBox="0 0 24 24"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5z" fill="none" stroke="currentColor" stroke-width="2"/></svg></span><div><b>编队</b><br><span class="text-dim">排兵布阵，兵种克制</span></div></div>
+        <div class="tutorial-feature"><span class="qa-icon"><svg viewBox="0 0 24 24"><path d="M6 2l6 6 6-6M5 8v12l7-4 7 4V8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>征战</b><br><span class="text-dim">闯关推图，天命抉择</span></div></div>
+        <div class="tutorial-feature"><span class="qa-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16v4l-3 3 3 3v6H4v-6l3-3-3-3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span><div><b>求贤</b><br><span class="text-dim">三顾茅庐，以诚招贤</span></div></div>
+        <div class="tutorial-feature"><span class="qa-icon"><svg class="res-icon ri-gold" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#d4a843"/><text x="8" y="11" text-anchor="middle" font-size="8" font-weight="700" fill="#0a0e1a">¥</text></svg></span><div><b>挂机</b><br><span class="text-dim">离线也能积累资源</span></div></div>
       </div>
       <button class="btn btn-gold btn-block" onclick="App.advanceTutorial()">了解更多</button>
     </div>
     <!-- Step 2 -->
     <div class="tutorial-step">
-      <div style="font-size:48px;margin-bottom:12px">🗡️🏹</div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-bottom:12px">
+        <div class="hp hp-md hp-r1 hp-f-qun" style="--hc1:#3a3f47;--hc2:#6c757d"><div class="hp-bg"></div><span class="hp-ch">兵</span><div class="hp-frame"></div></div>
+        <div class="hp hp-md hp-r1 hp-f-qun" style="--hc1:#3a3f47;--hc2:#6c757d"><div class="hp-bg"></div><span class="hp-ch">弓</span><div class="hp-frame"></div></div>
+      </div>
       <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">你的起始武将</h2>
       <p style="color:var(--dim);margin-bottom:16px;font-size:13px">你已经拥有 <b>新兵</b> 和 <b>弓手</b> 两名武将。<br>兵种之间存在克制关系：</p>
       <div style="background:var(--card2);border-radius:12px;padding:16px;margin-bottom:20px;font-size:14px;text-align:center;line-height:2">
-        🐴骑 → 🏹弓 → 🔱枪 → 🛡️盾 → 🔮术 → 🐴骑<br>
+        骑兵 → 弓兵 → 枪兵 → 盾兵 → 术士 → 骑兵<br>
         <span class="text-dim" style="font-size:12px">克制 ×1.3 伤害 · 被克 ×0.7 伤害</span>
       </div>
       <button class="btn btn-gold btn-block" onclick="App.advanceTutorial()">继续</button>
     </div>
     <!-- Step 3 -->
     <div class="tutorial-step">
-      <div style="font-size:48px;margin-bottom:12px">🎯</div>
+      <div style="margin-bottom:12px" class="hp-detail-bg r5"><div class="hp hp-lg hp-r5 hp-f-shu" style="--hc1:#1a5276;--hc2:#52b788"><div class="hp-bg"></div><div class="hp-pat hp-pat-lance"></div><span class="hp-ch">赵</span><div class="hp-frame"></div></div></div>
       <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">开始你的征途</h2>
       <div style="background:var(--card2);border-radius:12px;padding:16px;margin-bottom:20px;font-size:13px;line-height:1.8;color:var(--dim)">
-        <div>1️⃣ 先去 <b style="color:var(--text)">编队</b> 确认阵容</div>
-        <div>2️⃣ 进入 <b style="color:var(--text)">征战</b> 挑战关卡</div>
-        <div>3️⃣ 赚取金币后去 <b style="color:var(--text)">求贤馆</b> 招募名将</div>
-        <div>4️⃣ 每次关卡通关都有 <b style="color:var(--gold)">天命抉择</b>，影响后续剧情</div>
+        <div>1. 先去 <b style="color:var(--text)">编队</b> 确认阵容</div>
+        <div>2. 进入 <b style="color:var(--text)">征战</b> 挑战关卡</div>
+        <div>3. 赚取金币后去 <b style="color:var(--text)">求贤馆</b> 招募名将</div>
+        <div>4. 每次关卡通关都有 <b style="color:var(--gold)">天命抉择</b>，影响后续剧情</div>
       </div>
       <div style="background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.3);border-radius:12px;padding:12px;margin-bottom:16px;text-align:center">
-        <div style="font-size:24px">🐉</div>
         <div style="font-size:14px;font-weight:700;color:var(--gold)">新手礼包</div>
-        <div style="font-size:12px;color:var(--dim);margin-top:4px">🌟 SSR武将·赵云 + 💰500金币 + 💎20宝石</div>
+        <div style="font-size:12px;color:var(--dim);margin-top:4px">SSR武将·赵云 + 500金币 + 20宝石</div>
       </div>
       <div style="font-size:12px;color:var(--gold);font-style:italic;margin-bottom:16px;text-align:center">「选择塑造命运。没有对错，只有不同的三国。」</div>
       <button class="btn btn-gold btn-block" onclick="App.closeTutorial()">领取并开始征途！</button>
@@ -277,19 +277,19 @@
 <!-- ===== PAGE: DUNGEON ===== -->
 <div id="page-dungeon" class="page">
   <div class="page-header">
-    <div class="page-title">🏔️ 副本</div>
+    <div class="page-title">副本</div>
     <div class="resource-bar">
-      <span>💰 <b id="dg-gold">0</b></span>
-      <span>💎 <b id="dg-gems">0</b></span>
+      <span><svg class="res-icon ri-gold" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#d4a843"/><circle cx="8" cy="8" r="5" fill="none" stroke="#b8922e" stroke-width="1"/><text x="8" y="11" text-anchor="middle" font-size="8" font-weight="700" fill="#0a0e1a">¥</text></svg> <b id="dg-gold">0</b></span>
+      <span><svg class="res-icon ri-gem" viewBox="0 0 16 16"><polygon points="8,1 14,6 8,15 2,6" fill="#6366f1"/><polygon points="8,1 11,6 8,10 5,6" fill="#818cf8"/></svg> <b id="dg-gems">0</b></span>
     </div>
   </div>
 
   <!-- Dungeon Tabs -->
   <div class="tab-bar" id="dungeon-tabs">
-    <div class="tab-item active" onclick="App.switchDungeonTab('endless')">♾️ 无尽</div>
-    <div class="tab-item" onclick="App.switchDungeonTab('daily')">📅 每日</div>
-    <div class="tab-item" onclick="App.switchDungeonTab('raid')">💀 Boss</div>
-    <div class="tab-item" onclick="App.switchDungeonTab('seasonal')">🌸 赛季</div>
+    <div class="tab-item active" onclick="App.switchDungeonTab('endless')">无尽</div>
+    <div class="tab-item" onclick="App.switchDungeonTab('daily')">每日</div>
+    <div class="tab-item" onclick="App.switchDungeonTab('raid')">Boss</div>
+    <div class="tab-item" onclick="App.switchDungeonTab('seasonal')">赛季</div>
   </div>
 
   <div id="dungeon-content"></div>
@@ -298,14 +298,14 @@
 <!-- ===== PAGE: ARENA ===== -->
 <div id="page-arena" class="page">
   <div class="page-header">
-    <div class="page-title">⚔️ 竞技场</div>
+    <div class="page-title">竞技场</div>
     <div class="text-dim" style="font-size:12px" id="arena-attempts">剩余: 5次</div>
   </div>
 
   <!-- Arena Rank Display -->
   <div class="card card-glow" id="arena-rank-card">
     <div style="text-align:center">
-      <div style="font-size:48px" id="arena-rank-emoji">🥉</div>
+      <div style="font-size:48px" id="arena-rank-emoji"></div>
       <div style="font-size:20px;font-weight:700" id="arena-rank-name">青铜</div>
       <div style="font-size:14px;color:var(--gold)" id="arena-rating">Rating: 800</div>
       <div class="progress mt-8" style="width:80%;margin:8px auto 0"><div class="progress-fill" id="arena-progress-bar" style="width:0%;background:linear-gradient(90deg,var(--accent),var(--gold))"></div></div>
@@ -330,7 +330,7 @@
   <div class="card mt-16" id="arena-weekly-card">
     <div class="flex justify-between items-center">
       <div>
-        <div style="font-size:14px;font-weight:600">🎁 周奖励</div>
+        <div style="font-size:14px;font-weight:600"><svg class="sec-icon" viewBox="0 0 20 20"><rect x="2" y="8" width="16" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 8v10M2 12h16" stroke="currentColor" stroke-width="1.2"/><path d="M10 8C10 5 7 3 5.5 5S8 8 10 8m0 0c0-3 3-5 4.5-3S12 8 10 8" fill="none" stroke="currentColor" stroke-width="1.2"/></svg> 周奖励</div>
         <div class="text-dim" style="font-size:12px" id="arena-weekly-desc">基于当前段位</div>
       </div>
       <button class="btn btn-gold btn-sm" id="arena-weekly-btn" onclick="App.claimArenaWeekly()">领取</button>
@@ -338,14 +338,14 @@
   </div>
 
   <!-- Arena Leaderboard -->
-  <div style="font-size:15px;font-weight:600;margin:16px 0 8px">🏆 竞技排行</div>
+  <div style="font-size:15px;font-weight:600;margin:16px 0 8px"><svg class="sec-icon" viewBox="0 0 20 20"><path d="M5 2h10v6a5 5 0 01-10 0zM10 13v3M7 16h6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4H3v3a2 2 0 002 2M15 4h2v3a2 2 0 01-2 2" fill="none" stroke="currentColor" stroke-width="1.2"/></svg> 竞技排行</div>
   <div id="arena-leaderboard"></div>
 </div>
 
 <!-- ===== PAGE: EQUIPMENT ===== -->
 <div id="page-equipment" class="page">
   <div class="page-header">
-    <div class="page-title">🎒 装备库</div>
+    <div class="page-title">装备库</div>
     <button class="btn btn-sm" onclick="App.switchPage('roster')" style="background:var(--card2);color:var(--text)">← 返回</button>
   </div>
   <div id="equipment-content"></div>
@@ -354,7 +354,7 @@
 <!-- ===== PAGE: ACHIEVEMENTS ===== -->
 <div id="page-achievements" class="page">
   <div class="page-header">
-    <div class="page-title">🏅 成就</div>
+    <div class="page-title">成就</div>
     <button class="btn btn-sm" onclick="App.switchPage('profile')" style="background:var(--card2);color:var(--text)">← 返回</button>
   </div>
   <div id="achievements-content"></div>
@@ -363,7 +363,7 @@
 <!-- ===== PAGE: PROFILE ===== -->
 <div id="page-profile" class="page">
   <div class="page-header">
-    <div class="page-title">📊 档案</div>
+    <div class="page-title">档案</div>
   </div>
   <div id="profile-content"></div>
 </div>
@@ -373,16 +373,17 @@
 
 <!-- ===== BOTTOM NAV ===== -->
 <nav class="bottom-nav">
-  <div class="nav-item active" onclick="App.switchPage('home')"><span class="icon">🏠</span>主城</div>
-  <div class="nav-item" onclick="App.switchPage('campaign')"><span class="icon">⚔️</span>战役</div>
-  <div class="nav-item" onclick="App.switchPage('dungeon')"><span class="icon">🏔️</span>副本</div>
-  <div class="nav-item" onclick="App.switchPage('arena')"><span class="icon">🏟️</span>竞技</div>
-  <div class="nav-item" onclick="App.switchPage('roster')"><span class="icon">🛡️</span>英雄</div>
-  <div class="nav-item" onclick="App.switchPage('gacha')"><span class="icon">🏯</span>商店</div>
+  <div class="nav-item active" onclick="App.switchPage('home')"><span class="nav-svg"><svg viewBox="0 0 24 24"><path d="M3 12l9-9 9 9M5 10v10h5v-6h4v6h5V10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>主城</div>
+  <div class="nav-item" onclick="App.switchPage('campaign')"><span class="nav-svg"><svg viewBox="0 0 24 24"><path d="M6 2l6 6 6-6M5 8v12l7-4 7 4V8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>战役</div>
+  <div class="nav-item" onclick="App.switchPage('dungeon')"><span class="nav-svg"><svg viewBox="0 0 24 24"><path d="M2 20l5-8 4 4 4-6 5 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="17" cy="6" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span>副本</div>
+  <div class="nav-item" onclick="App.switchPage('arena')"><span class="nav-svg"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3v4m0 10v4M3 12h4m10 0h4" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="3" fill="currentColor" opacity=".6"/></svg></span>竞技</div>
+  <div class="nav-item" onclick="App.switchPage('roster')"><span class="nav-svg"><svg viewBox="0 0 24 24"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>英雄</div>
+  <div class="nav-item" onclick="App.switchPage('gacha')"><span class="nav-svg"><svg viewBox="0 0 24 24"><path d="M4 4h16v4l-3 3 3 3v6H4v-6l3-3-3-3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M4 8h16" stroke="currentColor" stroke-width="1.5"/></svg></span>商店</div>
 </nav>
 
 <!-- Scripts -->
 <script src="js/heroes.js"></script>
+<script src="js/visuals.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/battle.js"></script>
 <script src="js/campaign.js"></script>
