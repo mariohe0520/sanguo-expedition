@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a12">
+<title>三国·天命</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ===== PAGE: HOME ===== -->
+<div id="page-home" class="page active">
+  <div class="page-header">
+    <div class="page-title">三国·天命</div>
+    <div class="resource-bar">
+      <span>💰 <b id="hdr-gold">0</b></span>
+      <span>💎 <b id="hdr-gems">0</b></span>
+    </div>
+  </div>
+
+  <!-- Idle Reward Card -->
+  <div class="card card-glow" id="idle-card" onclick="App.collectIdle()">
+    <div class="idle-reward">
+      <div class="label">离线收益 (点击领取)</div>
+      <div class="big-num" id="idle-gold">+0</div>
+      <div class="label" id="idle-time">0分钟</div>
+    </div>
+  </div>
+
+  <!-- Player Info -->
+  <div class="card">
+    <div class="flex justify-between items-center">
+      <div>
+        <div style="font-size:18px;font-weight:700" id="player-name">主公</div>
+        <div class="text-dim" style="font-size:13px">Lv.<span id="player-level">1</span></div>
+      </div>
+      <div style="text-align:right">
+        <div class="text-dim" style="font-size:11px">经验</div>
+        <div class="progress" style="width:100px"><div class="progress-fill" id="player-exp-bar" style="width:0%;background:var(--accent)"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="card">
+    <div style="font-size:15px;font-weight:600;margin-bottom:12px">快捷入口</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="hero-card" onclick="App.switchPage('campaign')" style="margin:0;justify-content:center">
+        <span style="font-size:28px">⚔️</span>
+        <span style="font-size:14px;font-weight:600">征战</span>
+      </div>
+      <div class="hero-card" onclick="App.switchPage('gacha')" style="margin:0;justify-content:center">
+        <span style="font-size:28px">🏯</span>
+        <span style="font-size:14px;font-weight:600">求贤</span>
+      </div>
+      <div class="hero-card" onclick="App.switchPage('roster')" style="margin:0;justify-content:center">
+        <span style="font-size:28px">🛡️</span>
+        <span style="font-size:14px;font-weight:600">武将</span>
+      </div>
+      <div class="hero-card" onclick="App.switchPage('team')" style="margin:0;justify-content:center">
+        <span style="font-size:28px">📋</span>
+        <span style="font-size:14px;font-weight:600">编队</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chapter Progress -->
+  <div class="card">
+    <div class="flex justify-between items-center mb-8">
+      <div style="font-size:15px;font-weight:600">当前章节</div>
+      <div class="text-dim" style="font-size:12px" id="chapter-progress">第1章 1/10</div>
+    </div>
+    <div class="progress"><div class="progress-fill" id="chapter-bar" style="width:10%;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div></div>
+  </div>
+</div>
+
+<!-- ===== PAGE: CAMPAIGN ===== -->
+<div id="page-campaign" class="page">
+  <div class="page-header">
+    <div class="page-title" id="campaign-title">黄巾之乱</div>
+    <div class="resource-bar">
+      <span id="campaign-terrain">🌾 平原</span>
+      <span id="campaign-weather">☀️ 晴天</span>
+    </div>
+  </div>
+  <div class="stage-list" id="stage-list"></div>
+</div>
+
+<!-- ===== PAGE: BATTLE ===== -->
+<div id="page-battle" class="page">
+  <div class="page-header">
+    <div class="page-title" id="battle-title">战斗</div>
+    <div id="battle-turn" class="text-dim" style="font-size:13px">回合 0</div>
+  </div>
+  <div class="battle-field" id="battle-field">
+    <div class="team-col" id="team-player"></div>
+    <div class="vs-icon">⚔️</div>
+    <div class="team-col" id="team-enemy"></div>
+  </div>
+  <div class="card mt-16">
+    <div class="battle-log" id="battle-log"></div>
+  </div>
+  <div class="text-center mt-16">
+    <button class="btn btn-primary btn-block" id="btn-battle-start" onclick="App.startBattle()">开始战斗</button>
+  </div>
+</div>
+
+<!-- ===== PAGE: ROSTER ===== -->
+<div id="page-roster" class="page">
+  <div class="page-header">
+    <div class="page-title">武将</div>
+  </div>
+  <div id="roster-list"></div>
+</div>
+
+<!-- ===== PAGE: TEAM ===== -->
+<div id="page-team" class="page">
+  <div class="page-header">
+    <div class="page-title">编队</div>
+    <div class="text-dim" style="font-size:12px">前排2 + 后排3</div>
+  </div>
+  <div style="margin-bottom:12px;font-size:13px;color:var(--dim)">点击空位添加武将，点击已有武将移除</div>
+  <div id="team-slots" style="display:flex;flex-direction:column;gap:8px"></div>
+  <div class="mt-16" style="font-size:14px;font-weight:600">可用武将</div>
+  <div id="team-available" class="mt-8"></div>
+</div>
+
+<!-- ===== PAGE: GACHA ===== -->
+<div id="page-gacha" class="page">
+  <div class="page-header">
+    <div class="page-title">🏯 求贤馆</div>
+  </div>
+  <div style="font-size:13px;color:var(--dim);margin-bottom:16px">三顾茅庐 — 以诚意打动英雄加入</div>
+  <div id="gacha-list"></div>
+</div>
+
+<!-- ===== PAGE: GACHA VISIT ===== -->
+<div id="page-visit" class="page">
+  <div class="page-header">
+    <div class="page-title" id="visit-hero-name">拜访</div>
+    <button class="btn btn-sm" onclick="App.switchPage('gacha')" style="background:var(--card2);color:var(--text)">← 返回</button>
+  </div>
+  <div class="gacha-hero" id="visit-hero-display"></div>
+  <div class="card">
+    <div class="flex justify-between items-center mb-8">
+      <span style="font-size:13px">诚意度</span>
+      <span style="font-size:13px;color:var(--gold)" id="visit-sincerity">0</span>
+    </div>
+    <div class="sincerity-bar"><div class="sincerity-fill" id="visit-sincerity-bar" style="width:0%"></div></div>
+  </div>
+  <div class="dialogue-box" id="visit-dialogue"></div>
+</div>
+
+<!-- ===== DESTINY CHOICE OVERLAY ===== -->
+<div id="destiny-modal" class="destiny-modal hidden">
+  <div class="destiny-content">
+    <div class="destiny-title" id="destiny-title"></div>
+    <div class="destiny-desc" id="destiny-desc"></div>
+    <div id="destiny-options"></div>
+    <div class="destiny-lore" id="destiny-lore"></div>
+  </div>
+</div>
+
+<!-- ===== BATTLE RESULT OVERLAY ===== -->
+<div id="result-modal" class="destiny-modal hidden">
+  <div class="destiny-content text-center">
+    <div style="font-size:48px" id="result-icon">⚔️</div>
+    <div style="font-size:22px;font-weight:700;margin:12px 0" id="result-title">战斗结果</div>
+    <div style="font-size:14px;color:var(--dim)" id="result-detail"></div>
+    <button class="btn btn-primary btn-block mt-16" onclick="App.closeResult()">继续</button>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="toast" class="toast hidden"></div>
+
+<!-- ===== BOTTOM NAV ===== -->
+<nav class="bottom-nav">
+  <div class="nav-item active" onclick="App.switchPage('home')"><span class="icon">🏠</span>主城</div>
+  <div class="nav-item" onclick="App.switchPage('campaign')"><span class="icon">⚔️</span>征战</div>
+  <div class="nav-item" onclick="App.switchPage('gacha')"><span class="icon">🏯</span>求贤</div>
+  <div class="nav-item" onclick="App.switchPage('roster')"><span class="icon">🛡️</span>武将</div>
+  <div class="nav-item" onclick="App.switchPage('team')"><span class="icon">📋</span>编队</div>
+</nav>
+
+<!-- Scripts -->
+<script src="js/heroes.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/battle.js"></script>
+<script src="js/campaign.js"></script>
+<script src="js/gacha.js"></script>
+<script src="js/idle.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
