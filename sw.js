@@ -1,4 +1,4 @@
-const CACHE = 'sanguo-v6';
+const CACHE = 'sanguo-v7';
 const ASSETS = [
   '.',
   'index.html',
