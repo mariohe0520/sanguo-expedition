@@ -1,10 +1,12 @@
-const CACHE = 'sanguo-v5';
+const CACHE = 'sanguo-v6';
 const ASSETS = [
   '.',
   'index.html',
   'css/style.css',
   'css/premium.css',
+  'css/visuals.css',
   'js/heroes.js',
+  'js/visuals.js',
   'js/storage.js',
   'js/battle.js',
   'js/campaign.js',
