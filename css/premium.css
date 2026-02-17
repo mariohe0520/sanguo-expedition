@@ -1,0 +1,209 @@
+/* 三国·天命 — Premium Gacha RPG Theme · Ink Wash + Imperial Gold */
+
+/* 1. Color Scheme */
+:root {
+  --bg:#0a0e1a;--card:#111827;--card2:#1a1e2e;--text:#f0e6d3;--dim:#8a7e6d;--border:#2a2a3a;
+  --gold:#d4a843;--accent:#d4a843;--accent2:#b8922e;--jade:#4a8c6f;--cinnabar:#c04040;
+  --hp:#c04040;--rage:#d4a843;
+}
+body { background:linear-gradient(170deg,#0a0e1a,#1a1e2e); color:var(--text); }
+
+/* 8. Atmospheric: vignette + dust particles */
+body::before { content:'';position:fixed;inset:0;pointer-events:none;z-index:999;box-shadow:inset 0 0 120px 40px rgba(0,0,0,.55); }
+body::after {
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:998;
+  background-image:radial-gradient(1px 1px at 20% 30%,rgba(212,168,67,.35) 50%,transparent 100%),radial-gradient(1px 1px at 70% 60%,rgba(212,168,67,.25) 50%,transparent 100%),radial-gradient(1px 1px at 45% 80%,rgba(240,230,211,.2) 50%,transparent 100%);
+  background-size:200px 200px,150px 150px,180px 180px;animation:dustDrift 20s linear infinite;
+}
+@keyframes dustDrift { from{transform:translateY(0) translateX(0)} to{transform:translateY(-200px) translateX(30px)} }
+
+/* 9. Typography */
+.page-title,.destiny-title,h1,h2 { letter-spacing:2px;text-shadow:0 0 12px rgba(212,168,67,.25); }
+.big-num,.stat-val,.lb-power,#arena-rating,.idle-reward .big-num,#idle-gold {
+  background:linear-gradient(180deg,#f5d98a,#d4a843 50%,#b8922e);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.5));
+}
+
+/* 4. Navigation: frosted glass */
+.bottom-nav {
+  background:rgba(10,14,26,.82);backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);
+  border-top:1px solid rgba(212,168,67,.15);box-shadow:0 -4px 30px rgba(0,0,0,.5);
+}
+.nav-item { color:#6b6356;transition:color .25s,transform .2s;position:relative; }
+.nav-item.active { color:var(--gold);text-shadow:0 0 8px rgba(212,168,67,.5); }
+.nav-item.active::after {
+  content:'';position:absolute;bottom:2px;left:25%;right:25%;height:2px;background:var(--gold);border-radius:2px;
+  box-shadow:0 0 8px var(--gold),0 0 20px rgba(212,168,67,.4);
+}
+.tab-bar { background:rgba(17,24,39,.85);backdrop-filter:blur(16px);border:1px solid rgba(212,168,67,.1); }
+.tab-item.active {
+  background:linear-gradient(135deg,rgba(212,168,67,.2),rgba(184,146,46,.15));color:var(--gold);
+  box-shadow:inset 0 -2px 0 var(--gold),0 0 12px rgba(212,168,67,.15);
+}
+
+/* 5. Cards/Panels: depth + hover lift */
+.card {
+  background:linear-gradient(145deg,rgba(17,24,39,.9),rgba(26,30,46,.95));border:1px solid rgba(212,168,67,.08);
+  box-shadow:0 2px 8px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.03);
+  transition:transform .25s,box-shadow .25s;
+}
+.card:hover {
+  transform:translateY(-2px);
+  box-shadow:0 4px 12px rgba(0,0,0,.5),0 12px 32px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.05);
+}
+.card-glow {
+  border-color:rgba(212,168,67,.2);
+  box-shadow:0 0 20px rgba(212,168,67,.1),0 8px 24px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+/* 2. Hero Cards: rarity metallic borders + vignette */
+.hero-card {
+  background:linear-gradient(145deg,rgba(26,30,46,.95),rgba(17,24,39,.9));border:1px solid rgba(255,255,255,.06);
+  box-shadow:inset 0 0 30px rgba(0,0,0,.3),0 2px 8px rgba(0,0,0,.3);transition:transform .2s,box-shadow .25s,border-color .3s;
+}
+.hero-card:hover { transform:translateY(-2px); }
+.hero-emoji { border-radius:14px;box-shadow:inset 0 0 20px rgba(0,0,0,.4); }
+.rarity-2 .hero-emoji { background:rgba(180,190,200,.12);box-shadow:0 0 8px rgba(180,190,200,.15); }
+.rarity-2 { border-color:rgba(180,190,200,.25); }
+.rarity-3 .hero-emoji { background:rgba(59,130,246,.15);box-shadow:0 0 12px rgba(59,130,246,.25); }
+.rarity-3 { border-color:rgba(59,130,246,.3);box-shadow:inset 0 0 30px rgba(0,0,0,.3),0 0 12px rgba(59,130,246,.12); }
+.rarity-4 .hero-emoji { background:rgba(168,85,247,.15);box-shadow:0 0 14px rgba(168,85,247,.3); }
+.rarity-4 { border-color:rgba(168,85,247,.35);box-shadow:inset 0 0 30px rgba(0,0,0,.3),0 0 14px rgba(168,85,247,.15); }
+.rarity-5 .hero-emoji { background:rgba(212,168,67,.15);box-shadow:0 0 16px rgba(212,168,67,.35); }
+.rarity-5 { border-color:rgba(212,168,67,.4);animation:r5pulse 2.5s ease-in-out infinite; }
+@keyframes r5pulse {
+  0%,100% { box-shadow:inset 0 0 30px rgba(0,0,0,.3),0 0 10px rgba(212,168,67,.15);border-color:rgba(212,168,67,.3); }
+  50%     { box-shadow:inset 0 0 30px rgba(0,0,0,.3),0 0 24px rgba(212,168,67,.35);border-color:rgba(212,168,67,.55); }
+}
+.hero-sub { text-shadow:0 1px 0 rgba(0,0,0,.6);font-variant-numeric:tabular-nums; }
+
+/* 3. Battle Scene */
+.battle-field {
+  background:radial-gradient(ellipse at 50% 80%,rgba(26,30,46,.6),transparent 70%);
+  border-radius:16px;padding:24px 8px;position:relative;
+}
+.battle-field::before {
+  content:'';position:absolute;inset:0;border-radius:16px;pointer-events:none;
+  background:linear-gradient(180deg,transparent 50%,rgba(10,14,26,.5) 100%);
+}
+.fighter-row {
+  background:linear-gradient(135deg,rgba(26,30,46,.9),rgba(17,24,39,.85));
+  border:1px solid rgba(255,255,255,.05);box-shadow:0 2px 8px rgba(0,0,0,.3);
+}
+.fighter-row.acting { box-shadow:0 0 16px rgba(212,168,67,.45),0 0 40px rgba(212,168,67,.15);border-color:rgba(212,168,67,.3); }
+.bar { background:rgba(255,255,255,.06);box-shadow:inset 0 1px 2px rgba(0,0,0,.4); }
+.hp-fill { background:linear-gradient(90deg,#c04040,#e05555);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 0 6px rgba(192,64,64,.3); }
+.rage-fill { background:linear-gradient(90deg,var(--gold),#f5d98a);box-shadow:inset 0 1px 0 rgba(255,255,255,.25); }
+.dmg-popup { font-size:18px;color:var(--cinnabar);text-shadow:0 1px 3px rgba(0,0,0,.7);animation:dmgPremium 1s forwards; }
+@keyframes dmgPremium {
+  0%  { opacity:1;transform:translateY(0) scale(1); }
+  20% { transform:translateY(-8px) scale(1.3); }
+  100%{ opacity:0;transform:translateY(-35px) scale(.9); }
+}
+.dmg-popup.crit { color:var(--gold)!important;font-size:22px;animation:dmgCrit 1s forwards; }
+@keyframes dmgCrit {
+  0%  { opacity:1;transform:translateY(0) scale(1); }
+  10% { transform:translateY(-4px) scale(1.5) translateX(-3px); }
+  20% { transform:translateY(-8px) scale(1.4) translateX(3px); }
+  30% { transform:translateY(-12px) scale(1.3) translateX(-2px); }
+  100%{ opacity:0;transform:translateY(-40px) scale(.85); }
+}
+.fighter-row.skill-active::after {
+  content:'';position:absolute;inset:-4px;border-radius:14px;pointer-events:none;
+  background:radial-gradient(circle,rgba(212,168,67,.3),transparent 70%);animation:skillBurst .6s ease-out forwards;
+}
+@keyframes skillBurst { from{opacity:1;transform:scale(.8)} to{opacity:0;transform:scale(1.6)} }
+
+/* 6. Buttons */
+.btn-primary {
+  background:linear-gradient(135deg,#d4a843,#b8922e);color:#0a0e1a;font-weight:700;
+  box-shadow:0 2px 8px rgba(212,168,67,.25),inset 0 1px 0 rgba(255,255,255,.15);position:relative;overflow:hidden;
+}
+.btn-primary:active { transform:scale(.95);box-shadow:0 1px 4px rgba(212,168,67,.2); }
+.btn-primary::after {
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at var(--x,50%) var(--y,50%),rgba(255,255,255,.2),transparent 60%);opacity:0;transition:opacity .3s;
+}
+.btn-primary:active::after { opacity:1; }
+.btn-gold {
+  background:linear-gradient(135deg,#f5d98a,#d4a843);color:#0a0e1a;font-weight:700;
+  box-shadow:0 2px 8px rgba(212,168,67,.3),inset 0 1px 0 rgba(255,255,255,.2);
+}
+.btn-gold:active { transform:scale(.95); }
+
+/* 7. Gacha Reveal */
+.destiny-modal { background:rgba(5,7,13,.92);backdrop-filter:blur(8px); }
+.destiny-content {
+  background:linear-gradient(145deg,#111827,#1a1e2e);border:1px solid rgba(212,168,67,.35);
+  box-shadow:0 0 60px rgba(212,168,67,.15),0 0 120px rgba(212,168,67,.05),inset 0 1px 0 rgba(255,255,255,.05);
+}
+.recruit-success { animation:gachaReveal 1.5s ease-out; }
+@keyframes gachaReveal {
+  0%  { box-shadow:0 0 0 rgba(212,168,67,0);transform:scale(.7);opacity:0; }
+  30% { box-shadow:0 0 60px rgba(212,168,67,.5),inset 0 0 30px rgba(212,168,67,.2);transform:scale(1.05);opacity:1; }
+  50% { box-shadow:0 0 80px rgba(212,168,67,.6),0 0 120px rgba(212,168,67,.15);transform:scale(1); }
+  100%{ box-shadow:0 0 20px rgba(212,168,67,.2);transform:scale(1); }
+}
+@keyframes goldenCrack {
+  0%  { box-shadow:inset 0 0 100px rgba(0,0,0,.9); }
+  40% { box-shadow:inset 0 0 60px rgba(0,0,0,.7),0 0 40px rgba(212,168,67,.4); }
+  70% { box-shadow:inset 0 0 20px rgba(0,0,0,.3),0 0 80px rgba(212,168,67,.6); }
+  100%{ box-shadow:inset 0 0 0 transparent,0 0 40px rgba(212,168,67,.2); }
+}
+.gacha-hero { animation:goldenCrack 1.2s ease-out; }
+.gacha-hero .big-emoji { animation:cardFlyIn .8s cubic-bezier(.175,.885,.32,1.275) .3s both; }
+@keyframes cardFlyIn { from{transform:scale(0) rotate(-15deg);opacity:0} to{transform:scale(1) rotate(0);opacity:1} }
+.sincerity-fill { background:linear-gradient(90deg,var(--jade),var(--gold));box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 0 8px rgba(212,168,67,.2); }
+
+/* Stage items */
+.stage-item { background:linear-gradient(135deg,rgba(26,30,46,.9),rgba(17,24,39,.85));border:1px solid rgba(255,255,255,.06); }
+.stage-item.boss { border-color:rgba(212,168,67,.35);box-shadow:0 0 16px rgba(212,168,67,.1); }
+.stage-item.current { border-color:rgba(212,168,67,.4);box-shadow:0 0 16px rgba(212,168,67,.15); }
+.stage-num { background:linear-gradient(135deg,var(--gold),#b8922e);color:#0a0e1a;box-shadow:0 2px 6px rgba(0,0,0,.3); }
+
+/* Destiny choices */
+.destiny-option {
+  background:linear-gradient(135deg,rgba(26,30,46,.9),rgba(17,24,39,.85));
+  border:1px solid rgba(212,168,67,.1);box-shadow:0 2px 6px rgba(0,0,0,.25);
+}
+.destiny-option:hover { border-color:rgba(212,168,67,.35); }
+
+/* Progress bars */
+.progress { background:rgba(255,255,255,.04);box-shadow:inset 0 1px 2px rgba(0,0,0,.3); }
+.progress-fill { background:linear-gradient(90deg,var(--gold),#f5d98a)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.2); }
+
+/* Tutorial */
+.tutorial-overlay { background:rgba(5,7,13,.97); }
+.tutorial-feature { background:linear-gradient(135deg,rgba(17,24,39,.9),rgba(26,30,46,.8));border-color:rgba(212,168,67,.1); }
+.step-dot.active { background:var(--gold);box-shadow:0 0 8px rgba(212,168,67,.4); }
+
+/* Toast */
+.toast { background:linear-gradient(135deg,#111827,#1a1e2e);border:1px solid rgba(212,168,67,.3);box-shadow:0 4px 24px rgba(0,0,0,.6),0 0 12px rgba(212,168,67,.1); }
+
+/* Leaderboard */
+.lb-entry { background:linear-gradient(145deg,rgba(17,24,39,.9),rgba(26,30,46,.85));border-color:rgba(255,255,255,.05); }
+.lb-entry.lb-player { border-color:rgba(212,168,67,.3);box-shadow:0 0 20px rgba(212,168,67,.1);background:linear-gradient(135deg,rgba(17,24,39,.9),rgba(212,168,67,.06)); }
+#arena-rank-card { background:linear-gradient(135deg,rgba(17,24,39,.95),rgba(212,168,67,.06));border-color:rgba(212,168,67,.15); }
+
+/* Hero detail */
+.hd-emoji { box-shadow:0 0 30px rgba(0,0,0,.5),inset 0 0 20px rgba(0,0,0,.3); }
+.hd-name { letter-spacing:3px;text-shadow:0 0 16px rgba(212,168,67,.2); }
+.hd-stars { text-shadow:0 0 8px rgba(212,168,67,.4); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:3px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(212,168,67,.25);border-radius:3px; }
+* { scrollbar-width:thin;scrollbar-color:rgba(212,168,67,.25) transparent; }
+
+/* Idle card shimmer */
+#idle-card { border-color:rgba(212,168,67,.2);position:relative;overflow:hidden; }
+#idle-card::after {
+  content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:linear-gradient(45deg,transparent 40%,rgba(212,168,67,.06) 50%,transparent 60%);animation:shimmer 4s ease-in-out infinite;
+}
+@keyframes shimmer { 0%,100%{transform:translateX(-100%)} 50%{transform:translateX(100%)} }
+
+/* Quick entry grid */
+#page-home .hero-card { flex-direction:column;text-align:center;padding:16px 8px; }
