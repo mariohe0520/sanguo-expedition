@@ -150,6 +150,66 @@ const HEROES = {
     skill: { name:'长枪阵', desc:'对前排全体130%ATK伤害', type:'damage', target:'front_row', value:1.3, rage:65 },
     passive: { name:'枪林', desc:'被骑兵攻击时反击50%ATK', condition:'attacked_by_cavalry', value:0.5 },
     emoji:'🔱', lore:'列阵如林的枪兵精锐'
+  },
+
+  // ── Chapter 3 enemies ──────────────────────────
+  navy_soldier: {
+    id:'navy_soldier', name:'水军', title:'',
+    faction:'qun', unit:'spear', rarity:2,
+    baseStats: { hp:700, atk:75, def:55, spd:45, int:30 },
+    skill: { name:'水战突刺', desc:'对单体140%ATK伤害，水上地形+20%', type:'damage', target:'single_enemy', value:1.4, terrain_bonus:{river:0.2}, rage:65 },
+    passive: { name:'水性', desc:'河流地形DEF+15%', condition:'terrain_river', stat:'def', pct:15 },
+    emoji:'⛵', lore:'精通水战的曹军水师'
+  },
+  fire_archer: {
+    id:'fire_archer', name:'火弓手', title:'',
+    faction:'qun', unit:'archer', rarity:2,
+    baseStats: { hp:550, atk:95, def:35, spd:60, int:45 },
+    skill: { name:'火矢', desc:'对单体160%ATK伤害+灼烧2回合(每回合10%ATK)', type:'damage', target:'single_enemy', value:1.6, dot:{type:'burn',pct:0.1,duration:2}, rage:70 },
+    passive: { name:'引火', desc:'风天气ATK+20%', condition:'weather_wind', stat:'atk', pct:20 },
+    emoji:'🔥', lore:'箭尖燃火，百发百中'
+  },
+  caoren: {
+    id:'caoren', name:'曹仁', title:'铁壁将军',
+    faction:'wei', unit:'shield', rarity:4,
+    baseStats: { hp:1400, atk:70, def:140, spd:40, int:65 },
+    skill: { name:'铁壁', desc:'全队DEF+35%持续3回合', type:'buff', target:'all_ally', stat:'def', pct:35, duration:3, rage:100 },
+    passive: { name:'坚守不退', desc:'HP<50%时DEF+30%', condition:'hp_below_50', stat:'def', pct:30 },
+    emoji:'🏰', lore:'曹操宗族大将，善守城池'
+  },
+  zhouyu: {
+    id:'zhouyu', name:'周瑜', title:'美周郎',
+    faction:'wu', unit:'mage', rarity:5,
+    baseStats: { hp:900, atk:75, def:70, spd:85, int:145 },
+    skill: { name:'火烧赤壁', desc:'对全体造成200%INT伤害+灼烧2回合', type:'magic', target:'all_enemy', value:2.0, dot:{type:'burn',pct:0.15,duration:2}, rage:110 },
+    passive: { name:'英才', desc:'队伍INT总和最高时全队INT+10%', condition:'team_highest_int', stat:'int', pct:10 },
+    emoji:'🔥', lore:'谈笑间，樯橹灰飞烟灭'
+  },
+
+  // ── Chapter 4 enemies ──────────────────────────
+  strategist: {
+    id:'strategist', name:'军师', title:'',
+    faction:'qun', unit:'mage', rarity:2,
+    baseStats: { hp:500, atk:40, def:35, spd:65, int:110 },
+    skill: { name:'妙计', desc:'全体友军ATK+20%持续2回合', type:'buff', target:'all_ally', stat:'atk', pct:20, duration:2, rage:70 },
+    passive: { name:'智谋', desc:'每回合30%概率降低1名敌人DEF-15%', condition:'turn_start', chance:30, target:'random_enemy', stat:'def', pct:-15 },
+    emoji:'📜', lore:'运筹帷幄的幕后智囊'
+  },
+  crossbow_corps: {
+    id:'crossbow_corps', name:'连弩队', title:'',
+    faction:'qun', unit:'archer', rarity:2,
+    baseStats: { hp:600, atk:100, def:40, spd:50, int:35 },
+    skill: { name:'齐射', desc:'对全体敌人110%ATK伤害', type:'damage', target:'all_enemy', value:1.1, rage:80 },
+    passive: { name:'箭雨', desc:'攻击时20%概率攻击相邻单位', condition:'on_attack', chance:20, splash:true },
+    emoji:'🎯', lore:'诸葛连弩改良的精锐弩兵'
+  },
+  simayi: {
+    id:'simayi', name:'司马懿', title:'冢虎',
+    faction:'wei', unit:'mage', rarity:5,
+    baseStats: { hp:1100, atk:65, def:120, spd:60, int:150 },
+    skill: { name:'鹰视狼顾', desc:'复制对方最强武将技能使用', type:'mirror', target:'strongest_enemy', rage:110 },
+    passive: { name:'隐忍', desc:'受到致命伤害时50%概率存活(HP=1)', condition:'on_lethal', chance:50 },
+    emoji:'🦅', lore:'司马懿善忍，终成大器'
   }
 };
 

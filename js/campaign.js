@@ -34,6 +34,42 @@ const Campaign = {
         { id: 9, name: '虎牢关外', enemies: ['elite_spear','elite_cavalry','shield_militia','mage_acolyte','elite_spear'], reward: { gold: 450, exp: 280 }, branch: 'B' },
         { id: 10, name: '三英战吕布', enemies: ['elite_cavalry','elite_spear','lvbu','mage_acolyte','elite_cavalry'], boss: true, reward: { gold: 800, exp: 500, hero_shard: 'lvbu' } },
       ]
+    },
+    {
+      id: 3, name: '赤壁', icon: '🔥', terrain: 'river', weather: 'fog',
+      desc: '东风起，火烧连环。天下三分之战。',
+      stages: [
+        // --- 浓雾笼江 (stages 21-24, fog) ---
+        { id: 1, name: '赤壁前哨', enemies: ['navy_soldier','soldier','navy_soldier','archer_recruit'], reward: { gold: 800, exp: 500 }, weather: 'fog' },
+        { id: 2, name: '江上巡逻', enemies: ['navy_soldier','fire_archer','navy_soldier','soldier'], reward: { gold: 850, exp: 550 }, weather: 'fog' },
+        { id: 3, name: '水寨突袭', enemies: ['navy_soldier','fire_archer','navy_soldier','fire_archer'], reward: { gold: 900, exp: 600 }, weather: 'fog' },
+        { id: 4, name: '雾中伏击', enemies: ['fire_archer','navy_soldier','fire_archer','navy_soldier','fire_archer'], reward: { gold: 950, exp: 650 }, weather: 'fog', elite: true },
+        // --- 东风渐起 (stages 25-30, wind) ---
+        { id: 5, name: '曹仁守江', enemies: ['navy_soldier','elite_spear','caoren','fire_archer','shield_militia'], boss: true, reward: { gold: 1100, exp: 750 }, weather: 'wind' },
+        // --- 天命抉择 #3: 火攻还是水路封锁？---
+        { id: 6, name: '火船冲阵', enemies: ['fire_archer','fire_archer','navy_soldier','fire_archer','navy_soldier'], reward: { gold: 1050, exp: 700 }, weather: 'wind', branch: 'A' },
+        { id: 7, name: '烈焰焚江', enemies: ['fire_archer','fire_archer','navy_soldier','fire_archer','fire_archer'], reward: { gold: 1150, exp: 780 }, weather: 'wind', branch: 'A' },
+        { id: 8, name: '水路封锁', enemies: ['navy_soldier','navy_soldier','elite_spear','navy_soldier','shield_militia'], reward: { gold: 1050, exp: 700 }, weather: 'wind', branch: 'B' },
+        { id: 9, name: '铁索困敌', enemies: ['navy_soldier','elite_spear','navy_soldier','shield_militia','navy_soldier'], reward: { gold: 1150, exp: 780 }, weather: 'wind', branch: 'B' },
+        { id: 10, name: '曹操败走', enemies: ['elite_cavalry','fire_archer','caocao','elite_spear','navy_soldier'], boss: true, reward: { gold: 1500, exp: 1000, hero_shard: 'zhouyu' }, weather: 'wind', mechanic: 'retreat', retreat_hp_pct: 20 },
+      ]
+    },
+    {
+      id: 4, name: '五丈原', icon: '📜', terrain: 'plains', weather: 'clear',
+      desc: '出师未捷身先死，长使英雄泪满襟。',
+      stages: [
+        { id: 1, name: '五丈原前哨', enemies: ['strategist','soldier','crossbow_corps','soldier'], reward: { gold: 1500, exp: 1000 } },
+        { id: 2, name: '渭水之畔', enemies: ['elite_spear','strategist','crossbow_corps','soldier'], reward: { gold: 1600, exp: 1080 } },
+        { id: 3, name: '木牛流马', enemies: ['crossbow_corps','strategist','elite_spear','crossbow_corps'], reward: { gold: 1700, exp: 1160 } },
+        { id: 4, name: '上方谷诱敌', enemies: ['strategist','crossbow_corps','elite_cavalry','strategist','crossbow_corps'], reward: { gold: 1800, exp: 1250 }, elite: true, fog_of_war: true },
+        { id: 5, name: '司马拒战', enemies: ['crossbow_corps','strategist','simayi','elite_spear','strategist'], boss: true, reward: { gold: 2000, exp: 1400 } },
+        // --- 天命抉择 #4: 孔明遗计还是正面强攻？---
+        { id: 6, name: '孔明遗计', enemies: ['strategist','crossbow_corps','strategist','fire_archer','crossbow_corps'], reward: { gold: 1900, exp: 1300 }, fog_of_war: true, branch: 'A' },
+        { id: 7, name: '星落秋风', enemies: ['strategist','fire_archer','strategist','crossbow_corps','strategist'], reward: { gold: 2050, exp: 1420 }, fog_of_war: true, branch: 'A' },
+        { id: 8, name: '正面强攻', enemies: ['elite_cavalry','crossbow_corps','elite_spear','crossbow_corps','elite_cavalry'], reward: { gold: 1900, exp: 1300 }, branch: 'B' },
+        { id: 9, name: '铁壁突破', enemies: ['elite_spear','crossbow_corps','elite_cavalry','strategist','crossbow_corps'], reward: { gold: 2050, exp: 1420 }, branch: 'B' },
+        { id: 10, name: '司马懿决战', enemies: ['strategist','crossbow_corps','simayi','elite_cavalry','strategist'], boss: true, reward: { gold: 2500, exp: 1800, hero_shard: 'simayi' }, mechanic: 'mirror' },
+      ]
     }
   ],
 
@@ -58,6 +94,26 @@ const Campaign = {
         { id: 'B', text: '⚔️ 追！斩草除根', desc: '穷追吕布，获得战利品和精锐装备', reward: { gold: 800, equip_hint: 'fangtian_halberd' }, stages: [8, 9] }
       ],
       lore: '仁者救人，勇者杀敌。虎牢关下，你的选择将改变天命。'
+    },
+    3: {
+      trigger_after: 5, // After mini-boss 曹仁
+      title: '天命之选：赤壁之谋',
+      desc: '曹仁已退，曹军大营就在江对岸。周瑜献火攻之计，庞统献铁索连环。然火攻虽猛，江边百姓恐遭殃及。',
+      options: [
+        { id: 'A', text: '🔥 火攻！借东风焚尽曹船', desc: '火烧连环船，造成毁灭性打击，但沿江村落难免波及', reward: { atk_bonus: 30, karma: -20 }, stages: [6, 7] },
+        { id: 'B', text: '🌊 水路封锁，困死曹军', desc: '切断补给水路，迫曹军不战自溃。耗时更长但保全百姓', reward: { loyalty: 100, def_bonus: 20 }, stages: [8, 9] }
+      ],
+      lore: '火光冲天还是静水流深？赤壁之上，仁与狠一念之间。'
+    },
+    4: {
+      trigger_after: 5, // After mini-boss 司马懿
+      title: '天命之选：五丈原的抉择',
+      desc: '孔明病重，星落秋风五丈原。他留下最后一计，施展需燃尽自身生命之火。或可不用此计，以大军正面强攻。',
+      options: [
+        { id: 'A', text: '📜 施孔明遗计，以命换胜', desc: '使用诸葛亮最后的计谋，威力惊人但主力武将损失大量HP', reward: { int_bonus: 40, hero_cost: { stat: 'hp', pct: -30 } }, stages: [6, 7] },
+        { id: 'B', text: '⚔️ 正面强攻，堂堂正正', desc: '不靠奇谋，以绝对兵力碾压。战斗更难但无额外代价', reward: { atk_bonus: 25, gold: 1500 }, stages: [8, 9] }
+      ],
+      lore: '鞠躬尽瘁，死而后已。丞相的遗志，由你来完成。'
     }
   },
 
