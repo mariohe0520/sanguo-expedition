@@ -368,6 +368,22 @@ const Battle = {
       }
     }
 
+    // Hero affinity bonuses (羁绊)
+    if (typeof getActiveAffinities === 'function') {
+      const playerIds = this.state.player.filter(f => f).map(f => f.id);
+      const affinities = getActiveAffinities(playerIds);
+      for (const aff of affinities) {
+        for (const f of this.state.player.filter(x => x && aff.heroes.includes(x.id))) {
+          if (aff.bonus.all_pct)  { f.atk = Math.floor(f.atk * (1 + aff.bonus.all_pct / 100)); f.def = Math.floor(f.def * (1 + aff.bonus.all_pct / 100)); f.hp = Math.floor(f.hp * (1 + aff.bonus.all_pct / 100)); f.maxHp = Math.floor(f.maxHp * (1 + aff.bonus.all_pct / 100)); f.int = Math.floor(f.int * (1 + aff.bonus.all_pct / 100)); f.spd = Math.floor(f.spd * (1 + aff.bonus.all_pct / 100)); }
+          if (aff.bonus.atk_pct) { f.atk = Math.floor(f.atk * (1 + aff.bonus.atk_pct / 100)); }
+          if (aff.bonus.def_pct) { f.def = Math.floor(f.def * (1 + aff.bonus.def_pct / 100)); }
+          if (aff.bonus.int_pct) { f.int = Math.floor(f.int * (1 + aff.bonus.int_pct / 100)); }
+          if (aff.bonus.hp_pct)  { f.hp = Math.floor(f.hp * (1 + aff.bonus.hp_pct / 100)); f.maxHp = Math.floor(f.maxHp * (1 + aff.bonus.hp_pct / 100)); }
+          if (aff.bonus.spd_pct) { f.spd = Math.floor(f.spd * (1 + aff.bonus.spd_pct / 100)); }
+        }
+      }
+    }
+
     // Faction synergy
     for (const side of ['player', 'enemy']) {
       const team = this.state[side].filter(f => f);

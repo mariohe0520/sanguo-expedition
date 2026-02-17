@@ -246,8 +246,7 @@ const HEROES = {
     skill: { name:'护粮', desc:'保护补给线，全队回复10%HP', type:'heal', target:'all_ally', value:0.1, rage:65 },
     passive: { name:'辎重守卫', desc:'补给线附近DEF+25%', condition:'near_supply', stat:'def', pct:25 },
     emoji:'📦', lore:'守护粮草辎重的坚实后盾'
-  }
-};
+  },
 
   // ══════════════════════════════════════════
   // "Coming Soon" heroes — 23 placeholders

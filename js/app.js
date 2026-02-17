@@ -298,7 +298,9 @@ const App = {
   // ===== NAVIGATION =====
   switchPage(page) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-' + page).classList.add('active');
+    const pageEl = document.getElementById('page-' + page);
+    if (!pageEl) { console.warn('Page not found: page-' + page); return; }
+    pageEl.classList.add('active');
     const navPages = ['home', 'campaign', 'dungeon', 'arena', 'roster', 'gacha'];
     document.querySelectorAll('.nav-item').forEach((n, i) => {
       n.classList.toggle('active', navPages[i] === page);
@@ -1513,6 +1515,224 @@ const App = {
       '</div>';
   },
 
+  // ===== TUTORIAL =====
+  tutorialStep: 0,
+
+  advanceTutorial() {
+    const steps = document.querySelectorAll('.tutorial-step');
+    const dots = document.querySelectorAll('.step-dot');
+    if (this.tutorialStep < steps.length - 1) {
+      steps[this.tutorialStep].classList.remove('active');
+      dots[this.tutorialStep].classList.remove('active');
+      this.tutorialStep++;
+      steps[this.tutorialStep].classList.add('active');
+      dots[this.tutorialStep].classList.add('active');
+    }
+  },
+
+  closeTutorial() {
+    document.getElementById('tutorial-overlay').classList.add('hidden');
+    Storage._set('tutorialDone', true);
+  },
+
+  showTutorialIfNew() {
+    const done = Storage._get('tutorialDone', false);
+    if (!done) {
+      document.getElementById('tutorial-overlay').classList.remove('hidden');
+    }
+  },
+
+  // ===== EQUIPMENT SECTION (Hero Detail) =====
+  _renderHeroEquipSection(heroId) {
+    const equipped = Storage.getEquipped(heroId);
+    const inv = Storage.getEquipmentInventory();
+    let html = '<div class="card">' +
+      '<div style="font-size:14px;font-weight:600;margin-bottom:12px">🎒 装备栏</div>';
+
+    for (const [slot, info] of Object.entries(Equipment.SLOTS)) {
+      const uid = equipped[slot];
+      const item = uid ? Storage.getEquipmentByUid(uid) : null;
+      const tmpl = item ? Equipment.TEMPLATES[item.templateId] : null;
+      const rarInfo = tmpl ? Equipment.RARITIES[tmpl.rarity] : null;
+      const stats = item ? Equipment.getEquipStats(item) : null;
+
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--card2);border-radius:10px;margin-bottom:6px">' +
+        '<div style="font-size:20px;min-width:32px;text-align:center">' + info.emoji + '</div>' +
+        '<div style="flex:1">' +
+          '<div style="font-size:13px;font-weight:600">' + info.name + '</div>';
+      if (tmpl) {
+        const statStr = Object.entries(stats).map(([k,v]) => k.toUpperCase() + '+' + v).join(' ');
+        html += '<div style="font-size:12px;color:' + (rarInfo?.color || 'var(--dim)') + '">' +
+          (tmpl.emoji || '') + ' ' + tmpl.name + ' +' + item.level + ' (' + (rarInfo?.label || '') + ')</div>' +
+          '<div style="font-size:11px;color:var(--dim)">' + statStr + '</div>';
+      } else {
+        html += '<div style="font-size:12px;color:var(--dim)">空</div>';
+      }
+      html += '</div>';
+
+      if (tmpl) {
+        html += '<button class="btn btn-sm" onclick="App.unequipItem(\'' + heroId + '\',\'' + slot + '\')" style="background:var(--card);color:var(--hp);font-size:11px">卸下</button>';
+      }
+      html += '</div>';
+    }
+
+    // Set bonus display
+    const eqData = Equipment.getHeroEquipmentStats(heroId);
+    if (eqData.activeBonuses.length > 0) {
+      html += '<div style="margin-top:8px;padding:8px;background:rgba(251,191,36,.08);border-radius:8px">';
+      for (const b of eqData.activeBonuses) {
+        html += '<div style="font-size:12px;color:var(--gold)">✨ ' + b.name + ': ' + b.desc + '</div>';
+      }
+      html += '</div>';
+    }
+
+    // Available equipment to equip
+    const unequipped = inv.filter(e => {
+      // Not equipped on anyone
+      const allHeroes = Object.keys(Storage.getRoster());
+      for (const hid of allHeroes) {
+        const eq = Storage.getEquipped(hid);
+        if (Object.values(eq).includes(e.uid)) return false;
+      }
+      return true;
+    });
+
+    if (unequipped.length > 0) {
+      html += '<div style="font-size:13px;font-weight:600;margin-top:12px;margin-bottom:8px">可装备</div>';
+      for (const item of unequipped.slice(0, 10)) {
+        const tmpl = Equipment.TEMPLATES[item.templateId];
+        if (!tmpl) continue;
+        const rarInfo = Equipment.RARITIES[tmpl.rarity];
+        const stats = Equipment.getEquipStats(item);
+        const statStr = Object.entries(stats).map(([k,v]) => k.toUpperCase() + '+' + v).join(' ');
+        html += '<div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--card2);border-radius:8px;margin-bottom:4px;cursor:pointer" ' +
+          'onclick="App.equipItem(\'' + heroId + '\',\'' + item.uid + '\')">' +
+          '<span style="font-size:18px">' + (tmpl.emoji || '📦') + '</span>' +
+          '<div style="flex:1">' +
+            '<div style="font-size:12px;color:' + (rarInfo?.color || 'var(--dim)') + '">' + tmpl.name + ' +' + item.level + '</div>' +
+            '<div style="font-size:10px;color:var(--dim)">' + statStr + '</div>' +
+          '</div>' +
+          '<div style="font-size:11px;color:var(--accent)">装备</div>' +
+        '</div>';
+      }
+    }
+
+    html += '</div>';
+    return html;
+  },
+
+  equipItem(heroId, equipUid) {
+    const result = Equipment.equipToHero(heroId, equipUid);
+    if (result.error) { this.toast('❌ ' + result.error); return; }
+    this.toast('✅ 装备成功');
+    this.renderHeroDetail(heroId);
+    // Check first equip achievement
+    if (typeof Achievements !== 'undefined') {
+      const newAch = Achievements.checkAll();
+      if (newAch.length > 0) this.toast('🏅 新成就: ' + newAch.map(a => a.name).join(', '));
+    }
+  },
+
+  unequipItem(heroId, slot) {
+    Equipment.unequipFromHero(heroId, slot);
+    this.toast('已卸下装备');
+    this.renderHeroDetail(heroId);
+  },
+
+  // ===== EQUIPMENT INVENTORY PAGE =====
+  renderEquipmentPage() {
+    const content = document.getElementById('equipment-content');
+    if (!content) return;
+    const inv = Storage.getEquipmentInventory();
+    const roster = Storage.getRoster();
+
+    let html = '';
+    if (inv.length === 0) {
+      html = '<div class="card text-center text-dim" style="padding:40px">还没有装备，通关关卡获取！</div>';
+    } else {
+      for (const item of inv) {
+        const tmpl = Equipment.TEMPLATES[item.templateId];
+        if (!tmpl) continue;
+        const rarInfo = Equipment.RARITIES[tmpl.rarity];
+        const stats = Equipment.getEquipStats(item);
+        const statStr = Object.entries(stats).map(([k,v]) => k.toUpperCase() + '+' + v).join(' ');
+
+        // Check if equipped
+        let equippedOn = null;
+        for (const hid of Object.keys(roster)) {
+          const eq = Storage.getEquipped(hid);
+          if (Object.values(eq).includes(item.uid)) { equippedOn = HEROES[hid]; break; }
+        }
+
+        html += '<div class="card" style="padding:12px">' +
+          '<div class="flex justify-between items-center">' +
+            '<div class="flex items-center gap-8">' +
+              '<span style="font-size:24px">' + (tmpl.emoji || '📦') + '</span>' +
+              '<div>' +
+                '<div style="font-size:14px;font-weight:600;color:' + (rarInfo?.color || 'var(--text)') + '">' + tmpl.name + ' +' + item.level + '</div>' +
+                '<div style="font-size:11px;color:var(--dim)">' + (Equipment.SLOTS[tmpl.slot]?.name || '') + ' · ' + rarInfo.label + '</div>' +
+                '<div style="font-size:11px;color:var(--dim)">' + statStr + '</div>' +
+                (equippedOn ? '<div style="font-size:11px;color:var(--accent)">装备于: ' + equippedOn.emoji + ' ' + equippedOn.name + '</div>' : '') +
+              '</div>' +
+            '</div>' +
+            '<div>' +
+              '<button class="btn btn-sm" onclick="App.sellEquipment(\'' + item.uid + '\')" style="background:var(--card2);color:var(--hp);font-size:11px">出售</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }
+    }
+    content.innerHTML = html;
+  },
+
+  sellEquipment(uid) {
+    const gold = Equipment.sell(uid);
+    if (gold > 0) {
+      this.toast('💰 出售获得 ' + gold + ' 金币');
+      this.updateHeader();
+      this.renderEquipmentPage();
+    }
+  },
+
+  // ===== ACHIEVEMENTS PAGE =====
+  renderAchievementsPage() {
+    const content = document.getElementById('achievements-content');
+    if (!content) return;
+    const state = Achievements.getState();
+    let html = '';
+
+    for (const def of Achievements.DEFS) {
+      const entry = state.unlocked[def.id];
+      const completed = !!entry;
+      const claimed = entry?.claimed;
+
+      html += '<div class="daily-mission' + (claimed ? ' dm-claimed' : completed ? ' dm-complete' : '') + '">' +
+        '<div class="dm-icon">' + def.icon + '</div>' +
+        '<div class="dm-info">' +
+          '<div class="dm-name">' + def.name + '</div>' +
+          '<div class="dm-desc">' + def.desc + '</div>' +
+        '</div>' +
+        '<div class="dm-reward">' +
+          (claimed ? '<span class="dm-done">✅</span>' :
+           completed ? '<button class="btn btn-sm btn-gold" onclick="App.claimAchievement(\'' + def.id + '\')">' +
+             (def.reward.gold ? '💰' + def.reward.gold : '') + (def.reward.gems ? '💎' + def.reward.gems : '') + '</button>' :
+           '<span class="text-dim" style="font-size:12px">🔒</span>') +
+        '</div>' +
+      '</div>';
+    }
+    content.innerHTML = html;
+  },
+
+  claimAchievement(id) {
+    const success = Achievements.claim(id);
+    if (success) {
+      const def = Achievements.DEFS.find(d => d.id === id);
+      this.toast('🏅 领取成就奖励: ' + def.name);
+      this.updateHeader();
+      this.renderAchievementsPage();
+    }
+  },
+
   // ===== HERO ROSTER (updated for coming soon) =====
   renderRosterExtended() {
     const roster = Storage.getRoster();
@@ -1588,8 +1808,18 @@ App.startBattle = async function() {
       detailText += ' · 进入下一层';
     } else if (stage._dailyDungeon) {
       Dungeon.recordDailyAttempt(stage._dailyDungeon);
+      // Equipment drop for material dungeon
+      if (stage._dailyDungeon === 'material' && typeof Equipment !== 'undefined') {
+        const drop = Equipment.generateDrop(3, false);
+        if (drop) {
+          Storage.addEquipment(drop);
+          const tmpl = Equipment.TEMPLATES[drop.templateId];
+          const rarInfo = Equipment.RARITIES[tmpl?.rarity || 1];
+          detailText += '\n🎒 获得: ' + (tmpl?.emoji || '') + ' ' + (tmpl?.name || '???') + ' (' + rarInfo.label + ')';
+        }
+      }
       // Add pass XP
-      Seasonal.addPassXP(50);
+      if (typeof Seasonal !== 'undefined') Seasonal.addPassXP(50);
     } else if (stage._arenaFight) {
       const opp = stage._arenaOpponent;
       const arenaState = Arena.recordFight(true, opp.rating);
@@ -1608,15 +1838,32 @@ App.startBattle = async function() {
     } else {
       // Normal campaign
       Campaign.completeStage(stage.id);
+      // Equipment drop from campaign
+      if (typeof Equipment !== 'undefined') {
+        const chapter = Campaign.getCurrentChapter();
+        const drop = Equipment.generateDrop(chapter.id, !!stage.boss);
+        if (drop) {
+          Storage.addEquipment(drop);
+          const tmpl = Equipment.TEMPLATES[drop.templateId];
+          const rarInfo = Equipment.RARITIES[tmpl?.rarity || 1];
+          detailText += '\n🎒 获得: ' + (tmpl?.emoji || '') + ' ' + (tmpl?.name || '???') + ' (' + rarInfo.label + ')';
+        }
+      }
     }
 
-    document.getElementById('result-detail').textContent = detailText;
+    document.getElementById('result-detail').innerHTML = detailText.replace(/\n/g, '<br>');
 
     Storage.recordWin();
     DailyMissions.trackProgress('stages');
     if (stage.boss) {
       Storage.recordBossWin();
       DailyMissions.trackProgress('boss');
+    }
+
+    // Check achievements
+    if (typeof Achievements !== 'undefined') {
+      const newAch = Achievements.checkAll();
+      if (newAch.length > 0) setTimeout(() => this.toast('🏅 新成就: ' + newAch.map(a => a.name).join(', '), 3000), 1500);
     }
   } else {
     document.getElementById('result-icon').textContent = '💀';
@@ -1674,6 +1921,9 @@ const _originalInit = App.init;
 App.init = function() {
   Storage.trackPlayTime();
   _originalInit.call(this);
+
+  // Show tutorial for new players
+  this.showTutorialIfNew();
 
   // After original roster render, add coming soon heroes
   const origRenderRoster = this.renderRoster.bind(this);
