@@ -263,6 +263,92 @@ const Gacha = {
   getVisitStatus(heroId) {
     const state = Storage.getGachaState();
     return state.visits[heroId] || { sincerity: 0, dialogueIdx: 0, attempts: 0 };
+  },
+
+  // ===== STANDARD BANNER PULL SYSTEM =====
+  PULL_COST: 300,        // single pull gold cost
+  TEN_PULL_COST: 2700,   // 10-pull gold cost (10% off)
+  SSR_PITY: 90,          // guaranteed SSR at 90 pulls
+  SR_SOFT_PITY: 10,      // first 10-pull guarantees SR+
+
+  SSR_POOL: ['guanyu', 'caocao', 'zhaoyun', 'lvbu'],       // 5★
+  SR_POOL: ['liubei', 'zhangfei', 'sunshangxiang', 'diaochan', 'zhangjiao'], // 4★
+  R_POOL: ['huangzhong'],  // 3★
+
+  // Base rates: SSR 2%, SR 10%, R 88%
+  _singlePull(state, guaranteeSR) {
+    state.pity = (state.pity || 0) + 1;
+    state.totalPulls = (state.totalPulls || 0) + 1;
+
+    let rarity, pool;
+
+    // Hard pity at 90 pulls
+    if (state.pity >= this.SSR_PITY) {
+      rarity = 5; pool = this.SSR_POOL;
+      state.pity = 0;
+    } else if (guaranteeSR) {
+      // Guaranteed SR+ for first 10-pull or SR guarantee
+      const roll = Math.random();
+      if (roll < 0.2) { rarity = 5; pool = this.SSR_POOL; state.pity = 0; }
+      else { rarity = 4; pool = this.SR_POOL; }
+    } else {
+      // Soft pity: rate increases after 75 pulls
+      let ssrRate = 0.02;
+      if (state.pity > 75) ssrRate += (state.pity - 75) * 0.05; // +5% per pull after 75
+      const roll = Math.random();
+      if (roll < ssrRate) { rarity = 5; pool = this.SSR_POOL; state.pity = 0; }
+      else if (roll < ssrRate + 0.10) { rarity = 4; pool = this.SR_POOL; }
+      else { rarity = 3; pool = this.R_POOL; }
+    }
+
+    const heroId = pool[Math.floor(Math.random() * pool.length)];
+    const hero = HEROES[heroId];
+    const roster = Storage.getRoster();
+    const isNew = !roster[heroId];
+
+    if (isNew) {
+      Storage.addHero(heroId);
+    } else {
+      // Already owned — give shards instead
+      const shardAmount = rarity === 5 ? 10 : rarity === 4 ? 5 : 2;
+      Storage.addShards(heroId, shardAmount);
+    }
+
+    return { heroId, hero, rarity, isNew, shards: isNew ? 0 : (rarity === 5 ? 10 : rarity === 4 ? 5 : 2) };
+  },
+
+  pull(count) {
+    const state = Storage.getGachaState();
+    const cost = count === 10 ? this.TEN_PULL_COST : this.PULL_COST * count;
+    const player = Storage.getPlayer();
+    if (player.gold < cost) return { error: '金币不足！需要 ' + cost + ' 金币' };
+    player.gold -= cost;
+    Storage.savePlayer(player);
+
+    const isFirstTenPull = count === 10 && (state.totalPulls || 0) === 0;
+    const results = [];
+    let bestRarity = 0;
+    let hasSRPlus = false;
+
+    for (let i = 0; i < count; i++) {
+      // On 10-pull: guarantee SR+ on last pull if none pulled yet
+      const isLastOfTen = count === 10 && i === count - 1;
+      const needGuarantee = isLastOfTen && !hasSRPlus;
+      const guaranteeSR = isFirstTenPull || needGuarantee;
+
+      const r = this._singlePull(state, guaranteeSR && !hasSRPlus);
+      results.push(r);
+      if (r.rarity >= 4) hasSRPlus = true;
+      if (r.rarity > bestRarity) bestRarity = r.rarity;
+    }
+
+    Storage.saveGachaState(state);
+    return { results, cost, pity: state.pity, totalPulls: state.totalPulls, bestRarity };
+  },
+
+  getPullState() {
+    const state = Storage.getGachaState();
+    return { pity: state.pity || 0, totalPulls: state.totalPulls || 0 };
   }
 };
 

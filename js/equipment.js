@@ -162,6 +162,33 @@ const Equipment = {
     };
   },
 
+  // Calculate gear score for an equipment instance
+  getGearScore(item) {
+    const stats = this.getEquipStats(item);
+    const tmpl = this.TEMPLATES[item.templateId];
+    if (!tmpl) return 0;
+    // Weighted score: atk/int weighted higher, hp lower
+    const weights = { atk: 3, int: 3, def: 2, spd: 2.5, hp: 0.3 };
+    let score = 0;
+    for (const [k, v] of Object.entries(stats)) {
+      score += v * (weights[k] || 1);
+    }
+    // Rarity multiplier
+    score *= (1 + (tmpl.rarity - 1) * 0.2);
+    // Set bonus
+    if (tmpl.set) score *= 1.15;
+    return Math.floor(score);
+  },
+
+  // Get rarity color for a gear score range
+  getScoreRarity(score) {
+    if (score >= 400) return this.RARITIES[5]; // gold
+    if (score >= 250) return this.RARITIES[4]; // purple
+    if (score >= 150) return this.RARITIES[3]; // blue
+    if (score >= 80) return this.RARITIES[2];  // green
+    return this.RARITIES[1];                    // white
+  },
+
   // Get stats of an equipment instance
   getEquipStats(item) {
     const t = this.TEMPLATES[item.templateId];

@@ -615,6 +615,49 @@ const HERO_AFFINITIES = [
   },
 ];
 
+// ===== ELEMENT SYSTEM =====
+const HERO_ELEMENTS = {
+  // Shu
+  liubei: 'earth', guanyu: 'fire', zhangfei: 'lightning', zhaoyun: 'wind',
+  huangzhong: 'earth', zhugeLiang: 'wind', jiangwei: 'lightning',
+  machao: 'wind', huangyueying: 'wind', weiyan: 'fire', yanyan: 'earth',
+  // Wei
+  caocao: 'wind', simayi: 'ice', guojia: 'ice', xunyu: 'wind',
+  xuhuang: 'earth', zhanghe: 'wind', xiahouyuan: 'lightning',
+  pangde: 'fire', zhenji: 'ice',
+  // Wu
+  sunshangxiang: 'wind', zhouyu: 'fire', luXun: 'fire',
+  ganningwu: 'water', taishici: 'wind', lusu: 'water',
+  sunce: 'lightning', zhangzhao: 'earth',
+  // Qun
+  zhangjiao: 'lightning', lvbu: 'fire', diaochan: 'ice',
+  menghuo: 'earth', zhurong: 'fire', dongzhuo: 'fire',
+  yuanshao: 'earth', huatuo: 'water',
+  // Enemies
+  navy_soldier: 'water', fire_archer: 'fire', fire_soldier: 'fire',
+  mage_acolyte: 'fire', strategist: 'wind', supply_guard: 'earth',
+  shield_militia: 'earth', caoren: 'earth', crossbow_corps: 'wind',
+  caocao: 'wind',
+};
+
+const ELEMENT_REACTIONS = {
+  'fire+wind':      { name: '🌪️🔥 火风暴', type: 'firestorm', desc: '引燃烈风，全体敌人受到AoE伤害' },
+  'wind+fire':      { name: '🌪️🔥 火风暴', type: 'firestorm', desc: '引燃烈风，全体敌人受到AoE伤害' },
+  'water+ice':      { name: '❄️ 冰冻', type: 'freeze', desc: '极寒冻结，目标眩晕1回合' },
+  'ice+water':      { name: '❄️ 冰冻', type: 'freeze', desc: '极寒冻结，目标眩晕1回合' },
+  'earth+lightning': { name: '💥 碎裂', type: 'shatter', desc: '大地崩碎，目标防御-30%持续2回合' },
+  'lightning+earth': { name: '💥 碎裂', type: 'shatter', desc: '大地崩碎，目标防御-30%持续2回合' },
+};
+
+const ELEMENT_INFO = {
+  fire:      { name: '火', emoji: '🔥', color: '#ef4444' },
+  water:     { name: '水', emoji: '💧', color: '#3b82f6' },
+  wind:      { name: '风', emoji: '🌪️', color: '#22c55e' },
+  earth:     { name: '地', emoji: '🪨', color: '#a16207' },
+  lightning: { name: '雷', emoji: '⚡', color: '#eab308' },
+  ice:       { name: '冰', emoji: '❄️', color: '#67e8f9' },
+};
+
 // Calculate active affinities for a team
 function getActiveAffinities(teamHeroIds) {
   const active = [];
@@ -639,6 +682,9 @@ if (typeof window !== 'undefined') {
   window.FACTIONS = FACTIONS;
   window.FACTION_BONUS = FACTION_BONUS;
   window.HERO_AFFINITIES = HERO_AFFINITIES;
+  window.HERO_ELEMENTS = HERO_ELEMENTS;
+  window.ELEMENT_REACTIONS = ELEMENT_REACTIONS;
+  window.ELEMENT_INFO = ELEMENT_INFO;
   window.getActiveAffinities = getActiveAffinities;
   window.getTotalHeroCount = getTotalHeroCount;
 }

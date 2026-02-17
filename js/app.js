@@ -485,6 +485,8 @@ const App = {
     // Store chapter info on stage for terrain/weather lookup
     this.currentStage = stage;
     this.currentStage._chapter = chapter;
+    // Apply chapter difficulty scaling
+    this.currentStage._scaleMult = Campaign.getEnemyScale(chapter.id);
     this.prepareBattle(stage);
     this.switchPage('battle');
   },
@@ -548,8 +550,12 @@ const App = {
         div.className = 'fighter-row ' + (f.alive ? '' : 'dead');
         const hpPct = f.alive ? (f.hp / f.maxHp * 100) : 0;
         const ragePct = f.rage / (f.maxRage || 100) * 100;
+        const elemBadge = f.element && typeof ELEMENT_INFO !== 'undefined' && ELEMENT_INFO[f.element]
+          ? '<span class="element-badge" style="color:' + ELEMENT_INFO[f.element].color + '">' + ELEMENT_INFO[f.element].emoji + '</span>' : '';
+        const appliedBadge = f.appliedElement && typeof ELEMENT_INFO !== 'undefined' && ELEMENT_INFO[f.appliedElement]
+          ? '<span class="element-badge" style="border:1px solid ' + ELEMENT_INFO[f.appliedElement].color + '">' + ELEMENT_INFO[f.appliedElement].emoji + '</span>' : '';
         div.innerHTML = '<span class="fighter-emoji">' + f.emoji + '</span>' +
-          '<div class="fighter-bars"><div class="fighter-name">' + f.name + '</div>' +
+          '<div class="fighter-bars"><div class="fighter-name">' + f.name + elemBadge + appliedBadge + '</div>' +
           '<div class="bar"><div class="bar-fill hp-fill" style="width:' + hpPct + '%"></div></div>' +
           '<div class="bar"><div class="bar-fill rage-fill" style="width:' + ragePct + '%"></div></div></div>';
         c.appendChild(div);
@@ -689,7 +695,10 @@ const App = {
         '<div class="hd-title-text">' + (hero.title || '') + '</div>' +
         '<div class="hd-stars">' + '★'.repeat(stars) + '☆'.repeat(5 - stars) + '</div>' +
         '<div class="hd-meta">' + (UNIT_TYPES[hero.unit]?.emoji || '') + ' ' + (UNIT_TYPES[hero.unit]?.name || '') +
-          ' · ' + (FACTIONS[hero.faction]?.emoji || '') + ' ' + (FACTIONS[hero.faction]?.name || '') + ' · Lv.' + level + '</div>' +
+          ' · ' + (FACTIONS[hero.faction]?.emoji || '') + ' ' + (FACTIONS[hero.faction]?.name || '') + ' · Lv.' + level +
+          (typeof HERO_ELEMENTS !== 'undefined' && HERO_ELEMENTS[heroId] && ELEMENT_INFO[HERO_ELEMENTS[heroId]]
+            ? ' · ' + ELEMENT_INFO[HERO_ELEMENTS[heroId]].emoji + ' ' + ELEMENT_INFO[HERO_ELEMENTS[heroId]].name
+            : '') + '</div>' +
       '</div>' +
 
       '<div class="card">' +
@@ -840,6 +849,46 @@ const App = {
     const list = document.getElementById('gacha-list');
     list.innerHTML = '';
 
+    // Standard Banner Pull Section
+    const pullState = Gacha.getPullState();
+    const player = Storage.getPlayer();
+    const bannerDiv = document.createElement('div');
+    bannerDiv.className = 'card card-glow';
+    bannerDiv.style.cssText = 'border-color:var(--gold);margin-bottom:16px';
+    bannerDiv.innerHTML =
+      '<div style="text-align:center;margin-bottom:12px">' +
+        '<div style="font-size:24px">🎴</div>' +
+        '<div style="font-size:16px;font-weight:700;color:var(--gold)">天命召唤</div>' +
+        '<div class="text-dim" style="font-size:12px;margin-top:4px">SSR概率2% · 保底90抽 · 首次十连保底SR+</div>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding:8px;background:var(--card2);border-radius:10px">' +
+        '<div style="font-size:12px">' +
+          '<span class="text-dim">已抽: </span><b>' + pullState.totalPulls + '</b>' +
+          '<span class="text-dim" style="margin-left:12px">距保底: </span><b style="color:var(--gold)">' + (Gacha.SSR_PITY - pullState.pity) + '</b>' +
+        '</div>' +
+        '<div class="progress" style="width:80px;height:6px"><div class="progress-fill" style="width:' + (pullState.pity / Gacha.SSR_PITY * 100) + '%;background:linear-gradient(90deg,var(--accent),var(--gold))"></div></div>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+        '<button class="btn btn-primary" onclick="App.doGachaPull(1)">单抽 · 💰' + Gacha.PULL_COST + '</button>' +
+        '<button class="btn btn-gold" onclick="App.doGachaPull(10)">十连 · 💰' + Gacha.TEN_PULL_COST + '</button>' +
+      '</div>' +
+      '<div style="text-align:center;margin-top:8px">' +
+        '<div class="text-dim" style="font-size:11px">SSR: ⚔️关羽 🖤曹操 🐉赵云 👹吕布 | SR: 👑刘备 😤张飞 🏹孙尚香 🌸貂蝉 ⚡张角</div>' +
+      '</div>';
+    list.appendChild(bannerDiv);
+
+    // Pull result container
+    const resultDiv = document.createElement('div');
+    resultDiv.id = 'gacha-pull-result';
+    resultDiv.className = 'hidden';
+    list.appendChild(resultDiv);
+
+    // Section divider
+    const divider = document.createElement('div');
+    divider.style.cssText = 'font-size:15px;font-weight:600;margin:16px 0 8px;color:var(--gold)';
+    divider.textContent = '🏯 三顾茅庐 — 对话招募';
+    list.appendChild(divider);
+
     for (const [id, visit] of Object.entries(Gacha.VISITS)) {
       const hero = HEROES[id];
       if (!hero) continue;
@@ -941,6 +990,48 @@ const App = {
         );
     }
     this.updateHeader();
+  },
+
+  // ===== GACHA PULL =====
+  doGachaPull(count) {
+    const result = Gacha.pull(count);
+    if (result.error) { this.toast('❌ ' + result.error); return; }
+    DailyMissions.trackProgress('gacha');
+
+    const container = document.getElementById('gacha-pull-result');
+    container.classList.remove('hidden');
+
+    const rarityNames = { 5: 'SSR', 4: 'SR', 3: 'R' };
+    const rarityColors = { 5: 'var(--gold)', 4: '#a855f7', 3: '#3b82f6' };
+
+    let html = '<div class="card card-glow" style="border-color:' + rarityColors[result.bestRarity] + '">' +
+      '<div style="text-align:center;font-size:14px;font-weight:600;margin-bottom:12px;color:' + rarityColors[result.bestRarity] + '">' +
+        (result.bestRarity === 5 ? '🌟 恭喜获得SSR！' : result.bestRarity === 4 ? '✨ 获得SR武将！' : '抽卡结果') +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(' + Math.min(5, count) + ',1fr);gap:6px">';
+
+    for (const r of result.results) {
+      html += '<div style="text-align:center;padding:8px 4px;background:var(--card2);border-radius:10px;border:1px solid ' + rarityColors[r.rarity] + '">' +
+        '<div style="font-size:28px">' + r.hero.emoji + '</div>' +
+        '<div style="font-size:10px;font-weight:600;color:' + rarityColors[r.rarity] + '">' + rarityNames[r.rarity] + '</div>' +
+        '<div style="font-size:11px">' + r.hero.name + '</div>' +
+        '<div style="font-size:9px;color:var(--dim)">' + (r.isNew ? '🆕 新武将！' : '+' + r.shards + '🧩') + '</div>' +
+      '</div>';
+    }
+
+    html += '</div>' +
+      '<div class="text-dim text-center" style="font-size:11px;margin-top:8px">花费 ' + result.cost + '💰 · 距SSR保底: ' + (Gacha.SSR_PITY - result.pity) + '抽</div>' +
+    '</div>';
+
+    container.innerHTML = html;
+    this.updateHeader();
+    if (result.bestRarity === 5) this.toast('🌟 获得SSR武将！', 3000);
+
+    // Check achievements
+    if (typeof Achievements !== 'undefined') {
+      const newAch = Achievements.checkAll();
+      if (newAch.length > 0) setTimeout(() => this.toast('🏅 新成就: ' + newAch.map(a => a.name).join(', ')), 1500);
+    }
   },
 
   // ===== LEADERBOARD (v2 + kingdom war) =====
@@ -1648,6 +1739,21 @@ const App = {
   closeTutorial() {
     document.getElementById('tutorial-overlay').classList.add('hidden');
     Storage._set('tutorialDone', true);
+    // Free SSR hero for new players: Zhao Yun
+    const roster = Storage.getRoster();
+    if (!roster['zhaoyun']) {
+      Storage.addHero('zhaoyun');
+      // Auto-add to team
+      const team = Storage.getTeam();
+      const emptySlot = team.indexOf(null);
+      if (emptySlot !== -1) { team[emptySlot] = 'zhaoyun'; Storage.saveTeam(team); }
+      // Give starting gold bonus
+      Storage.addGold(500);
+      Storage.addGems(20);
+      setTimeout(() => {
+        this.toast('🎉 获得SSR武将: 赵云·常山赵子龙！附赠500金币+20宝石', 4000);
+      }, 500);
+    }
   },
 
   showTutorialIfNew() {
@@ -1677,9 +1783,13 @@ const App = {
           '<div style="font-size:13px;font-weight:600">' + info.name + '</div>';
       if (tmpl) {
         const statStr = Object.entries(stats).map(([k,v]) => k.toUpperCase() + '+' + v).join(' ');
+        const gearScore = Equipment.getGearScore(item);
+        const scoreRar = Equipment.getScoreRarity(gearScore);
+        const maxLevel = (tmpl.rarity || 1) * 3;
         html += '<div style="font-size:12px;color:' + (rarInfo?.color || 'var(--dim)') + '">' +
-          (tmpl.emoji || '') + ' ' + tmpl.name + ' +' + item.level + ' (' + (rarInfo?.label || '') + ')</div>' +
-          '<div style="font-size:11px;color:var(--dim)">' + statStr + '</div>';
+          (tmpl.emoji || '') + ' ' + tmpl.name + ' +' + item.level + '/' + maxLevel + ' (' + (rarInfo?.label || '') + ')</div>' +
+          '<div style="font-size:11px;color:var(--dim)">' + statStr + '</div>' +
+          '<div style="font-size:10px;margin-top:2px"><span style="color:' + scoreRar.color + ';font-weight:700">⚡' + gearScore + '</span> <span class="text-dim">装分</span></div>';
       } else {
         html += '<div style="font-size:12px;color:var(--dim)">空</div>';
       }
@@ -1720,14 +1830,19 @@ const App = {
         const rarInfo = Equipment.RARITIES[tmpl.rarity];
         const stats = Equipment.getEquipStats(item);
         const statStr = Object.entries(stats).map(([k,v]) => k.toUpperCase() + '+' + v).join(' ');
-        html += '<div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--card2);border-radius:8px;margin-bottom:4px;cursor:pointer" ' +
+        const gearScore = Equipment.getGearScore(item);
+        const scoreRar = Equipment.getScoreRarity(gearScore);
+        html += '<div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--card2);border-radius:8px;margin-bottom:4px;cursor:pointer;border-left:3px solid ' + (rarInfo?.color || 'var(--border)') + '" ' +
           'onclick="App.equipItem(\'' + heroId + '\',\'' + item.uid + '\')">' +
           '<span style="font-size:18px">' + (tmpl.emoji || '📦') + '</span>' +
           '<div style="flex:1">' +
             '<div style="font-size:12px;color:' + (rarInfo?.color || 'var(--dim)') + '">' + tmpl.name + ' +' + item.level + '</div>' +
             '<div style="font-size:10px;color:var(--dim)">' + statStr + '</div>' +
           '</div>' +
-          '<div style="font-size:11px;color:var(--accent)">装备</div>' +
+          '<div style="text-align:right">' +
+            '<div style="font-size:11px;color:' + scoreRar.color + ';font-weight:700">⚡' + gearScore + '</div>' +
+            '<div style="font-size:10px;color:var(--accent)">装备</div>' +
+          '</div>' +
         '</div>';
       }
     }
@@ -1845,12 +1960,16 @@ const App = {
           if (Object.values(eq).includes(item.uid)) { equippedOn = HEROES[hid]; break; }
         }
 
-        html += '<div class="card" style="padding:12px">' +
+        const gearScore = Equipment.getGearScore(item);
+        const scoreRar = Equipment.getScoreRarity(gearScore);
+        const maxLevel = (tmpl.rarity || 1) * 3;
+
+        html += '<div class="card" style="padding:12px;border-left:3px solid ' + (rarInfo?.color || 'var(--border)') + '">' +
           '<div class="flex justify-between items-center">' +
             '<div class="flex items-center gap-8">' +
               '<span style="font-size:24px">' + (tmpl.emoji || '📦') + '</span>' +
               '<div>' +
-                '<div style="font-size:14px;font-weight:600;color:' + (rarInfo?.color || 'var(--text)') + '">' + tmpl.name + ' +' + item.level + '</div>' +
+                '<div style="font-size:14px;font-weight:600;color:' + (rarInfo?.color || 'var(--text)') + '">' + tmpl.name + ' +' + item.level + '/' + maxLevel + ' <span style="font-size:11px;color:' + scoreRar.color + '">⚡' + gearScore + '</span></div>' +
                 '<div style="font-size:11px;color:var(--dim)">' + (Equipment.SLOTS[tmpl.slot]?.name || '') + ' · ' + rarInfo.label + '</div>' +
                 '<div style="font-size:11px;color:var(--dim)">' + statStr + '</div>' +
                 (equippedOn ? '<div style="font-size:11px;color:var(--accent)">装备于: ' + equippedOn.emoji + ' ' + equippedOn.name + '</div>' : '') +

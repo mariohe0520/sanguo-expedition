@@ -171,6 +171,20 @@ const Campaign = {
     }
   },
 
+  // Difficulty curve: enemy stat multiplier per chapter
+  CHAPTER_SCALING: {
+    1: { enemyScale: 0.4, desc: '教程难度' },       // Tutorial — can't lose
+    2: { enemyScale: 0.75, desc: '需要阵容搭配' },   // Team composition matters
+    3: { enemyScale: 1.2, desc: '需要装备强化' },     // Need equipment upgrades
+    4: { enemyScale: 1.7, desc: '需要天赋投入' },     // Need skill tree investment
+    5: { enemyScale: 2.2, desc: '需要元素反应策略' }, // Need element reactions
+    6: { enemyScale: 2.8, desc: '终局·需要极限Build' }, // Endgame, optimized builds
+  },
+
+  getEnemyScale(chapterId) {
+    return this.CHAPTER_SCALING[chapterId]?.enemyScale || 1;
+  },
+
   getCurrentChapter() {
     const progress = Storage.getCampaignProgress?.() || { chapter: 1, stage: 1, choices: {} };
     return this.CHAPTERS.find(c => c.id === progress.chapter) || this.CHAPTERS[0];

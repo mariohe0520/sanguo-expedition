@@ -207,3 +207,28 @@ body::after {
 
 /* Quick entry grid */
 #page-home .hero-card { flex-direction:column;text-align:center;padding:16px 8px; }
+
+/* Gacha pull animation */
+#gacha-pull-result .card { animation:gachaPullReveal .6s ease-out; }
+@keyframes gachaPullReveal {
+  0% { opacity:0;transform:scale(.8) translateY(20px); }
+  60% { transform:scale(1.02) translateY(-4px); }
+  100% { opacity:1;transform:scale(1) translateY(0); }
+}
+
+/* Equipment gear score glow */
+.gear-score-gold { text-shadow:0 0 8px rgba(245,158,11,.4); }
+.gear-score-purple { text-shadow:0 0 8px rgba(168,85,247,.4); }
+
+/* Element reaction flash */
+@keyframes elementFlash {
+  0% { box-shadow:0 0 20px rgba(212,168,67,.6); }
+  100% { box-shadow:0 0 0 transparent; }
+}
+.element-reaction { animation:elementFlash .8s ease-out; }
+
+/* Element badge in battle */
+.element-badge {
+  display:inline-block;font-size:10px;padding:1px 4px;border-radius:4px;
+  background:rgba(0,0,0,.3);margin-left:4px;vertical-align:middle;
+}

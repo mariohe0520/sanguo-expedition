@@ -63,6 +63,9 @@ const Battle = {
       specials = SkillTree.getSpecials(hero.id);
     }
 
+    // Element from HERO_ELEMENTS map
+    const element = (typeof HERO_ELEMENTS !== 'undefined') ? (HERO_ELEMENTS[hero.id] || null) : null;
+
     return {
       id: hero.id,
       name: hero.name,
@@ -71,6 +74,7 @@ const Battle = {
       unit: hero.unit,
       faction: hero.faction,
       rarity: hero.rarity,
+      element,
       hp: baseHP,
       maxHp: baseHP,
       atk: baseATK,
@@ -87,6 +91,7 @@ const Battle = {
       effects: [], // stun, charm, invincible
       equipEffects, // from equipment sets
       _specials: specials, // from skill tree
+      appliedElement: null, // for element reaction system
     };
   },
 
@@ -241,6 +246,11 @@ const Battle = {
         this.addLog(`⬛ ${defender.name} 玄甲反弹 ${reflectDmg}伤害！`);
         if (attacker.hp <= 0) { attacker.alive = false; }
       }
+    }
+
+    // Element reaction check
+    if (attacker.element && defender.alive && typeof ELEMENT_REACTIONS !== 'undefined') {
+      this.checkElementReaction(attacker, defender);
     }
 
     // Gain rage
@@ -422,6 +432,10 @@ const Battle = {
           t.hp = Math.max(0, t.hp - dmg);
           this.addLog(`  → ${t.emoji} ${t.name} -${dmg} 法伤`);
           if (t.hp <= 0) t.alive = false;
+          // Element reaction from skills
+          else if (fighter.element && typeof ELEMENT_REACTIONS !== 'undefined') {
+            this.checkElementReaction(fighter, t);
+          }
         }
         break;
       }
@@ -534,6 +548,58 @@ const Battle = {
     fighter.buffs = fighter.buffs.filter(b => { b.duration--; return b.duration > 0; });
     fighter.debuffs = fighter.debuffs.filter(d => { d.duration--; return d.duration > 0; });
     fighter.effects = fighter.effects.filter(e => { e.duration--; return e.duration > 0; });
+  },
+
+  // ===== ELEMENT REACTIONS =====
+  checkElementReaction(attacker, defender) {
+    if (!attacker.element || !defender.alive) return;
+    const existing = defender.appliedElement;
+    if (!existing) {
+      // Apply element aura to target
+      defender.appliedElement = attacker.element;
+      return;
+    }
+    if (existing === attacker.element) return; // Same element, no reaction
+
+    const key = existing + '+' + attacker.element;
+    const reaction = ELEMENT_REACTIONS[key];
+    if (!reaction) {
+      // No valid reaction, overwrite element
+      defender.appliedElement = attacker.element;
+      return;
+    }
+
+    // Consume the applied element
+    defender.appliedElement = null;
+
+    switch (reaction.type) {
+      case 'firestorm': {
+        // AoE damage to all enemies of defender's side
+        const targets = (defender.side === 'player' ? this.state.player : this.state.enemy).filter(f => f?.alive);
+        const aoeDmg = Math.floor(this.getEffStat(attacker, 'atk') * 0.5);
+        this.addLog(reaction.name + '！元素反应触发！');
+        for (const t of targets) {
+          t.hp = Math.max(0, t.hp - aoeDmg);
+          this.addLog(`  🔥 ${t.name} 受到 ${aoeDmg} 火风暴伤害`);
+          if (t.hp <= 0) { t.alive = false; }
+        }
+        break;
+      }
+      case 'freeze': {
+        // Stun target for 1 turn
+        if (!defender.effects.some(e => e.type === 'invincible')) {
+          defender.effects.push({ type: 'stun', duration: 1 });
+          this.addLog(reaction.name + '！' + defender.name + ' 被冰冻！无法行动1回合');
+        }
+        break;
+      }
+      case 'shatter': {
+        // Defense break -30% for 2 turns
+        defender.debuffs.push({ stat: 'def', pct: -30, duration: 2 });
+        this.addLog(reaction.name + '！' + defender.name + ' 防御碎裂！DEF-30% 2回合');
+        break;
+      }
+    }
   },
 
   // ===== UTILS =====
