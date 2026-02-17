@@ -118,6 +118,38 @@ const HEROES = {
     skill: { name:'射击', desc:'对单体110%ATK伤害', type:'damage', target:'single_enemy', value:1.1, rage:50 },
     passive: null,
     emoji:'🏹', lore:'村里的猎人'
+  },
+  shield_militia: {
+    id:'shield_militia', name:'盾民兵', title:'',
+    faction:'qun', unit:'shield', rarity:1,
+    baseStats: { hp:600, atk:45, def:65, spd:35, int:20 },
+    skill: { name:'盾击', desc:'对单体100%ATK伤害+自身DEF+10%持续2回合', type:'damage', target:'single_enemy', value:1.0, selfBuff:{stat:'def',pct:10,duration:2}, rage:60 },
+    passive: null,
+    emoji:'🛡️', lore:'扛着木盾的民兵'
+  },
+  mage_acolyte: {
+    id:'mage_acolyte', name:'术士学徒', title:'',
+    faction:'qun', unit:'mage', rarity:1,
+    baseStats: { hp:350, atk:35, def:25, spd:55, int:80 },
+    skill: { name:'火球', desc:'对单体150%INT伤害', type:'magic', target:'single_enemy', value:1.5, rage:55 },
+    passive: null,
+    emoji:'🔮', lore:'习得皮毛法术的少年'
+  },
+  elite_cavalry: {
+    id:'elite_cavalry', name:'精锐骑兵', title:'',
+    faction:'qun', unit:'cavalry', rarity:2,
+    baseStats: { hp:800, atk:90, def:60, spd:75, int:30 },
+    skill: { name:'冲锋', desc:'对单体180%ATK伤害', type:'damage', target:'single_enemy', value:1.8, rage:70 },
+    passive: { name:'铁蹄', desc:'首回合SPD+20%', condition:'turn_1', stat:'spd', pct:20 },
+    emoji:'🐴', lore:'久经沙场的骑兵精锐'
+  },
+  elite_spear: {
+    id:'elite_spear', name:'精锐枪兵', title:'',
+    faction:'qun', unit:'spear', rarity:2,
+    baseStats: { hp:750, atk:85, def:75, spd:50, int:25 },
+    skill: { name:'长枪阵', desc:'对前排全体130%ATK伤害', type:'damage', target:'front_row', value:1.3, rage:65 },
+    passive: { name:'枪林', desc:'被骑兵攻击时反击50%ATK', condition:'attacked_by_cavalry', value:0.5 },
+    emoji:'🔱', lore:'列阵如林的枪兵精锐'
   }
 };
 

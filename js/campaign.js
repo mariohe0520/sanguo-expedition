@@ -17,6 +17,23 @@ const Campaign = {
         { id: 9, name: '曹操来袭', enemies: ['soldier','archer_recruit','soldier','soldier','archer_recruit'], reward: { gold: 250, exp: 150 }, branch: 'B' },
         { id: 10, name: '张宝复仇', enemies: ['soldier','archer_recruit','zhangjiao','soldier','soldier'], boss: true, reward: { gold: 500, exp: 300, hero_shard: 'huangzhong' } },
       ]
+    },
+    {
+      id: 2, name: '虎牢关', icon: '🏔️', terrain: 'mountain', weather: 'clear',
+      desc: '三英战吕布，天下震动。',
+      stages: [
+        { id: 1, name: '山道遭伏', enemies: ['soldier','archer_recruit','shield_militia','soldier'], reward: { gold: 200, exp: 100 } },
+        { id: 2, name: '汜水关前哨', enemies: ['elite_spear','soldier','archer_recruit','shield_militia'], reward: { gold: 230, exp: 120 } },
+        { id: 3, name: '华雄逞威', enemies: ['elite_cavalry','soldier','elite_spear','archer_recruit','mage_acolyte'], reward: { gold: 280, exp: 150 } },
+        { id: 4, name: '温酒斩华雄', enemies: ['elite_cavalry','elite_spear','shield_militia','mage_acolyte','soldier'], reward: { gold: 320, exp: 180 }, elite: true },
+        { id: 5, name: '吕布出阵', enemies: ['elite_cavalry','elite_spear','lvbu','shield_militia','mage_acolyte'], boss: true, reward: { gold: 500, exp: 300 } },
+        // --- 天命抉择 #2: 救百姓还是追吕布？---
+        { id: 6, name: '烽烟救民', enemies: ['soldier','mage_acolyte','shield_militia','archer_recruit','soldier'], reward: { gold: 350, exp: 220 }, terrain: 'mountain', branch: 'A' },
+        { id: 7, name: '掩护撤离', enemies: ['elite_spear','shield_militia','mage_acolyte','elite_cavalry','archer_recruit'], reward: { gold: 400, exp: 260 }, branch: 'A' },
+        { id: 8, name: '追击吕布', enemies: ['elite_cavalry','elite_cavalry','elite_spear','mage_acolyte','soldier'], reward: { gold: 380, exp: 240 }, branch: 'B' },
+        { id: 9, name: '虎牢关外', enemies: ['elite_spear','elite_cavalry','shield_militia','mage_acolyte','elite_spear'], reward: { gold: 450, exp: 280 }, branch: 'B' },
+        { id: 10, name: '三英战吕布', enemies: ['elite_cavalry','elite_spear','lvbu','mage_acolyte','elite_cavalry'], boss: true, reward: { gold: 800, exp: 500, hero_shard: 'lvbu' } },
+      ]
     }
   ],
 
@@ -31,6 +48,16 @@ const Campaign = {
         { id: 'B', text: '📋 先壮大自己再说', desc: '南下招兵买马，获得更多金币和兵力', reward: { gold: 500, troops: 100 }, stages: [8, 9] }
       ],
       lore: '选择塑造命运。没有对错，只有不同的三国。'
+    },
+    2: {
+      trigger_after: 5, // After stage 5
+      title: '天命之选：虎牢关之岔',
+      desc: '吕布退走，关外百姓正遭劫掠。追击吕布可削其势，救助百姓可得民心。',
+      options: [
+        { id: 'A', text: '🛡️ 救！百姓为重', desc: '护送百姓撤离，获得民心值和名医线索', reward: { loyalty: 80, hero_hint: 'huatuo' }, stages: [6, 7] },
+        { id: 'B', text: '⚔️ 追！斩草除根', desc: '穷追吕布，获得战利品和精锐装备', reward: { gold: 800, equip_hint: 'fangtian_halberd' }, stages: [8, 9] }
+      ],
+      lore: '仁者救人，勇者杀敌。虎牢关下，你的选择将改变天命。'
     }
   },
 
