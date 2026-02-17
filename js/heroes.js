@@ -210,6 +210,42 @@ const HEROES = {
     skill: { name:'鹰视狼顾', desc:'复制对方最强武将技能使用', type:'mirror', target:'strongest_enemy', rage:110 },
     passive: { name:'隐忍', desc:'受到致命伤害时50%概率存活(HP=1)', condition:'on_lethal', chance:50 },
     emoji:'🦅', lore:'司马懿善忍，终成大器'
+  },
+
+  // ── Chapter 5 heroes ──────────────────────────
+  luXun: {
+    id:'luXun', name:'陆逊', title:'火烧连营',
+    faction:'wu', unit:'mage', rarity:5,
+    baseStats: { hp:950, atk:70, def:65, spd:80, int:148 },
+    skill: { name:'火烧连营', desc:'对全体造成220%INT伤害，森林地形+30%', type:'magic', target:'all_enemy', value:2.2, terrain_bonus:{forest:0.3}, rage:110 },
+    passive: { name:'火势蔓延', desc:'火焰伤害连锁至相邻敌人(50%伤害)', condition:'on_fire_damage', chain_targets:'adjacent', chain_pct:50 },
+    emoji:'🔥', lore:'夷陵一把火，烧尽蜀汉七百里连营'
+  },
+  fire_soldier: {
+    id:'fire_soldier', name:'火兵', title:'',
+    faction:'qun', unit:'archer', rarity:2,
+    baseStats: { hp:500, atk:90, def:30, spd:55, int:40 },
+    skill: { name:'火箭齐发', desc:'对单体170%ATK伤害+灼烧3回合(每回合12%ATK)', type:'damage', target:'single_enemy', value:1.7, dot:{type:'burn',pct:0.12,duration:3}, rage:70 },
+    passive: { name:'引火物', desc:'森林地形ATK+25%', condition:'terrain_forest', stat:'atk', pct:25 },
+    emoji:'🔥', lore:'携火油火箭的特殊弓兵'
+  },
+
+  // ── Chapter 6 heroes ──────────────────────────
+  jiangwei: {
+    id:'jiangwei', name:'姜维', title:'幼麟',
+    faction:'shu', unit:'cavalry', rarity:5,
+    baseStats: { hp:1050, atk:138, def:88, spd:82, int:95 },
+    skill: { name:'继志北伐', desc:'对单体280%ATK伤害；若诸葛亮在队则额外施放「卧龙遗计」(全体150%INT)', type:'damage', target:'single_enemy', value:2.8, inherit:{hero:'zhugeLiang',bonus_skill:{type:'magic',target:'all_enemy',value:1.5}}, rage:105 },
+    passive: { name:'死战不退', desc:'HP<20%时ATK翻倍', condition:'hp_below_20', stat:'atk', pct:100 },
+    emoji:'⚔️', lore:'诸葛亮衣钵传人，九伐中原矢志不渝'
+  },
+  supply_guard: {
+    id:'supply_guard', name:'辎重兵', title:'',
+    faction:'qun', unit:'shield', rarity:2,
+    baseStats: { hp:750, atk:50, def:90, spd:30, int:25 },
+    skill: { name:'护粮', desc:'保护补给线，全队回复10%HP', type:'heal', target:'all_ally', value:0.1, rage:65 },
+    passive: { name:'辎重守卫', desc:'补给线附近DEF+25%', condition:'near_supply', stat:'def', pct:25 },
+    emoji:'📦', lore:'守护粮草辎重的坚实后盾'
   }
 };
 

@@ -70,6 +70,40 @@ const Campaign = {
         { id: 9, name: '铁壁突破', enemies: ['elite_spear','crossbow_corps','elite_cavalry','strategist','crossbow_corps'], reward: { gold: 2050, exp: 1420 }, branch: 'B' },
         { id: 10, name: '司马懿决战', enemies: ['strategist','crossbow_corps','simayi','elite_cavalry','strategist'], boss: true, reward: { gold: 2500, exp: 1800, hero_shard: 'simayi' }, mechanic: 'mirror' },
       ]
+    },
+    {
+      id: 5, name: '夷陵之战', icon: '🌲', terrain: 'forest', weather: 'wind',
+      desc: '为关羽报仇，蜀军倾巢东征。七百里连营，烈火将至。',
+      stages: [
+        { id: 1, name: '秭归集结', enemies: ['fire_soldier','soldier','fire_soldier','elite_spear'], reward: { gold: 2800, exp: 2000 }, weather: 'clear' },
+        { id: 2, name: '林中遭伏', enemies: ['fire_soldier','fire_archer','fire_soldier','soldier'], reward: { gold: 3000, exp: 2100 }, weather: 'wind' },
+        { id: 3, name: '连营推进', enemies: ['fire_soldier','elite_spear','fire_archer','fire_soldier','soldier'], reward: { gold: 3200, exp: 2250 }, weather: 'wind' },
+        { id: 4, name: '密林苦战', enemies: ['fire_archer','fire_soldier','fire_archer','fire_soldier','fire_archer'], reward: { gold: 3400, exp: 2400 }, weather: 'wind', elite: true },
+        { id: 5, name: '陆逊坚守', enemies: ['fire_soldier','fire_archer','luXun','fire_soldier','navy_soldier'], boss: true, reward: { gold: 3800, exp: 2700 }, weather: 'wind', mechanic: 'fire_burn' },
+        // --- 天命抉择 #5: 复仇还是放下？---
+        { id: 6, name: '怒火攻心', enemies: ['fire_soldier','fire_archer','elite_cavalry','fire_soldier','fire_archer'], reward: { gold: 3600, exp: 2550 }, weather: 'wind', branch: 'A' },
+        { id: 7, name: '七百里烈焰', enemies: ['fire_archer','fire_soldier','fire_archer','fire_soldier','fire_archer'], reward: { gold: 3900, exp: 2800 }, weather: 'wind', branch: 'A' },
+        { id: 8, name: '白帝托孤', enemies: ['elite_spear','soldier','shield_militia','elite_spear','soldier'], reward: { gold: 3600, exp: 2550 }, weather: 'clear', branch: 'B' },
+        { id: 9, name: '蜀军重整', enemies: ['elite_cavalry','elite_spear','strategist','crossbow_corps','elite_spear'], reward: { gold: 3900, exp: 2800 }, weather: 'clear', branch: 'B' },
+        { id: 10, name: '夷陵决战', enemies: ['fire_archer','fire_soldier','luXun','fire_soldier','fire_archer'], boss: true, reward: { gold: 5000, exp: 3500, hero_shard: 'luXun' }, weather: 'wind', mechanic: 'fire_burn' },
+      ]
+    },
+    {
+      id: 6, name: '北伐', icon: '⛰️', terrain: 'mountain', weather: 'clear',
+      desc: '丞相遗志，九伐中原。粮草为命，山道为棺。',
+      stages: [
+        { id: 1, name: '汉中出师', enemies: ['supply_guard','strategist','crossbow_corps','soldier'], reward: { gold: 4200, exp: 3000 }, mechanic: 'supply_drain' },
+        { id: 2, name: '祁山道', enemies: ['elite_spear','supply_guard','crossbow_corps','strategist'], reward: { gold: 4500, exp: 3200 }, mechanic: 'supply_drain' },
+        { id: 3, name: '街亭危机', enemies: ['elite_cavalry','crossbow_corps','strategist','elite_spear','supply_guard'], reward: { gold: 4800, exp: 3400 }, mechanic: 'supply_drain' },
+        { id: 4, name: '粮道争夺', enemies: ['supply_guard','crossbow_corps','supply_guard','elite_cavalry','crossbow_corps'], reward: { gold: 5100, exp: 3600 }, mechanic: 'supply_drain', elite: true },
+        { id: 5, name: '司马懿拒战', enemies: ['strategist','crossbow_corps','simayi','supply_guard','strategist'], boss: true, reward: { gold: 5500, exp: 4000 }, mechanic: 'supply_drain' },
+        // --- 天命抉择 #6: 木牛流马还是全面进攻？---
+        { id: 6, name: '木牛流马', enemies: ['supply_guard','elite_spear','crossbow_corps','supply_guard','strategist'], reward: { gold: 5200, exp: 3800 }, mechanic: 'supply_drain', branch: 'A' },
+        { id: 7, name: '栈道运粮', enemies: ['crossbow_corps','supply_guard','strategist','crossbow_corps','supply_guard'], reward: { gold: 5600, exp: 4100 }, mechanic: 'supply_drain', branch: 'A' },
+        { id: 8, name: '铁骑突阵', enemies: ['elite_cavalry','elite_cavalry','crossbow_corps','elite_spear','elite_cavalry'], reward: { gold: 5200, exp: 3800 }, mechanic: 'supply_drain', branch: 'B' },
+        { id: 9, name: '中原会战', enemies: ['elite_spear','crossbow_corps','elite_cavalry','strategist','elite_spear'], reward: { gold: 5600, exp: 4100 }, mechanic: 'supply_drain', branch: 'B' },
+        { id: 10, name: '司马懿终战', enemies: ['strategist','crossbow_corps','simayi','elite_cavalry','strategist'], boss: true, reward: { gold: 7000, exp: 5000, hero_shard: 'jiangwei' }, mechanic: 'supply_drain', boss_enhanced: { mirror: true, teleport: true } },
+      ]
     }
   ],
 
@@ -114,6 +148,26 @@ const Campaign = {
         { id: 'B', text: '⚔️ 正面强攻，堂堂正正', desc: '不靠奇谋，以绝对兵力碾压。战斗更难但无额外代价', reward: { atk_bonus: 25, gold: 1500 }, stages: [8, 9] }
       ],
       lore: '鞠躬尽瘁，死而后已。丞相的遗志，由你来完成。'
+    },
+    5: {
+      trigger_after: 5, // After mini-boss 陆逊
+      title: '天命之选：夷陵之火',
+      desc: '关羽已逝，张飞遇害。刘备怒火中烧，率蜀军倾巢东征。陆逊坚守不出，七百里连营暴露在山林之间。是继续复仇的烈焰，还是收拾残局、守住蜀汉根基？',
+      options: [
+        { id: 'A', text: '🔥 复仇！关羽之仇不共戴天', desc: '全军猛攻，ATK+40但随机2名武将因负伤退出3场战斗', reward: { atk_bonus: 40, hero_disable: { count: 2, battles: 3 } }, stages: [6, 7] },
+        { id: 'B', text: '🕊️ 放下，重建蜀汉', desc: '接受失去，凝聚人心。忠义+150，解锁特殊阵型「桃园阵」', reward: { loyalty: 150, unlock_formation: 'taoyuan_formation' }, stages: [8, 9] }
+      ],
+      lore: '烈火焚林还是落叶归根？夷陵之上，蜀汉的命运悬于一念。'
+    },
+    6: {
+      trigger_after: 5, // After mini-boss 司马懿
+      title: '天命之选：北伐的命脉',
+      desc: '姜维继承丞相遗志北伐中原，然蜀道艰难，粮草补给成为最大瓶颈。木牛流马可保后勤无忧，全面进攻则可毕其功于一役——但粮尽之日便是败亡之时。',
+      options: [
+        { id: 'A', text: '📜 木牛流马，稳扎稳打', desc: '建造木牛流马保障补给，金+2000，获得后勤增益', reward: { gold: 2000, logistics_buff: true }, stages: [6, 7] },
+        { id: 'B', text: '⚔️ 全面进攻，一战定乾坤', desc: 'ATK+35，士气+50，但补给消耗翻倍', reward: { atk_bonus: 35, morale: 50, supply_penalty_multiplier: 2 }, stages: [8, 9] }
+      ],
+      lore: '兵马未动粮草先行。北伐之路，是稳如泰山还是破釜沉舟？'
     }
   },
 
