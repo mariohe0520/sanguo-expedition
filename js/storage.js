@@ -92,6 +92,25 @@ const Storage = {
   // === v2: Daily Missions ===
   getDailyMissions() { return this._get('dailyMissions', null); },
   saveDailyMissions(m) { this._set('dailyMissions', m); },
+
+  // === v3: Equipment Inventory ===
+  getEquipmentInventory() { return this._get('equipInv', []); },
+  saveEquipmentInventory(arr) { this._set('equipInv', arr); },
+  addEquipment(item) { const inv = this.getEquipmentInventory(); inv.push(item); this.saveEquipmentInventory(inv); return item; },
+  removeEquipment(uid) { this.saveEquipmentInventory(this.getEquipmentInventory().filter(e => e.uid !== uid)); },
+  getEquipmentByUid(uid) { return this.getEquipmentInventory().find(e => e.uid === uid) || null; },
+
+  // Equipped per hero: { weapon: uid, armor: uid, accessory: uid, mount: uid }
+  getEquipped(heroId) { const all = this._get('equipped', {}); return all[heroId] || { weapon:null, armor:null, accessory:null, mount:null }; },
+  saveEquipped(heroId, eq) { const all = this._get('equipped', {}); all[heroId] = eq; this._set('equipped', all); },
+
+  // === v3: Kingdom Allegiance ===
+  getKingdom() { return this._get('kingdom', null); },
+  saveKingdom(k) { this._set('kingdom', k); },
+
+  // === v3: Achievements ===
+  getAchievementState() { return this._get('achievements', { unlocked: {} }); },
+  saveAchievementState(s) { this._set('achievements', s); },
 };
 
 if (typeof window !== 'undefined') window.Storage = Storage;

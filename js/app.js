@@ -307,6 +307,8 @@ const App = {
     if (page === 'team') this.renderTeam();
     if (page === 'gacha') this.renderGacha();
     if (page === 'leaderboard') this.renderLeaderboard();
+    if (page === 'equipment') this.renderEquipmentPage();
+    if (page === 'achievements') this.renderAchievementsPage();
   },
 
   updateHeader() {
@@ -336,6 +338,12 @@ const App = {
     document.getElementById('chapter-bar').style.width = (progress.stage / 10 * 100) + '%';
     this.updateHeader();
     this.renderDailyMissions();
+    this.renderKingdomCard();
+    // Check achievements in background
+    if (typeof Achievements !== 'undefined') {
+      const newAch = Achievements.checkAll();
+      if (newAch.length > 0) this.toast('🏅 新成就: ' + newAch.map(a => a.name).join(', '));
+    }
   },
 
   checkIdleReward() {
@@ -497,7 +505,22 @@ const App = {
       Storage.addExp(stage.reward.exp);
       if (stage.reward.hero_shard) Storage.addShards(stage.reward.hero_shard, 3);
       Campaign.completeStage(stage.id);
-      document.getElementById('result-detail').textContent = '+' + stage.reward.gold + '💰 +' + stage.reward.exp + '⭐' + (stage.reward.hero_shard ? ' +3🧩' : '');
+
+      let resultText = '+' + stage.reward.gold + '💰 +' + stage.reward.exp + '⭐' + (stage.reward.hero_shard ? ' +3🧩' : '');
+
+      // v3: Equipment drop
+      if (typeof Equipment !== 'undefined') {
+        const chapter = Campaign.getCurrentChapter();
+        const drop = Equipment.generateDrop(chapter.id, !!stage.boss);
+        if (drop) {
+          Storage.addEquipment(drop);
+          const tmpl = Equipment.TEMPLATES[drop.templateId];
+          const rarInfo = Equipment.RARITIES[tmpl?.rarity || 1];
+          resultText += '\n🎒 获得装备: ' + (tmpl?.emoji || '') + ' ' + (tmpl?.name || '???') + ' (' + rarInfo.label + ')';
+        }
+      }
+
+      document.getElementById('result-detail').innerHTML = resultText.replace(/\n/g, '<br>');
 
       // v2: Track stats & missions
       Storage.recordWin();
@@ -506,10 +529,16 @@ const App = {
         Storage.recordBossWin();
         DailyMissions.trackProgress('boss');
       }
+
+      // v3: Check achievements
+      if (typeof Achievements !== 'undefined') {
+        const newAch = Achievements.checkAll();
+        if (newAch.length > 0) setTimeout(() => this.toast('🏅 新成就: ' + newAch.map(a => a.name).join(', '), 3000), 1500);
+      }
     } else {
       document.getElementById('result-icon').textContent = '💀';
       document.getElementById('result-title').textContent = '败北...';
-      document.getElementById('result-detail').textContent = '升级武将或调整阵容再战！';
+      document.getElementById('result-detail').innerHTML = '升级武将或调整阵容再战！';
       Storage.recordLoss();
     }
     modal.classList.remove('hidden');
@@ -626,7 +655,10 @@ const App = {
             '<div class="upgrade-cost">🧩 ' + (stars >= 5 ? '—' : starUpCost) + ' (拥有' + (data.shards || 0) + ')</div>' +
           '</button>' +
         '</div>' +
-      '</div>';
+      '</div>' +
+
+      // v3: Equipment slots
+      this._renderHeroEquipSection(heroId);
   },
 
   doLevelUp(heroId) {
@@ -812,13 +844,30 @@ const App = {
     this.updateHeader();
   },
 
-  // ===== LEADERBOARD (v2) =====
+  // ===== LEADERBOARD (v2 + kingdom war) =====
   renderLeaderboard() {
     const rankings = Leaderboard.getRankings();
     document.getElementById('lb-reset').textContent = Leaderboard.getResetCountdown();
 
     const list = document.getElementById('leaderboard-list');
     list.innerHTML = '';
+
+    // Kingdom war summary
+    if (typeof KingdomSystem !== 'undefined') {
+      const kWar = KingdomSystem.getKingdomWar();
+      const playerK = Storage.getKingdom();
+      let kwHTML = '<div class="card card-glow" style="margin-bottom:12px"><div style="font-size:14px;font-weight:600;margin-bottom:10px">🏰 势力战争 · 本周</div>';
+      kWar.forEach(k => {
+        const isPlayer = k.id === playerK;
+        kwHTML += '<div class="kw-row' + (isPlayer ? ' kw-mine' : '') + '">' +
+          '<span class="kw-rank">' + (k.rank <= 3 ? ['🥇','🥈','🥉'][k.rank-1] : k.rank) + '</span>' +
+          '<span class="kw-emoji" style="color:' + k.color + '">' + k.banner + '</span>' +
+          '<span class="kw-name">' + k.name + (isPlayer ? ' <span class="lb-you">你</span>' : '') + '</span>' +
+          '<span class="kw-power">⚡' + k.power + '</span></div>';
+      });
+      kwHTML += '</div>';
+      list.innerHTML += kwHTML;
+    }
 
     rankings.forEach(entry => {
       const div = document.createElement('div');

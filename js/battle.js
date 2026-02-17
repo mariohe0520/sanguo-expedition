@@ -27,6 +27,22 @@ const Battle = {
     const level = side === 'player' ? (Storage?.getHeroLevel?.(hero.id) || 1) : 1;
     const stars = side === 'player' ? (Storage?.getHeroStars?.(hero.id) || hero.rarity || 1) : (hero.rarity || 1);
     const mult = (1 + (level - 1) * 0.08) * (1 + (stars - 1) * 0.15);
+
+    let eqHP=0, eqATK=0, eqDEF=0, eqSPD=0, eqINT=0;
+    let equipEffects = { crit_pct:0, skill_dmg_pct:0, reflect_pct:0 };
+    // Apply equipment stats for player heroes
+    if (side === 'player' && typeof Equipment !== 'undefined') {
+      const eqData = Equipment.getHeroEquipmentStats(hero.id);
+      if (eqData) { eqHP=eqData.stats.hp; eqATK=eqData.stats.atk; eqDEF=eqData.stats.def; eqSPD=eqData.stats.spd; eqINT=eqData.stats.int; }
+      equipEffects = Equipment.getHeroBattleEffects(hero.id);
+    }
+
+    const baseHP  = Math.floor(hero.baseStats.hp * mult)  + eqHP;
+    const baseATK = Math.floor(hero.baseStats.atk * mult) + eqATK;
+    const baseDEF = Math.floor(hero.baseStats.def * mult) + eqDEF;
+    const baseSPD = Math.floor(hero.baseStats.spd * mult) + eqSPD;
+    const baseINT = Math.floor(hero.baseStats.int * mult) + eqINT;
+
     return {
       id: hero.id,
       name: hero.name,
@@ -35,12 +51,12 @@ const Battle = {
       unit: hero.unit,
       faction: hero.faction,
       rarity: hero.rarity,
-      hp: Math.floor(hero.baseStats.hp * mult),
-      maxHp: Math.floor(hero.baseStats.hp * mult),
-      atk: Math.floor(hero.baseStats.atk * mult),
-      def: Math.floor(hero.baseStats.def * mult),
-      spd: Math.floor(hero.baseStats.spd * mult),
-      int: Math.floor(hero.baseStats.int * mult),
+      hp: baseHP,
+      maxHp: baseHP,
+      atk: baseATK,
+      def: baseDEF,
+      spd: baseSPD,
+      int: baseINT,
       rage: 0,
       maxRage: hero.skill?.rage || 100,
       skill: hero.skill,
@@ -49,6 +65,7 @@ const Battle = {
       buffs: [],   // {stat, pct, duration}
       debuffs: [],
       effects: [], // stun, charm, invincible
+      equipEffects, // from equipment sets
     };
   },
 
@@ -143,6 +160,16 @@ const Battle = {
       this.addLog(`${attacker.emoji} ${attacker.name} → ${defender.emoji} ${defender.name} ${dmg}伤害${advMult > 1 ? ' (克制!)' : ''}`);
     }
 
+    // Equipment set: 玄甲 reflect damage
+    if (defender.alive && defender.equipEffects?.reflect_pct > 0) {
+      const reflectDmg = Math.floor(dmg * defender.equipEffects.reflect_pct / 100);
+      if (reflectDmg > 0) {
+        attacker.hp = Math.max(0, attacker.hp - reflectDmg);
+        this.addLog(`⬛ ${defender.name} 玄甲反弹 ${reflectDmg}伤害！`);
+        if (attacker.hp <= 0) { attacker.alive = false; }
+      }
+    }
+
     // Gain rage
     attacker.rage = Math.min(attacker.maxRage, attacker.rage + 20);
     defender.rage = Math.min(defender.maxRage, (defender.rage || 0) + 10);
@@ -161,8 +188,9 @@ const Battle = {
     const defStat = this.getEffStat(def, 'def');
     const base = Math.max(1, atkStat - defStat * 0.5);
     const variance = 0.9 + Math.random() * 0.2;
-    // Crit chance: 10% base
-    const critChance = 10 + (atk.buffs.find(b => b.stat === 'crit')?.pct || 0);
+    // Crit chance: 10% base + buff + equipment set bonus
+    const equipCrit = atk.equipEffects?.crit_pct || 0;
+    const critChance = 10 + (atk.buffs.find(b => b.stat === 'crit')?.pct || 0) + equipCrit;
     const isCrit = Math.random() * 100 < critChance;
     return Math.floor(base * variance * (isCrit ? 1.5 : 1));
   },
@@ -225,6 +253,9 @@ const Battle = {
 
     this.addLog(`⚡ ${fighter.emoji} ${fighter.name} 释放【${s.name}】！`);
 
+    // Equipment set: 凤翼 skill damage bonus
+    const skillDmgBonus = fighter.equipEffects?.skill_dmg_pct || 0;
+
     switch (s.type) {
       case 'damage': {
         let targets;
@@ -238,6 +269,7 @@ const Battle = {
           const hits = s.hits || 1;
           for (let h = 0; h < hits; h++) {
             let dmg = Math.floor(this.getEffStat(fighter, 'atk') * s.value);
+            dmg = Math.floor(dmg * (1 + skillDmgBonus / 100));
             if (s.guaranteed_crit) dmg = Math.floor(dmg * 1.5);
             t.hp = Math.max(0, t.hp - dmg);
             this.addLog(`  → ${t.emoji} ${t.name} -${dmg} HP`);
@@ -255,6 +287,7 @@ const Battle = {
         const targets = s.target === 'all_enemy' ? enemies : [enemies.sort((a,b) => a.hp - b.hp)[0]];
         for (const t of targets) {
           let dmg = Math.floor(this.getEffStat(fighter, 'int') * s.value);
+          dmg = Math.floor(dmg * (1 + skillDmgBonus / 100));
           // Weather affects magic skills (e.g. rain weakens fire magic)
           dmg = Math.floor(dmg * this.getWeatherMult(fighter, this.state.weather, true));
           t.hp = Math.max(0, t.hp - dmg);
@@ -320,6 +353,21 @@ const Battle = {
         }
       }
     }
+    // Kingdom allegiance buff: +10% all stats to matching faction heroes
+    if (typeof Storage !== 'undefined') {
+      const kingdom = Storage.getKingdom?.();
+      if (kingdom) {
+        for (const f of this.state.player.filter(x => x && x.faction === kingdom)) {
+          f.atk   = Math.floor(f.atk * 1.1);
+          f.def   = Math.floor(f.def * 1.1);
+          f.hp    = Math.floor(f.hp * 1.1);
+          f.maxHp = Math.floor(f.maxHp * 1.1);
+          f.int   = Math.floor(f.int * 1.1);
+          f.spd   = Math.floor(f.spd * 1.1);
+        }
+      }
+    }
+
     // Faction synergy
     for (const side of ['player', 'enemy']) {
       const team = this.state[side].filter(f => f);
