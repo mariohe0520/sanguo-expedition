@@ -111,6 +111,91 @@ const Storage = {
   // === v3: Achievements ===
   getAchievementState() { return this._get('achievements', { unlocked: {} }); },
   saveAchievementState(s) { this._set('achievements', s); },
+
+  // === v4: Statistics & Profile ===
+  getProfileStats() {
+    const p = this.getPlayer();
+    const roster = this.getRoster();
+    const stats = this.getBattleStats();
+    const progress = this.getCampaignProgress();
+    const dungeonState = this._get('dungeonState', { highestFloor: 0, totalRuns: 0 });
+    const arenaState = this._get('arenaState', { rating: 800, wins: 0, losses: 0, bestStreak: 0 });
+    const playTime = this._get('playTime', { firstLogin: Date.now(), totalSessions: 0 });
+
+    // Calculate total power
+    let totalPower = 0;
+    const heroCount = Object.keys(roster).length;
+    for (const [id, data] of Object.entries(roster)) {
+      const hero = HEROES[id];
+      if (!hero) continue;
+      const level = data.level || 1;
+      const stars = data.stars || hero.rarity;
+      const mult = (1 + (level - 1) * 0.08) * (1 + (stars - 1) * 0.15);
+      const s = hero.baseStats;
+      totalPower += Math.floor((s.hp + s.atk + s.def + s.spd + s.int) * mult);
+    }
+
+    // Find favorite hero (most used — approximate by highest level)
+    let favoriteHero = null;
+    let maxLevel = 0;
+    for (const [id, data] of Object.entries(roster)) {
+      if ((data.level || 1) > maxLevel) {
+        maxLevel = data.level || 1;
+        favoriteHero = HEROES[id];
+      }
+    }
+
+    const totalBattles = stats.wins + stats.losses;
+    const winRate = totalBattles > 0 ? Math.floor(stats.wins / totalBattles * 100) : 0;
+    const totalHeroesInGame = getTotalHeroCount();
+
+    return {
+      name: p.name,
+      level: p.level,
+      gold: p.gold,
+      gems: p.gems,
+      totalPower,
+      heroCount,
+      totalHeroesInGame,
+      collectionPct: Math.floor(heroCount / totalHeroesInGame * 100),
+      stagesCleared: (progress.chapter - 1) * 10 + progress.stage - 1,
+      totalChapters: 6,
+      currentChapter: progress.chapter,
+      totalBattles,
+      wins: stats.wins,
+      losses: stats.losses,
+      bossWins: stats.bossWins,
+      winRate,
+      favoriteHero,
+      dungeonHighestFloor: dungeonState.highestFloor,
+      dungeonTotalRuns: dungeonState.totalRuns,
+      arenaRating: arenaState.rating,
+      arenaWins: arenaState.wins,
+      arenaBestStreak: arenaState.bestStreak,
+      daysSinceStart: Math.floor((Date.now() - playTime.firstLogin) / 86400000),
+      kingdom: this.getKingdom(),
+    };
+  },
+
+  trackPlayTime() {
+    const pt = this._get('playTime', { firstLogin: Date.now(), totalSessions: 0 });
+    pt.totalSessions++;
+    this._set('playTime', pt);
+  },
+
+  // === v4: Seasonal Content ===
+  getSeasonalState() {
+    return this._get('seasonalState', {
+      currentSeason: 0,
+      passLevel: 0,
+      passXP: 0,
+      premium: false,
+      claimed: {},
+      stagesCleared: {},
+      achievements: {},
+    });
+  },
+  saveSeasonalState(s) { this._set('seasonalState', s); },
 };
 
 if (typeof window !== 'undefined') window.Storage = Storage;

@@ -1,4 +1,4 @@
-const CACHE = 'sanguo-v2';
+const CACHE = 'sanguo-v4';
 const ASSETS = [
   '.',
   'index.html',
@@ -9,6 +9,10 @@ const ASSETS = [
   'js/campaign.js',
   'js/gacha.js',
   'js/idle.js',
+  'js/equipment.js',
+  'js/dungeon.js',
+  'js/arena.js',
+  'js/seasonal.js',
   'js/app.js',
   'manifest.json'
 ];

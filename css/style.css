@@ -259,3 +259,35 @@ body { font-family:-apple-system,system-ui,sans-serif; background:var(--bg); col
 /* Page transition */
 @keyframes slideIn { from{opacity:0;transform:translateX(12px)} to{opacity:1;transform:translateX(0)} }
 .page.active { animation:slideIn .25s ease-out; }
+
+/* ===== v4: TAB BAR ===== */
+.tab-bar { display:flex; gap:4px; margin-bottom:12px; background:var(--card); border-radius:12px; padding:4px; }
+.tab-item { flex:1; text-align:center; padding:10px 8px; border-radius:10px; font-size:12px; font-weight:600; cursor:pointer; transition:.2s; color:var(--dim); }
+.tab-item.active { background:var(--accent); color:#fff; }
+.tab-item:active { transform:scale(.95); }
+
+/* ===== v4: ARENA ===== */
+#arena-rank-card { background:linear-gradient(135deg,var(--card),rgba(99,102,241,.08)); }
+
+/* ===== v4: PROFILE ===== */
+#page-profile .card { transition:.2s; }
+
+/* ===== v4: DUNGEON ===== */
+#dungeon-content .card { transition:.2s; }
+#dungeon-content .card:active { transform:scale(.98); }
+
+/* Seasonal banner gradient */
+.seasonal-banner { background:linear-gradient(135deg,rgba(244,114,182,.15),rgba(251,191,36,.1)); border-color:var(--gold) !important; }
+
+/* Arena opponent card hover */
+#arena-opponents .card { cursor:pointer; border:1px solid var(--border); transition:.2s; }
+#arena-opponents .card:hover { border-color:var(--accent); }
+#arena-opponents .card:active { transform:scale(.97); }
+
+/* Better button disabled state */
+.btn:disabled { opacity:.4; cursor:not-allowed; }
+.btn:disabled:active { transform:none; }
+
+/* Scroll snap for pass rewards */
+#dungeon-content [style*="overflow-x"] { -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory; }
+#dungeon-content [style*="overflow-x"] > div { scroll-snap-align:start; }

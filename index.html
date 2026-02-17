@@ -58,22 +58,30 @@
   <!-- Quick Actions -->
   <div class="card">
     <div style="font-size:15px;font-weight:600;margin-bottom:12px">快捷入口</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
       <div class="hero-card" onclick="App.switchPage('campaign')" style="margin:0;justify-content:center">
-        <span style="font-size:28px">⚔️</span>
-        <span style="font-size:14px;font-weight:600">征战</span>
+        <span style="font-size:24px">⚔️</span>
+        <span style="font-size:12px;font-weight:600">战役</span>
+      </div>
+      <div class="hero-card" onclick="App.switchPage('dungeon')" style="margin:0;justify-content:center">
+        <span style="font-size:24px">🏔️</span>
+        <span style="font-size:12px;font-weight:600">副本</span>
+      </div>
+      <div class="hero-card" onclick="App.switchPage('arena')" style="margin:0;justify-content:center">
+        <span style="font-size:24px">🏟️</span>
+        <span style="font-size:12px;font-weight:600">竞技</span>
       </div>
       <div class="hero-card" onclick="App.switchPage('gacha')" style="margin:0;justify-content:center">
-        <span style="font-size:28px">🏯</span>
-        <span style="font-size:14px;font-weight:600">求贤</span>
+        <span style="font-size:24px">🏯</span>
+        <span style="font-size:12px;font-weight:600">求贤</span>
       </div>
       <div class="hero-card" onclick="App.switchPage('roster')" style="margin:0;justify-content:center">
-        <span style="font-size:28px">🛡️</span>
-        <span style="font-size:14px;font-weight:600">武将</span>
+        <span style="font-size:24px">🛡️</span>
+        <span style="font-size:12px;font-weight:600">英雄</span>
       </div>
-      <div class="hero-card" onclick="App.switchPage('leaderboard')" style="margin:0;justify-content:center">
-        <span style="font-size:28px">🏆</span>
-        <span style="font-size:14px;font-weight:600">排行</span>
+      <div class="hero-card" onclick="App.switchPage('profile')" style="margin:0;justify-content:center">
+        <span style="font-size:24px">📊</span>
+        <span style="font-size:12px;font-weight:600">档案</span>
       </div>
     </div>
   </div>
@@ -260,17 +268,93 @@
   </div>
 </div>
 
+<!-- ===== PAGE: DUNGEON ===== -->
+<div id="page-dungeon" class="page">
+  <div class="page-header">
+    <div class="page-title">🏔️ 副本</div>
+    <div class="resource-bar">
+      <span>💰 <b id="dg-gold">0</b></span>
+      <span>💎 <b id="dg-gems">0</b></span>
+    </div>
+  </div>
+
+  <!-- Dungeon Tabs -->
+  <div class="tab-bar" id="dungeon-tabs">
+    <div class="tab-item active" onclick="App.switchDungeonTab('endless')">♾️ 无尽</div>
+    <div class="tab-item" onclick="App.switchDungeonTab('daily')">📅 每日</div>
+    <div class="tab-item" onclick="App.switchDungeonTab('raid')">💀 Boss</div>
+    <div class="tab-item" onclick="App.switchDungeonTab('seasonal')">🌸 赛季</div>
+  </div>
+
+  <div id="dungeon-content"></div>
+</div>
+
+<!-- ===== PAGE: ARENA ===== -->
+<div id="page-arena" class="page">
+  <div class="page-header">
+    <div class="page-title">⚔️ 竞技场</div>
+    <div class="text-dim" style="font-size:12px" id="arena-attempts">剩余: 5次</div>
+  </div>
+
+  <!-- Arena Rank Display -->
+  <div class="card card-glow" id="arena-rank-card">
+    <div style="text-align:center">
+      <div style="font-size:48px" id="arena-rank-emoji">🥉</div>
+      <div style="font-size:20px;font-weight:700" id="arena-rank-name">青铜</div>
+      <div style="font-size:14px;color:var(--gold)" id="arena-rating">Rating: 800</div>
+      <div class="progress mt-8" style="width:80%;margin:8px auto 0"><div class="progress-fill" id="arena-progress-bar" style="width:0%;background:linear-gradient(90deg,var(--accent),var(--gold))"></div></div>
+      <div class="text-dim" style="font-size:11px;margin-top:4px" id="arena-next-rank">下一段位: 白银 (1000)</div>
+    </div>
+  </div>
+
+  <!-- Arena Stats -->
+  <div class="card">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+      <div><div style="font-size:20px;font-weight:700;color:var(--shu)" id="arena-wins">0</div><div class="text-dim" style="font-size:11px">胜</div></div>
+      <div><div style="font-size:20px;font-weight:700;color:var(--hp)" id="arena-losses">0</div><div class="text-dim" style="font-size:11px">负</div></div>
+      <div><div style="font-size:20px;font-weight:700;color:var(--gold)" id="arena-streak">0</div><div class="text-dim" style="font-size:11px">连胜</div></div>
+    </div>
+  </div>
+
+  <!-- Opponents -->
+  <div style="font-size:15px;font-weight:600;margin-bottom:8px">选择对手</div>
+  <div id="arena-opponents"></div>
+
+  <!-- Weekly Reward -->
+  <div class="card mt-16" id="arena-weekly-card">
+    <div class="flex justify-between items-center">
+      <div>
+        <div style="font-size:14px;font-weight:600">🎁 周奖励</div>
+        <div class="text-dim" style="font-size:12px" id="arena-weekly-desc">基于当前段位</div>
+      </div>
+      <button class="btn btn-gold btn-sm" id="arena-weekly-btn" onclick="App.claimArenaWeekly()">领取</button>
+    </div>
+  </div>
+
+  <!-- Arena Leaderboard -->
+  <div style="font-size:15px;font-weight:600;margin:16px 0 8px">🏆 竞技排行</div>
+  <div id="arena-leaderboard"></div>
+</div>
+
+<!-- ===== PAGE: PROFILE ===== -->
+<div id="page-profile" class="page">
+  <div class="page-header">
+    <div class="page-title">📊 档案</div>
+  </div>
+  <div id="profile-content"></div>
+</div>
+
 <!-- ===== TOAST ===== -->
 <div id="toast" class="toast hidden"></div>
 
 <!-- ===== BOTTOM NAV ===== -->
 <nav class="bottom-nav">
   <div class="nav-item active" onclick="App.switchPage('home')"><span class="icon">🏠</span>主城</div>
-  <div class="nav-item" onclick="App.switchPage('campaign')"><span class="icon">⚔️</span>征战</div>
-  <div class="nav-item" onclick="App.switchPage('gacha')"><span class="icon">🏯</span>求贤</div>
-  <div class="nav-item" onclick="App.switchPage('roster')"><span class="icon">🛡️</span>武将</div>
-  <div class="nav-item" onclick="App.switchPage('team')"><span class="icon">📋</span>编队</div>
-  <div class="nav-item" onclick="App.switchPage('leaderboard')"><span class="icon">🏆</span>排行</div>
+  <div class="nav-item" onclick="App.switchPage('campaign')"><span class="icon">⚔️</span>战役</div>
+  <div class="nav-item" onclick="App.switchPage('dungeon')"><span class="icon">🏔️</span>副本</div>
+  <div class="nav-item" onclick="App.switchPage('arena')"><span class="icon">🏟️</span>竞技</div>
+  <div class="nav-item" onclick="App.switchPage('roster')"><span class="icon">🛡️</span>英雄</div>
+  <div class="nav-item" onclick="App.switchPage('gacha')"><span class="icon">🏯</span>商店</div>
 </nav>
 
 <!-- Scripts -->
@@ -280,6 +364,10 @@
 <script src="js/campaign.js"></script>
 <script src="js/gacha.js"></script>
 <script src="js/idle.js"></script>
+<script src="js/equipment.js"></script>
+<script src="js/dungeon.js"></script>
+<script src="js/arena.js"></script>
+<script src="js/seasonal.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
