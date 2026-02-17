@@ -4,7 +4,7 @@
 const Leaderboard = {
   RIVAL_NAMES: ['烈焰军', '苍龙营', '虎豹骑', '飞鱼卫', '赤壁联军', '铁壁营', '青龙军', '白虎卫', '玄武营'],
   RIVAL_LEADERS: ['袁绍', '袁术', '公孙瓒', '陶谦', '刘表', '马腾', '韩遂', '张鲁', '孟获'],
-  RIVAL_EMOJIS: ['🦁', '🐲', '🐯', '🐟', '🔥', '🏰', '🐉', '🐺', '🐘'],
+  RIVAL_EMOJIS: ['狮', '龙', '虎', '鱼', '焰', '城', '蛟', '狼', '象'],
 
   seededRandom(seed) {
     let s = seed;
@@ -73,7 +73,7 @@ const Leaderboard = {
     const rivals = this.generateRivals();
     const player = Storage.getPlayer();
     const playerEntry = {
-      rank: 0, name: player.name + '的军队', leader: player.name, emoji: '👑',
+      rank: 0, name: player.name + '的军队', leader: player.name, emoji: '',
       power: this.getPlayerPower(), progress: this.getPlayerProgress(),
       winRate: this.getPlayerWinRate(), army: Storage.getTeam().filter(Boolean), isPlayer: true
     };
@@ -104,9 +104,9 @@ const Leaderboard = {
 // ===== DAILY MISSION ENGINE =====
 const DailyMissions = {
   MISSIONS: [
-    { id: 'stages', name: '征战沙场', desc: '完成3个关卡', target: 3, reward: { gold: 200 }, rewardText: '💰200', icon: '⚔️' },
-    { id: 'gacha', name: '礼贤下士', desc: '拜访求贤馆1次', target: 1, reward: { gold: 100 }, rewardText: '💰100', icon: '🏯' },
-    { id: 'boss', name: '斩将夺旗', desc: '击败Boss 1次', target: 1, reward: { gems: 5 }, rewardText: '💎5', icon: '💀' }
+    { id: 'stages', name: '征战沙场', desc: '完成3个关卡', target: 3, reward: { gold: 200 }, rewardText: '金200', icon: 'battle' },
+    { id: 'gacha', name: '礼贤下士', desc: '拜访求贤馆1次', target: 1, reward: { gold: 100 }, rewardText: '金100', icon: 'scroll' },
+    { id: 'boss', name: '斩将夺旗', desc: '击败Boss 1次', target: 1, reward: { gems: 5 }, rewardText: '石5', icon: 'battle' }
   ],
 
   getTodayKey() {
@@ -351,7 +351,7 @@ const App = {
     // Check achievements in background
     if (typeof Achievements !== 'undefined') {
       const newAch = Achievements.checkAll();
-      if (newAch.length > 0) this.toast('🏅 新成就: ' + newAch.map(a => a.name).join(', '));
+      if (newAch.length > 0) this.toast('新成就: ' + newAch.map(a => a.name).join(', '));
     }
   },
 
@@ -370,7 +370,7 @@ const App = {
   collectIdle() {
     const result = Idle.collectRewards();
     if (!result) return;
-    this.toast('🎉 领取 ' + result.gold + '金币 + ' + result.exp + '经验！' + (result.loot.length ? ' 获得装备!' : ''));
+    this.toast('领取 ' + result.gold + '金币 + ' + result.exp + '经验！' + (result.loot.length ? ' 获得装备!' : ''));
     document.getElementById('idle-card').classList.add('hidden');
     this.renderHome();
   },
@@ -390,10 +390,8 @@ const App = {
 
     document.getElementById('campaign-title').textContent = chapter.icon + ' ' + chapter.name;
 
-    const terrainEmojis = { plains: '🌾 平原', mountain: '⛰️ 山地', water: '🌊 水域', river: '🌊 水域', forest: '🌲 森林', castle: '🏰 城池' };
-    const weatherEmojis = { clear: '☀️ 晴天', rain: '🌧️ 雨天', fog: '🌫️ 雾天', fire: '🔥 火烧', wind: '🌬️ 大风' };
-    document.getElementById('campaign-terrain').textContent = terrainEmojis[chapter.terrain] || '🌾 平原';
-    document.getElementById('campaign-weather').textContent = weatherEmojis[chapter.weather] || '☀️ 晴天';
+    document.getElementById('campaign-terrain').innerHTML = Visuals.terrainLabel(chapter.terrain);
+    document.getElementById('campaign-weather').innerHTML = Visuals.weatherLabel(chapter.weather);
 
     const list = document.getElementById('stage-list');
     list.innerHTML = '';
@@ -413,7 +411,7 @@ const App = {
         'cursor:' + (isUnlocked ? 'pointer' : 'default') + ';transition:.2s';
       tab.innerHTML = '<div style="font-size:18px">' + ch.icon + '</div>' +
         '<div style="font-size:10px;' + (isActive ? 'color:var(--gold);font-weight:600' : 'color:var(--dim)') + '">' +
-        (isCompleted ? '✅ ' + ch.id : isActive && isCurrentChapter ? '▶ ' + ch.id : ch.id) + '</div>';
+        (isCompleted ? '通 ' + ch.id : isActive && isCurrentChapter ? '▶ ' + ch.id : ch.id) + '</div>';
       if (isUnlocked) {
         const chId = ch.id;
         tab.onclick = () => this.selectCampaignChapter(chId);
@@ -455,9 +453,9 @@ const App = {
 
       const div = document.createElement('div');
       div.className = 'stage-item ' + (stage.boss ? 'boss ' : '') + (isCurrent ? 'current ' : '') + (isLocked ? 'locked' : '');
-      div.innerHTML = '<div class="stage-num ' + (stage.boss ? 'stage-boss' : '') + '">' + (stage.boss ? '💀' : stage.id) + '</div>' +
-        '<div class="stage-info"><div class="stage-name">' + stage.name + (isCompleted ? ' ✅' : '') + '</div>' +
-        '<div class="stage-reward">💰' + stage.reward.gold + ' · ⭐' + stage.reward.exp + (stage.reward.hero_shard ? ' · 🧩碎片' : '') + '</div></div>' +
+      div.innerHTML = '<div class="stage-num ' + (stage.boss ? 'stage-boss' : '') + '">' + (stage.boss ? Visuals.bossSkull() : stage.id) + '</div>' +
+        '<div class="stage-info"><div class="stage-name">' + stage.name + (isCompleted ? ' <span style="color:var(--shu)">通</span>' : '') + '</div>' +
+        '<div class="stage-reward">' + Visuals.resIcon('gold') + stage.reward.gold + ' · ' + Visuals.resIcon('exp') + stage.reward.exp + (stage.reward.hero_shard ? ' · ' + Visuals.resIcon('shard') + '碎片' : '') + '</div></div>' +
         (stage.elite ? '<span class="text-gold">精英</span>' : '');
       if (!isLocked) {
         const stageRef = stage;
@@ -551,10 +549,10 @@ const App = {
         const hpPct = f.alive ? (f.hp / f.maxHp * 100) : 0;
         const ragePct = f.rage / (f.maxRage || 100) * 100;
         const elemBadge = f.element && typeof ELEMENT_INFO !== 'undefined' && ELEMENT_INFO[f.element]
-          ? '<span class="element-badge" style="color:' + ELEMENT_INFO[f.element].color + '">' + ELEMENT_INFO[f.element].emoji + '</span>' : '';
+          ? Visuals.elemBadge(f.element) : '';
         const appliedBadge = f.appliedElement && typeof ELEMENT_INFO !== 'undefined' && ELEMENT_INFO[f.appliedElement]
-          ? '<span class="element-badge" style="border:1px solid ' + ELEMENT_INFO[f.appliedElement].color + '">' + ELEMENT_INFO[f.appliedElement].emoji + '</span>' : '';
-        div.innerHTML = '<span class="fighter-emoji">' + f.emoji + '</span>' +
+          ? '<span class="elem-badge" style="--ec:' + ELEMENT_INFO[f.appliedElement].color + ';border-style:dashed">' + Visuals.elemIcon(f.appliedElement) + '</span>' : '';
+        div.innerHTML = Visuals.heroPortrait(f.id, 'sm', f.rarity) +
           '<div class="fighter-bars"><div class="fighter-name">' + f.name + elemBadge + appliedBadge + '</div>' +
           '<div class="bar"><div class="bar-fill hp-fill" style="width:' + hpPct + '%"></div></div>' +
           '<div class="bar"><div class="bar-fill rage-fill" style="width:' + ragePct + '%"></div></div></div>';
@@ -583,14 +581,14 @@ const App = {
     const stage = this.currentStage;
 
     if (result === 'victory') {
-      document.getElementById('result-icon').textContent = '🎉';
+      document.getElementById('result-icon').innerHTML = '<span style="font-size:48px;color:var(--gold)">胜</span>';
       document.getElementById('result-title').textContent = '胜利！';
       Storage.addGold(stage.reward.gold);
       Storage.addExp(stage.reward.exp);
       if (stage.reward.hero_shard) Storage.addShards(stage.reward.hero_shard, 3);
       Campaign.completeStage(stage.id);
 
-      let resultText = '+' + stage.reward.gold + '💰 +' + stage.reward.exp + '⭐' + (stage.reward.hero_shard ? ' +3🧩' : '');
+      let resultText = '+' + stage.reward.gold + '金 +' + stage.reward.exp + '经验' + (stage.reward.hero_shard ? ' +3碎片' : '');
 
       // v3: Equipment drop
       if (typeof Equipment !== 'undefined') {
@@ -600,7 +598,7 @@ const App = {
           Storage.addEquipment(drop);
           const tmpl = Equipment.TEMPLATES[drop.templateId];
           const rarInfo = Equipment.RARITIES[tmpl?.rarity || 1];
-          resultText += '\n🎒 获得装备: ' + (tmpl?.emoji || '') + ' ' + (tmpl?.name || '???') + ' (' + rarInfo.label + ')';
+          resultText += '\n获得装备: ' + (tmpl?.emoji || '') + ' ' + (tmpl?.name || '???') + ' (' + rarInfo.label + ')';
         }
       }
 
@@ -617,10 +615,10 @@ const App = {
       // v3: Check achievements
       if (typeof Achievements !== 'undefined') {
         const newAch = Achievements.checkAll();
-        if (newAch.length > 0) setTimeout(() => this.toast('🏅 新成就: ' + newAch.map(a => a.name).join(', '), 3000), 1500);
+        if (newAch.length > 0) setTimeout(() => this.toast('新成就: ' + newAch.map(a => a.name).join(', '), 3000), 1500);
       }
     } else {
-      document.getElementById('result-icon').textContent = '💀';
+      document.getElementById('result-icon').innerHTML = '<span style="font-size:48px;color:var(--hp)">败</span>';
       document.getElementById('result-title').textContent = '败北...';
       document.getElementById('result-detail').innerHTML = '升级武将或调整阵容再战！';
       Storage.recordLoss();
@@ -647,10 +645,10 @@ const App = {
       const stars = data.stars || hero.rarity;
       const div = document.createElement('div');
       div.className = 'hero-card rarity-' + hero.rarity;
-      div.innerHTML = '<div class="hero-emoji">' + hero.emoji + '</div>' +
+      div.innerHTML = '<div class="hero-emoji">' + Visuals.heroPortrait(id, 'sm', hero.rarity) + '</div>' +
         '<div class="hero-info">' +
           '<div class="hero-name">' + hero.name + (hero.title ? ' · ' + hero.title : '') + '</div>' +
-          '<div class="hero-sub">Lv.' + data.level + ' · ' + (UNIT_TYPES[hero.unit]?.emoji || '') + ' ' + (UNIT_TYPES[hero.unit]?.name || '') + ' · ' + (FACTIONS[hero.faction]?.emoji || '') + ' ' + (FACTIONS[hero.faction]?.name || '') + '</div>' +
+          '<div class="hero-sub">Lv.' + data.level + ' · ' + Visuals.unitIcon(hero.unit) + ' ' + (UNIT_TYPES[hero.unit]?.name || '') + ' · ' + Visuals.factionIcon(hero.faction) + ' ' + (FACTIONS[hero.faction]?.name || '') + '</div>' +
           '<div class="hero-stars">' + '★'.repeat(stars) + '☆'.repeat(5 - stars) + '</div>' +
         '</div>' +
         '<div class="text-dim" style="font-size:18px">›</div>';
@@ -690,56 +688,56 @@ const App = {
     const content = document.getElementById('hero-detail-content');
     content.innerHTML =
       '<div class="hd-hero-display">' +
-        '<div class="hd-emoji rarity-' + hero.rarity + '-bg">' + hero.emoji + '</div>' +
+        '<div class="hp-detail-bg r' + hero.rarity + '">' + Visuals.heroPortrait(heroId, 'lg', hero.rarity) + '</div>' +
         '<div class="hd-name">' + hero.name + '</div>' +
         '<div class="hd-title-text">' + (hero.title || '') + '</div>' +
         '<div class="hd-stars">' + '★'.repeat(stars) + '☆'.repeat(5 - stars) + '</div>' +
-        '<div class="hd-meta">' + (UNIT_TYPES[hero.unit]?.emoji || '') + ' ' + (UNIT_TYPES[hero.unit]?.name || '') +
-          ' · ' + (FACTIONS[hero.faction]?.emoji || '') + ' ' + (FACTIONS[hero.faction]?.name || '') + ' · Lv.' + level +
-          (typeof HERO_ELEMENTS !== 'undefined' && HERO_ELEMENTS[heroId] && ELEMENT_INFO[HERO_ELEMENTS[heroId]]
-            ? ' · ' + ELEMENT_INFO[HERO_ELEMENTS[heroId]].emoji + ' ' + ELEMENT_INFO[HERO_ELEMENTS[heroId]].name
+        '<div class="hd-meta">' + Visuals.unitIcon(hero.unit) + ' ' + (UNIT_TYPES[hero.unit]?.name || '') +
+          ' · ' + Visuals.factionIcon(hero.faction) + ' ' + (FACTIONS[hero.faction]?.name || '') + ' · Lv.' + level +
+          (typeof HERO_ELEMENTS !== 'undefined' && HERO_ELEMENTS[heroId]
+            ? ' · ' + Visuals.elemBadge(HERO_ELEMENTS[heroId])
             : '') + '</div>' +
       '</div>' +
 
       '<div class="card">' +
-        '<div style="font-size:14px;font-weight:600;margin-bottom:12px">📊 战斗属性</div>' +
+        '<div style="font-size:14px;font-weight:600;margin-bottom:12px">' + Visuals.secIcon('stats') + ' 战斗属性</div>' +
         '<div class="stat-grid">' +
-          '<div class="stat-row"><span class="stat-label">❤️ 生命</span><div class="stat-bar-wrap"><div class="stat-bar stat-bar-hp" style="width:' + Math.min(100, stats.hp / 20) + '%"></div></div><span class="stat-val">' + stats.hp + '</span></div>' +
-          '<div class="stat-row"><span class="stat-label">⚔️ 攻击</span><div class="stat-bar-wrap"><div class="stat-bar stat-bar-atk" style="width:' + Math.min(100, stats.atk / 2) + '%"></div></div><span class="stat-val">' + stats.atk + '</span></div>' +
-          '<div class="stat-row"><span class="stat-label">🛡️ 防御</span><div class="stat-bar-wrap"><div class="stat-bar stat-bar-def" style="width:' + Math.min(100, stats.def / 1.5) + '%"></div></div><span class="stat-val">' + stats.def + '</span></div>' +
-          '<div class="stat-row"><span class="stat-label">💨 速度</span><div class="stat-bar-wrap"><div class="stat-bar stat-bar-spd" style="width:' + Math.min(100, stats.spd) + '%"></div></div><span class="stat-val">' + stats.spd + '</span></div>' +
-          '<div class="stat-row"><span class="stat-label">🧠 智力</span><div class="stat-bar-wrap"><div class="stat-bar stat-bar-int" style="width:' + Math.min(100, stats.int / 1.6) + '%"></div></div><span class="stat-val">' + stats.int + '</span></div>' +
+          '<div class="stat-row"><span class="stat-label">HP 生命</span><div class="stat-bar-wrap"><div class="stat-bar stat-bar-hp" style="width:' + Math.min(100, stats.hp / 20) + '%"></div></div><span class="stat-val">' + stats.hp + '</span></div>' +
+          '<div class="stat-row"><span class="stat-label">ATK 攻击</span><div class="stat-bar-wrap"><div class="stat-bar stat-bar-atk" style="width:' + Math.min(100, stats.atk / 2) + '%"></div></div><span class="stat-val">' + stats.atk + '</span></div>' +
+          '<div class="stat-row"><span class="stat-label">DEF 防御</span><div class="stat-bar-wrap"><div class="stat-bar stat-bar-def" style="width:' + Math.min(100, stats.def / 1.5) + '%"></div></div><span class="stat-val">' + stats.def + '</span></div>' +
+          '<div class="stat-row"><span class="stat-label">SPD 速度</span><div class="stat-bar-wrap"><div class="stat-bar stat-bar-spd" style="width:' + Math.min(100, stats.spd) + '%"></div></div><span class="stat-val">' + stats.spd + '</span></div>' +
+          '<div class="stat-row"><span class="stat-label">INT 智力</span><div class="stat-bar-wrap"><div class="stat-bar stat-bar-int" style="width:' + Math.min(100, stats.int / 1.6) + '%"></div></div><span class="stat-val">' + stats.int + '</span></div>' +
         '</div>' +
       '</div>' +
 
       (hero.skill ? '<div class="card">' +
-        '<div style="font-size:14px;font-weight:600;margin-bottom:8px">⚡ 技能: ' + hero.skill.name + '</div>' +
+        '<div style="font-size:14px;font-weight:600;margin-bottom:8px">' + Visuals.secIcon('skill') + ' 技能: ' + hero.skill.name + '</div>' +
         '<div class="text-dim" style="font-size:13px">' + hero.skill.desc + '</div>' +
         '<div style="font-size:11px;color:var(--gold);margin-top:6px">怒气消耗: ' + hero.skill.rage + '</div>' +
       '</div>' : '') +
 
       (hero.passive ? '<div class="card">' +
-        '<div style="font-size:14px;font-weight:600;margin-bottom:8px">🔮 被动: ' + hero.passive.name + '</div>' +
+        '<div style="font-size:14px;font-weight:600;margin-bottom:8px">' + Visuals.secIcon('passive') + ' 被动: ' + hero.passive.name + '</div>' +
         '<div class="text-dim" style="font-size:13px">' + hero.passive.desc + '</div>' +
       '</div>' : '') +
 
       '<div class="card">' +
-        '<div style="font-size:14px;font-weight:600;margin-bottom:8px">📖 背景故事</div>' +
+        '<div style="font-size:14px;font-weight:600;margin-bottom:8px">' + Visuals.secIcon('lore') + ' 背景故事</div>' +
         '<div class="text-dim" style="font-size:13px;font-style:italic">"' + hero.lore + '"</div>' +
       '</div>' +
 
       '<div class="card">' +
-        '<div style="font-size:14px;font-weight:600;margin-bottom:12px">⬆️ 强化武将</div>' +
+        '<div style="font-size:14px;font-weight:600;margin-bottom:12px">' + Visuals.secIcon('upgrade') + ' 强化武将</div>' +
         '<div class="upgrade-grid">' +
           '<button class="btn btn-primary upgrade-btn" onclick="App.doLevelUp(\'' + heroId + '\')">' +
             '<div class="upgrade-label">升级</div>' +
             '<div class="upgrade-detail">Lv.' + level + ' → Lv.' + (level + 1) + '</div>' +
-            '<div class="upgrade-cost">💰 ' + levelUpCost + '</div>' +
+            '<div class="upgrade-cost">'+ Visuals.resIcon('gold') + ' ' + levelUpCost + '</div>' +
           '</button>' +
           '<button class="btn btn-gold upgrade-btn" onclick="App.doStarUp(\'' + heroId + '\')"' + (stars >= 5 ? ' disabled' : '') + '>' +
             '<div class="upgrade-label">' + (stars >= 5 ? '已满星' : '升星') + '</div>' +
             '<div class="upgrade-detail">' + (stars >= 5 ? '★★★★★' : '★' + stars + ' → ★' + (stars + 1)) + '</div>' +
-            '<div class="upgrade-cost">🧩 ' + (stars >= 5 ? '—' : starUpCost) + ' (拥有' + (data.shards || 0) + ')</div>' +
+            '<div class="upgrade-cost">'+ Visuals.resIcon('shard') + ' ' + (stars >= 5 ? '—' : starUpCost) + ' (拥有' + (data.shards || 0) + ')</div>' +
           '</button>' +
         '</div>' +
       '</div>' +
@@ -753,16 +751,16 @@ const App = {
 
   doLevelUp(heroId) {
     const result = Storage.levelUpHero(heroId);
-    if (result.error) { this.toast('❌ ' + result.error); return; }
-    this.toast('⬆️ 升级成功！Lv.' + (result.newLevel - 1) + ' → Lv.' + result.newLevel);
+    if (result.error) { this.toast(result.error); return; }
+    this.toast('升级成功！Lv.' + (result.newLevel - 1) + ' → Lv.' + result.newLevel);
     this.renderHeroDetail(heroId);
     this.updateHeader();
   },
 
   doStarUp(heroId) {
     const result = Storage.starUpHero(heroId);
-    if (result.error) { this.toast('❌ ' + result.error); return; }
-    this.toast('⭐ 升星成功！★' + (result.newStars - 1) + ' → ★' + result.newStars);
+    if (result.error) { this.toast(result.error); return; }
+    this.toast('升星成功！★' + (result.newStars - 1) + ' → ★' + result.newStars);
     this.renderHeroDetail(heroId);
     this.updateHeader();
   },
@@ -781,12 +779,12 @@ const App = {
       const div = document.createElement('div');
       div.className = 'hero-card' + (hero ? ' rarity-' + hero.rarity : '');
       if (hero) {
-        div.innerHTML = '<div class="hero-emoji">' + hero.emoji + '</div>' +
+        div.innerHTML = '<div class="hero-emoji">' + Visuals.heroPortrait(heroId, 'sm', hero.rarity) + '</div>' +
           '<div class="hero-info"><div class="hero-name">' + labels[i] + ': ' + hero.name + '</div>' +
           '<div class="hero-sub">' + (UNIT_TYPES[hero.unit]?.name || '') + ' · ' + (FACTIONS[hero.faction]?.name || '') + '</div></div>';
         div.onclick = () => { team[i] = null; Storage.saveTeam(team); this.renderTeam(); };
       } else {
-        div.innerHTML = '<div class="hero-emoji" style="opacity:.3">➕</div><div class="hero-info"><div class="hero-name text-dim">' + labels[i] + ': 空位</div></div>';
+        div.innerHTML = '<div class="hero-emoji" style="opacity:.3;font-size:24px">+</div><div class="hero-info"><div class="hero-name text-dim">' + labels[i] + ': 空位</div></div>';
       }
       slotsEl.appendChild(div);
     });
@@ -800,7 +798,7 @@ const App = {
       if (!hero) continue;
       const div = document.createElement('div');
       div.className = 'hero-card rarity-' + hero.rarity;
-      div.innerHTML = '<div class="hero-emoji">' + hero.emoji + '</div>' +
+      div.innerHTML = '<div class="hero-emoji">' + Visuals.heroPortrait(id, 'sm', hero.rarity) + '</div>' +
         '<div class="hero-info"><div class="hero-name">' + hero.name + '</div>' +
         '<div class="hero-sub">' + (UNIT_TYPES[hero.unit]?.name || '') + '</div></div>';
       div.onclick = () => {
@@ -830,10 +828,10 @@ const App = {
     const adviceEl = document.getElementById('formation-advice');
     adviceEl.classList.remove('hidden');
     adviceEl.innerHTML = '<div class="card card-glow" style="border-color:var(--shu)">' +
-      '<div style="font-size:14px;font-weight:600;margin-bottom:12px">🤖 编队分析</div>' +
+      '<div style="font-size:14px;font-weight:600;margin-bottom:12px">编队分析</div>' +
       result.map(h =>
         '<div class="fa-entry">' +
-          '<span class="fa-emoji">' + h.hero.emoji + '</span>' +
+          '<span class="fa-emoji">' + Visuals.heroPortrait(h.id, 'xs', h.hero.rarity) + '</span>' +
           '<span class="fa-name">' + h.hero.name + '</span>' +
           '<span class="fa-reasons">' + h.reasons.join(', ') + '</span>' +
         '</div>'
@@ -841,7 +839,7 @@ const App = {
     '</div>';
 
     this.renderTeam();
-    this.toast('🤖 智能编队完成！');
+    this.toast('智能编队完成！');
   },
 
   // ===== GACHA =====
@@ -857,7 +855,7 @@ const App = {
     bannerDiv.style.cssText = 'border-color:var(--gold);margin-bottom:16px';
     bannerDiv.innerHTML =
       '<div style="text-align:center;margin-bottom:12px">' +
-        '<div style="font-size:24px">🎴</div>' +
+        '<div style="font-size:18px;font-weight:700;color:var(--gold)">召</div>' +
         '<div style="font-size:16px;font-weight:700;color:var(--gold)">天命召唤</div>' +
         '<div class="text-dim" style="font-size:12px;margin-top:4px">SSR概率2% · 保底90抽 · 首次十连保底SR+</div>' +
       '</div>' +
@@ -869,11 +867,11 @@ const App = {
         '<div class="progress" style="width:80px;height:6px"><div class="progress-fill" style="width:' + (pullState.pity / Gacha.SSR_PITY * 100) + '%;background:linear-gradient(90deg,var(--accent),var(--gold))"></div></div>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
-        '<button class="btn btn-primary" onclick="App.doGachaPull(1)">单抽 · 💰' + Gacha.PULL_COST + '</button>' +
-        '<button class="btn btn-gold" onclick="App.doGachaPull(10)">十连 · 💰' + Gacha.TEN_PULL_COST + '</button>' +
+        '<button class="btn btn-primary" onclick="App.doGachaPull(1)">单抽 · ' + Visuals.resIcon('gold') + + Gacha.PULL_COST + '</button>' +
+        '<button class="btn btn-gold" onclick="App.doGachaPull(10)">十连 · ' + Visuals.resIcon('gold') + + Gacha.TEN_PULL_COST + '</button>' +
       '</div>' +
       '<div style="text-align:center;margin-top:8px">' +
-        '<div class="text-dim" style="font-size:11px">SSR: ⚔️关羽 🖤曹操 🐉赵云 👹吕布 | SR: 👑刘备 😤张飞 🏹孙尚香 🌸貂蝉 ⚡张角</div>' +
+        '<div class="text-dim" style="font-size:11px">SSR: 关羽 曹操 赵云 吕布 | SR: 刘备 张飞 孙尚香 貂蝉 张角</div>' +
       '</div>';
     list.appendChild(bannerDiv);
 
@@ -886,7 +884,7 @@ const App = {
     // Section divider
     const divider = document.createElement('div');
     divider.style.cssText = 'font-size:15px;font-weight:600;margin:16px 0 8px;color:var(--gold)';
-    divider.textContent = '🏯 三顾茅庐 — 对话招募';
+    divider.textContent = '三顾茅庐 — 对话招募';
     list.appendChild(divider);
 
     for (const [id, visit] of Object.entries(Gacha.VISITS)) {
@@ -897,11 +895,11 @@ const App = {
 
       const div = document.createElement('div');
       div.className = 'hero-card rarity-' + hero.rarity;
-      div.innerHTML = '<div class="hero-emoji">' + hero.emoji + '</div>' +
+      div.innerHTML = '<div class="hero-emoji">' + Visuals.heroPortrait(id, 'sm', hero.rarity) + '</div>' +
         '<div class="hero-info">' +
-          '<div class="hero-name">' + hero.name + ' · ' + hero.title + (owned ? ' ✅' : '') + '</div>' +
+          '<div class="hero-name">' + hero.name + ' · ' + hero.title + (owned ? ' <span style="color:var(--shu)">已有</span>' : '') + '</div>' +
           '<div class="hero-sub">' + visit.hint + '</div>' +
-          '<div style="margin-top:4px;font-size:11px">💰' + visit.cost + ' · 拜访' + visit.dialogues + '次 · ' + '★'.repeat(hero.rarity) +
+          '<div style="margin-top:4px;font-size:11px">' + Visuals.resIcon('gold') + visit.cost + ' · 拜访' + visit.dialogues + '次 · ' + '★'.repeat(hero.rarity) +
           (status.attempts > 0 ? ' · 已访' + status.attempts + '次' : '') + '</div>' +
         '</div>';
       if (!owned) div.onclick = () => this.startVisit(id);
@@ -920,7 +918,7 @@ const App = {
     this.currentVisitHero = heroId;
     document.getElementById('visit-hero-name').textContent = '拜访 ' + result.hero.name;
     document.getElementById('visit-hero-display').innerHTML =
-      '<div class="big-emoji">' + result.hero.emoji + '</div>' +
+      Visuals.heroPortrait(heroId, 'lg', result.hero.rarity) +
       '<div class="hero-title">' + result.hero.name + ' · ' + result.hero.title + '</div>' +
       '<div class="text-dim mt-8" style="font-size:13px">' + result.hero.lore + '</div>';
 
@@ -950,7 +948,7 @@ const App = {
       box.innerHTML = '<div class="text-center" style="padding:20px">' +
         '<div class="text-dim">本次拜访结束</div>' +
         '<div class="mt-8">诚意度: ' + status.sincerity + '</div>' +
-        '<button class="btn btn-gold btn-block mt-16" onclick="App.startVisit(\'' + heroId + '\')">再次拜访 (💰' + visit.cost + ')</button>' +
+        '<button class="btn btn-gold btn-block mt-16" onclick="App.startVisit(\'' + heroId + '\')">再次拜访 (' + Visuals.resIcon('gold') + + visit.cost + ')</button>' +
         '<button class="btn btn-sm btn-block mt-8" onclick="App.switchPage(\'gacha\')" style="background:var(--card2);color:var(--text)">返回求贤馆</button>' +
         '</div>';
     }
@@ -971,10 +969,10 @@ const App = {
     if (result.recruited) {
       const hero = HEROES[this.currentVisitHero];
       box.innerHTML = '<div class="dialogue-text" style="color:var(--gold);font-size:15px">' + result.response + '</div>' +
-        '<div class="recruit-success" style="font-size:48px;text-align:center;margin:16px 0">🎉</div>' +
+        '<div class="recruit-success" style="text-align:center;margin:16px 0">' + Visuals.heroPortrait(this.currentVisitHero, 'xl') + '</div>' +
         '<div class="text-center" style="font-size:16px;font-weight:700;color:var(--gold)">' + hero.name + ' 加入了你的队伍！</div>' +
         '<button class="btn btn-gold btn-block mt-16" onclick="App.switchPage(\'roster\')">查看武将</button>';
-      this.toast('🎉 ' + hero.name + ' 加入了你的队伍！', 4000);
+      this.toast(hero.name + ' 加入了你的队伍！', 4000);
     } else {
       // Show response first — player must click "继续" to advance
       box.innerHTML = '<div class="dialogue-text">' + result.response + '</div>' +
@@ -983,7 +981,7 @@ const App = {
           ? '<div class="text-center mt-16">' +
               '<div style="font-size:14px;font-weight:600;color:var(--hp)">招募失败</div>' +
               '<div class="text-dim mt-8">诚意不足，下次再努力！</div>' +
-              '<button class="btn btn-gold btn-block mt-16" onclick="App.startVisit(\'' + this.currentVisitHero + '\')">再次拜访 (💰' + visit.cost + ')</button>' +
+              '<button class="btn btn-gold btn-block mt-16" onclick="App.startVisit(\'' + this.currentVisitHero + '\')">再次拜访 (' + Visuals.resIcon('gold') + + visit.cost + ')</button>' +
               '<button class="btn btn-sm btn-block mt-8" onclick="App.switchPage(\'gacha\')" style="background:var(--card2);color:var(--text)">返回求贤馆</button>' +
             '</div>'
           : '<button class="btn btn-primary btn-block mt-16" onclick="App.updateVisitUI()">继续</button>'
@@ -995,7 +993,7 @@ const App = {
   // ===== GACHA PULL =====
   doGachaPull(count) {
     const result = Gacha.pull(count);
-    if (result.error) { this.toast('❌ ' + result.error); return; }
+    if (result.error) { this.toast(result.error); return; }
     DailyMissions.trackProgress('gacha');
 
     const container = document.getElementById('gacha-pull-result');
@@ -1006,31 +1004,31 @@ const App = {
 
     let html = '<div class="card card-glow" style="border-color:' + rarityColors[result.bestRarity] + '">' +
       '<div style="text-align:center;font-size:14px;font-weight:600;margin-bottom:12px;color:' + rarityColors[result.bestRarity] + '">' +
-        (result.bestRarity === 5 ? '🌟 恭喜获得SSR！' : result.bestRarity === 4 ? '✨ 获得SR武将！' : '抽卡结果') +
+        (result.bestRarity === 5 ? '恭喜获得SSR！' : result.bestRarity === 4 ? '获得SR武将！' : '抽卡结果') +
       '</div>' +
       '<div style="display:grid;grid-template-columns:repeat(' + Math.min(5, count) + ',1fr);gap:6px">';
 
     for (const r of result.results) {
       html += '<div style="text-align:center;padding:8px 4px;background:var(--card2);border-radius:10px;border:1px solid ' + rarityColors[r.rarity] + '">' +
-        '<div style="font-size:28px">' + r.hero.emoji + '</div>' +
+        Visuals.heroPortrait(r.heroId, 'md', r.rarity) +
         '<div style="font-size:10px;font-weight:600;color:' + rarityColors[r.rarity] + '">' + rarityNames[r.rarity] + '</div>' +
         '<div style="font-size:11px">' + r.hero.name + '</div>' +
-        '<div style="font-size:9px;color:var(--dim)">' + (r.isNew ? '🆕 新武将！' : '+' + r.shards + '🧩') + '</div>' +
+        '<div style="font-size:9px;color:var(--dim)">' + (r.isNew ? '<span style="color:var(--gold)">新武将！</span>' : '+' + r.shards + '碎片') + '</div>' +
       '</div>';
     }
 
     html += '</div>' +
-      '<div class="text-dim text-center" style="font-size:11px;margin-top:8px">花费 ' + result.cost + '💰 · 距SSR保底: ' + (Gacha.SSR_PITY - result.pity) + '抽</div>' +
+      '<div class="text-dim text-center" style="font-size:11px;margin-top:8px">花费 ' + result.cost + Visuals.resIcon('gold') + ' · 距SSR保底: ' + (Gacha.SSR_PITY - result.pity) + '抽</div>' +
     '</div>';
 
     container.innerHTML = html;
     this.updateHeader();
-    if (result.bestRarity === 5) this.toast('🌟 获得SSR武将！', 3000);
+    if (result.bestRarity === 5) this.toast('获得SSR武将！', 3000);
 
     // Check achievements
     if (typeof Achievements !== 'undefined') {
       const newAch = Achievements.checkAll();
-      if (newAch.length > 0) setTimeout(() => this.toast('🏅 新成就: ' + newAch.map(a => a.name).join(', ')), 1500);
+      if (newAch.length > 0) setTimeout(() => this.toast('新成就: ' + newAch.map(a => a.name).join(', ')), 1500);
     }
   },
 
@@ -1046,14 +1044,14 @@ const App = {
     if (typeof KingdomSystem !== 'undefined') {
       const kWar = KingdomSystem.getKingdomWar();
       const playerK = Storage.getKingdom();
-      let kwHTML = '<div class="card card-glow" style="margin-bottom:12px"><div style="font-size:14px;font-weight:600;margin-bottom:10px">🏰 势力战争 · 本周</div>';
+      let kwHTML = '<div class="card card-glow" style="margin-bottom:12px"><div style="font-size:14px;font-weight:600;margin-bottom:10px"> 势力战争 · 本周</div>';
       kWar.forEach(k => {
         const isPlayer = k.id === playerK;
         kwHTML += '<div class="kw-row' + (isPlayer ? ' kw-mine' : '') + '">' +
-          '<span class="kw-rank">' + (k.rank <= 3 ? ['🥇','🥈','🥉'][k.rank-1] : k.rank) + '</span>' +
+          '<span class="kw-rank">' + (k.rank <= 3 ? ['①','②','③'][k.rank-1] : k.rank) + '</span>' +
           '<span class="kw-emoji" style="color:' + k.color + '">' + k.banner + '</span>' +
           '<span class="kw-name">' + k.name + (isPlayer ? ' <span class="lb-you">你</span>' : '') + '</span>' +
-          '<span class="kw-power">⚡' + k.power + '</span></div>';
+          '<span class="kw-power">' + k.power + '</span></div>';
       });
       kwHTML += '</div>';
       list.innerHTML += kwHTML;
@@ -1064,10 +1062,10 @@ const App = {
       div.className = 'lb-entry' + (entry.isPlayer ? ' lb-player' : '');
 
       const rankDisplay = entry.rank <= 3
-        ? ['🥇', '🥈', '🥉'][entry.rank - 1]
+        ? ['①', '②', '③'][entry.rank - 1]
         : '<span class="lb-rank-num">' + entry.rank + '</span>';
 
-      const armyEmojis = entry.army.map(id => HEROES[id]?.emoji || '❓').join(' ');
+      const armyEmojis = entry.army.map(id => HEROES[id]?.emoji || '?').join(' ');
 
       div.innerHTML =
         '<div class="lb-rank">' + rankDisplay + '</div>' +
@@ -1077,9 +1075,9 @@ const App = {
           '<div class="lb-army">' + armyEmojis + '</div>' +
         '</div>' +
         '<div class="lb-stats">' +
-          '<div class="lb-power">⚡' + entry.power + '</div>' +
+          '<div class="lb-power">' + entry.power + '</div>' +
           '<div class="lb-winrate">胜率 ' + entry.winRate + '%</div>' +
-          '<div class="lb-progress">🗺️ 进度 ' + entry.progress + '</div>' +
+          '<div class="lb-progress">进度 ' + entry.progress + '</div>' +
         '</div>';
 
       list.appendChild(div);
@@ -1109,7 +1107,7 @@ const App = {
           '<div class="dm-bar"><div class="dm-bar-fill" style="width:' + pct + '%"></div></div>' +
         '</div>' +
         '<div class="dm-reward">' +
-          (claimed ? '<span class="dm-done">✅</span>' :
+          (claimed ? '<span class="dm-done" style="color:var(--shu)">完成</span>' :
            complete ? '<button class="btn btn-sm btn-gold" onclick="App.claimMission(\'' + def.id + '\')">' + def.rewardText + '</button>' :
            '<span class="text-dim" style="font-size:12px">' + def.rewardText + '</span>') +
         '</div>' +
@@ -1121,7 +1119,7 @@ const App = {
     const success = DailyMissions.claimReward(missionId);
     if (success) {
       const def = DailyMissions.MISSIONS.find(m => m.id === missionId);
-      this.toast('🎁 领取奖励: ' + def.rewardText);
+      this.toast('领取奖励: ' + def.rewardText);
       this.renderDailyMissions();
       this.updateHeader();
     }
@@ -1158,7 +1156,7 @@ const App = {
 
     if (!unlocked) {
       return '<div class="card" style="text-align:center;padding:40px">' +
-        '<div style="font-size:48px;margin-bottom:16px">🔒</div>' +
+        '<div style="font-size:24px;margin-bottom:16px">' + Visuals.secIcon('lock') + '</div>' +
         '<div style="font-size:16px;font-weight:600">无尽副本</div>' +
         '<div class="text-dim" style="margin-top:8px">通关第六章后解锁</div>' +
       '</div>';
@@ -1181,7 +1179,7 @@ const App = {
       // Show current floor
       html += '<div class="card' + (floorData.isBossFloor ? ' card-glow" style="border-color:var(--gold)' : '') + '">' +
         '<div style="font-size:16px;font-weight:700;margin-bottom:8px">' +
-          (floorData.isBossFloor ? '💀 ' : '⚔️ ') + floorData.name +
+          (floorData.isBossFloor ? Visuals.bossSkull() + ' ' : Visuals.secIcon('battle') + ' ') + floorData.name +
         '</div>' +
         '<div class="text-dim" style="font-size:12px;margin-bottom:8px">' +
           '地形: ' + ({plains:'平原',mountain:'山地',river:'水域',forest:'森林',castle:'城池'}[floorData.terrain]||floorData.terrain) + ' · 天气: ' + ({clear:'晴天',rain:'雨天',fog:'雾天',wind:'大风',fire:'火烧'}[floorData.weather]||floorData.weather) + ' · 难度x' + floorData.scaleMult.toFixed(2) +
@@ -1196,15 +1194,15 @@ const App = {
       }
 
       html += '<div style="font-size:13px;margin-bottom:8px">敌人: ' +
-        floorData.enemies.map(e => HEROES[e]?.emoji || '❓').join(' ') + '</div>' +
-        '<div style="font-size:12px;color:var(--gold)">奖励: 💰' + floorData.reward.gold + ' ⭐' + floorData.reward.exp +
-          (floorData.reward.gems ? ' 💎' + floorData.reward.gems : '') + '</div>' +
+        floorData.enemies.map(e => HEROES[e]?.emoji || '?').join(' ') + '</div>' +
+        '<div style="font-size:12px;color:var(--gold)">奖励: ' + Visuals.resIcon('gold') + + floorData.reward.gold + ' ' + Visuals.resIcon('exp') + + floorData.reward.exp +
+          (floorData.reward.gems ? ' ' + Visuals.resIcon('gem') + + floorData.reward.gems : '') + '</div>' +
         '<button class="btn btn-primary btn-block mt-16" onclick="App.fightDungeonFloor()">挑战本层</button>' +
         '<button class="btn btn-sm btn-block mt-8" onclick="App.retreatDungeon()" style="background:var(--card2);color:var(--text)">撤退（保留进度）</button>' +
       '</div>';
     } else {
       html += '<div class="card" style="text-align:center">' +
-        '<div style="font-size:48px;margin-bottom:12px">♾️</div>' +
+        '<div style="font-size:32px;font-weight:900;margin-bottom:12px;color:var(--gold)">无尽</div>' +
         '<div style="font-size:18px;font-weight:700">无尽副本</div>' +
         '<div class="text-dim mt-8">无限层数，越深越难，奖励越丰厚</div>' +
         '<div class="text-dim" style="font-size:12px;margin-top:4px">每10层: Boss · 每5层: 随机事件</div>' +
@@ -1213,7 +1211,7 @@ const App = {
     }
 
     // Leaderboard
-    html += '<div style="font-size:14px;font-weight:600;margin:16px 0 8px">🏆 深渊排行</div>';
+    html += '<div style="font-size:14px;font-weight:600;margin:16px 0 8px"> 深渊排行</div>';
     html += this._renderDungeonLeaderboard();
 
     return html;
@@ -1232,11 +1230,11 @@ const App = {
     entries.sort((a, b) => b.floor - a.floor);
 
     return entries.map((e, i) => {
-      const rank = i < 3 ? ['🥇', '🥈', '🥉'][i] : (i + 1) + '';
+      const rank = i < 3 ? ['①', '②', '③'][i] : (i + 1) + '';
       return '<div class="lb-entry' + (e.isPlayer ? ' lb-player' : '') + '">' +
         '<div class="lb-rank">' + rank + '</div>' +
         '<div class="lb-info"><div class="lb-name">' + e.name + (e.isPlayer ? ' <span class="lb-you">你</span>' : '') + '</div></div>' +
-        '<div class="lb-stats"><div class="lb-power">🏔️ 第' + e.floor + '层</div></div>' +
+        '<div class="lb-stats"><div class="lb-power"> 第' + e.floor + '层</div></div>' +
       '</div>';
     }).join('');
   },
@@ -1244,7 +1242,7 @@ const App = {
   startEndlessDungeon() {
     Dungeon.startRun();
     this.renderDungeon();
-    this.toast('♾️ 无尽副本开始！');
+    this.toast('无尽副本开始！');
   },
 
   fightDungeonFloor() {
@@ -1286,7 +1284,7 @@ const App = {
     const state = Dungeon.getDailyState();
 
     let html = '<div class="card" style="text-align:center;padding:10px">' +
-      '<div style="font-size:12px;color:var(--gold)">🔥 连续签到: ' + (state.streak || 0) + '天 (奖励+' + Math.min(state.streak || 0, 7) * 5 + '%)</div>' +
+      '<div style="font-size:12px;color:var(--gold)">连续签到: ' + (state.streak || 0) + '天 (奖励+' + Math.min(state.streak || 0, 7) * 5 + '%)</div>' +
     '</div>';
 
     for (const type of types) {
@@ -1302,9 +1300,9 @@ const App = {
         '</div>' +
         '<div class="text-dim" style="font-size:12px;margin-bottom:8px">' + dungeon.desc + '</div>' +
         '<div style="font-size:12px;color:var(--gold);margin-bottom:12px">奖励: ' +
-          (reward.gold ? '💰' + reward.gold + ' ' : '') +
-          (reward.exp ? '⭐' + reward.exp + ' ' : '') +
-          (reward.equipChance ? '⚔️装备掉落 ' : '') +
+          (reward.gold ? Visuals.resIcon('gold') + reward.gold + ' ' : '') +
+          (reward.exp ? Visuals.resIcon('exp') + reward.exp + ' ' : '') +
+          (reward.equipChance ? '装备掉落 ' : '') +
           (reward.streakBonus > 0 ? '<span style="color:var(--shu)">+' + reward.streakBonus + '%连续奖励</span>' : '') +
         '</div>' +
         '<button class="btn btn-primary btn-block" onclick="App.startDailyDungeon(\'' + type + '\')"' +
@@ -1354,7 +1352,7 @@ const App = {
         '<div class="text-dim" style="font-size:11px">Boss HP</div>' +
         '<div class="progress mt-8" style="height:12px"><div class="progress-fill" style="width:' + Math.max(0, 100 - damagePct) + '%;background:linear-gradient(90deg,var(--hp),#f97316)"></div></div>' +
         '<div style="font-size:12px;margin-top:4px">' + state.totalDamage.toLocaleString() + ' / ' + boss.hp.toLocaleString() +
-          (state.defeated ? ' <span style="color:var(--shu)">✅ 已击败！</span>' : '') + '</div>' +
+          (state.defeated ? ' <span style="color:var(--shu)">已击败！</span>' : '') + '</div>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;margin:12px 0">' +
         '<div><div style="font-size:11px;color:var(--dim)">今周挑战</div><div style="font-weight:700">' + state.attempts + '/' + Dungeon.MAX_RAID_ATTEMPTS + '</div></div>' +
@@ -1363,17 +1361,17 @@ const App = {
       '</div>' +
       '<button class="btn btn-gold btn-block" onclick="App.startRaidBoss()"' +
         (!canRaid ? ' disabled style="opacity:.4"' : '') + '>' +
-        (state.defeated ? '已击败' : canRaid ? '⚔️ 讨伐Boss' : '本周次数已用完') +
+        (state.defeated ? '已击败' : canRaid ? '讨伐Boss' : '本周次数已用完') +
       '</button>' +
     '</div>';
 
     // Community damage leaderboard
-    html += '<div style="font-size:14px;font-weight:600;margin:16px 0 8px">🏆 讨伐排行</div>';
+    html += '<div style="font-size:14px;font-weight:600;margin:16px 0 8px"> 讨伐排行</div>';
     for (const entry of communityDmg) {
       html += '<div class="lb-entry' + (entry.isPlayer ? ' lb-player' : '') + '">' +
         '<div style="font-size:18px;min-width:28px;text-align:center">' + entry.emoji + '</div>' +
         '<div class="lb-info"><div class="lb-name">' + entry.name + (entry.isPlayer ? ' <span class="lb-you">你</span>' : '') + '</div></div>' +
-        '<div class="lb-stats"><div class="lb-power" style="color:var(--hp)">🗡️ ' + entry.damage.toLocaleString() + '</div></div>' +
+        '<div class="lb-stats"><div class="lb-power" style="color:var(--hp)"> ' + entry.damage.toLocaleString() + '</div></div>' +
       '</div>';
     }
     return html;
@@ -1429,7 +1427,7 @@ const App = {
 
     // Season Pass
     html += '<div class="card">' +
-      '<div style="font-size:15px;font-weight:600;margin-bottom:8px">🎫 赛季通行证</div>' +
+      '<div style="font-size:15px;font-weight:600;margin-bottom:8px"> 赛季通行证</div>' +
       '<div class="flex justify-between items-center">' +
         '<div class="text-dim" style="font-size:12px">等级 ' + progress.level + '/' + Seasonal.PASS_LEVELS + '</div>' +
         '<div class="text-dim" style="font-size:12px">XP: ' + progress.xp + '/' + progress.xpNeeded + '</div>' +
@@ -1439,7 +1437,7 @@ const App = {
 
     // Pass Rewards Preview
     html += '<div class="card">' +
-      '<div style="font-size:14px;font-weight:600;margin-bottom:8px">🎁 通行证奖励</div>' +
+      '<div style="font-size:14px;font-weight:600;margin-bottom:8px"> 通行证奖励</div>' +
       '<div style="display:flex;gap:8px;overflow-x:auto;padding:8px 0">';
 
     const freeLevels = Object.keys(Seasonal.PASS_REWARDS.free).map(Number).sort((a, b) => a - b);
@@ -1450,10 +1448,10 @@ const App = {
       html += '<div style="min-width:70px;text-align:center;padding:8px;background:var(--card2);border-radius:10px;border:1px solid ' +
         (canClaim ? 'var(--gold)' : claimed ? 'var(--shu)' : 'var(--border)') + '">' +
         '<div style="font-size:11px;color:var(--dim)">Lv.' + lvl + '</div>' +
-        '<div style="font-size:14px;margin:4px 0">' + (r.gold ? '💰' : r.gems ? '💎' : '🧩') + '</div>' +
+        '<div style="font-size:14px;margin:4px 0">' + (r.gold ? Visuals.resIcon('gold') : r.gems ? Visuals.resIcon('gem') : Visuals.resIcon('shard')) + '</div>' +
         '<div style="font-size:10px">' + (r.gold ? r.gold : r.gems ? r.gems : '碎片') + '</div>' +
         (canClaim ? '<div style="font-size:9px;color:var(--gold);margin-top:2px" onclick="App.claimSeasonPass(' + lvl + ')">领取</div>' : '') +
-        (claimed ? '<div style="font-size:9px;color:var(--shu)">✅</div>' : '') +
+        (claimed ? '<div style="font-size:9px;color:var(--shu)">完成</div>' : '') +
       '</div>';
     }
     html += '</div></div>';
@@ -1477,10 +1475,10 @@ const App = {
 
     // Seasonal Achievements
     html += '<div class="card">' +
-      '<div style="font-size:14px;font-weight:600;margin-bottom:8px">🏅 赛季成就</div>';
+      '<div style="font-size:14px;font-weight:600;margin-bottom:8px"> 赛季成就</div>';
     for (const ach of Seasonal.SEASONAL_ACHIEVEMENTS) {
       html += '<div class="daily-mission">' +
-        '<div class="dm-icon">🏅</div>' +
+        '<div class="dm-icon">' + Visuals.secIcon('trophy') + '</div>' +
         '<div class="dm-info">' +
           '<div class="dm-name">' + ach.name + '</div>' +
           '<div class="dm-desc">' + ach.desc + '</div>' +
@@ -1496,7 +1494,7 @@ const App = {
   claimSeasonPass(level) {
     const result = Seasonal.claimPassReward(level, 'free');
     if (result) {
-      this.toast('🎁 领取赛季奖励: ' + (result.gold ? '💰' + result.gold + ' ' : '') + (result.gems ? '💎' + result.gems : ''));
+      this.toast('领取赛季奖励: ' + (result.gold ? result.gold + '金 ' : '') + (result.gems ? result.gems + '石' : ''));
       this.updateHeader();
       this.renderDungeon();
     }
@@ -1527,7 +1525,7 @@ const App = {
 
     // Weekly reward
     const weeklyBtn = document.getElementById('arena-weekly-btn');
-    document.getElementById('arena-weekly-desc').textContent = rank.name + ': 💰' + rank.weeklyGold + ' 💎' + rank.weeklyGems;
+    document.getElementById('arena-weekly-desc').textContent = rank.name + ': ' + rank.weeklyGold + '金 ' + rank.weeklyGems + '石';
     if (state.weeklyRewardClaimed) {
       weeklyBtn.textContent = '已领取';
       weeklyBtn.disabled = true;
@@ -1553,14 +1551,14 @@ const App = {
       return;
     }
 
-    const labels = ['🟢 简单', '🟡 普通', '🔴 困难'];
+    const labels = ['简单', '普通', '困难'];
     container.innerHTML = this.arenaOpponents.map((opp, i) => {
       return '<div class="card" style="cursor:pointer" onclick="App.startArenaFight(' + i + ')">' +
         '<div class="flex justify-between items-center">' +
           '<div>' +
             '<div style="font-size:14px;font-weight:600">' + opp.name + '</div>' +
             '<div class="text-dim" style="font-size:12px">' + opp.rank.emoji + ' ' + opp.rank.name + ' · Rating ' + opp.rating + '</div>' +
-            '<div style="font-size:14px;margin-top:4px">' + opp.team.map(id => HEROES[id]?.emoji || '❓').join(' ') + '</div>' +
+            '<div style="font-size:14px;margin-top:4px">' + opp.team.map(id => HEROES[id]?.emoji || '?').join(' ') + '</div>' +
           '</div>' +
           '<div style="text-align:right">' +
             '<div style="font-size:12px;font-weight:600">' + labels[i] + '</div>' +
@@ -1574,14 +1572,14 @@ const App = {
     const entries = Arena.getLeaderboard();
     const container = document.getElementById('arena-leaderboard');
     container.innerHTML = entries.map((e, i) => {
-      const rankIcon = i < 3 ? ['🥇', '🥈', '🥉'][i] : (i + 1);
+      const rankIcon = i < 3 ? ['①', '②', '③'][i] : (i + 1);
       return '<div class="lb-entry' + (e.isPlayer ? ' lb-player' : '') + '">' +
         '<div class="lb-rank">' + rankIcon + '</div>' +
         '<div class="lb-info">' +
           '<div class="lb-name">' + e.rank.emoji + ' ' + e.name + (e.isPlayer ? ' <span class="lb-you">你</span>' : '') + '</div>' +
           '<div class="lb-meta">胜场: ' + e.wins + '</div>' +
         '</div>' +
-        '<div class="lb-stats"><div class="lb-power">⚡ ' + e.rating + '</div></div>' +
+        '<div class="lb-stats"><div class="lb-power"> ' + e.rating + '</div></div>' +
       '</div>';
     }).join('');
   },
@@ -1610,7 +1608,7 @@ const App = {
   claimArenaWeekly() {
     const result = Arena.claimWeeklyReward();
     if (result) {
-      this.toast('🎁 周奖励: 💰' + result.gold + ' 💎' + result.gems + ' (' + result.rank + ')');
+      this.toast('周奖励: ' + result.gold + '金 Visuals.resIcon('gem') + + result.gems + ' (' + result.rank + ')');
       this.updateHeader();
       this.renderArena();
     } else {
@@ -1632,16 +1630,16 @@ const App = {
     content.innerHTML =
       // Player Card
       '<div class="card card-glow" style="text-align:center">' +
-        '<div style="font-size:48px">' + (kingdom ? kingdom.banner : '⚔️') + '</div>' +
+        '<div style="font-size:32px;font-weight:900;color:var(--gold)">' + (kingdom ? kingdom.banner : '将') + '</div>' +
         '<div style="font-size:22px;font-weight:700;margin:8px 0">' + stats.name + '</div>' +
         '<div class="text-dim">Lv.' + stats.level + (kingdom ? ' · ' + kingdom.name : '') + '</div>' +
-        '<div style="font-size:18px;color:var(--gold);margin-top:8px">⚡ 战力 ' + stats.totalPower.toLocaleString() + '</div>' +
+        '<div style="font-size:18px;color:var(--gold);margin-top:8px">战力 ' + stats.totalPower.toLocaleString() + '</div>' +
         '<div class="text-dim" style="font-size:11px;margin-top:4px">已游玩 ' + stats.daysSinceStart + ' 天</div>' +
       '</div>' +
 
       // Collection Progress
       '<div class="card">' +
-        '<div style="font-size:15px;font-weight:600;margin-bottom:12px">📚 收集进度</div>' +
+        '<div style="font-size:15px;font-weight:600;margin-bottom:12px"> 收集进度</div>' +
         '<div class="flex justify-between items-center mb-8">' +
           '<span style="font-size:13px">武将收集</span>' +
           '<span style="font-size:13px;color:var(--gold)">' + stats.heroCount + '/' + stats.totalHeroesInGame + ' (' + stats.collectionPct + '%)</span>' +
@@ -1656,7 +1654,7 @@ const App = {
 
       // Battle Stats
       '<div class="card">' +
-        '<div style="font-size:15px;font-weight:600;margin-bottom:12px">⚔️ 战斗统计</div>' +
+        '<div style="font-size:15px;font-weight:600;margin-bottom:12px"> 战斗统计</div>' +
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
           '<div style="background:var(--card2);padding:12px;border-radius:10px;text-align:center">' +
             '<div style="font-size:22px;font-weight:700;color:var(--shu)">' + stats.wins + '</div><div class="text-dim" style="font-size:11px">胜利</div></div>' +
@@ -1672,13 +1670,13 @@ const App = {
 
       // Arena & Dungeon
       '<div class="card">' +
-        '<div style="font-size:15px;font-weight:600;margin-bottom:12px">🏟️ 竞技 & 副本</div>' +
+        '<div style="font-size:15px;font-weight:600;margin-bottom:12px"> 竞技 & 副本</div>' +
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
           '<div style="background:var(--card2);padding:12px;border-radius:10px;text-align:center">' +
             '<div style="font-size:16px">' + arenaRank.emoji + '</div>' +
             '<div style="font-size:14px;font-weight:700">' + stats.arenaRating + '</div><div class="text-dim" style="font-size:11px">竞技评分</div></div>' +
           '<div style="background:var(--card2);padding:12px;border-radius:10px;text-align:center">' +
-            '<div style="font-size:16px">🏔️</div>' +
+            '<div style="font-size:14px;font-weight:700;color:var(--gold)">深</div>' +
             '<div style="font-size:14px;font-weight:700">' + stats.dungeonHighestFloor + '</div><div class="text-dim" style="font-size:11px">无尽最深</div></div>' +
           '<div style="background:var(--card2);padding:12px;border-radius:10px;text-align:center">' +
             '<div style="font-size:14px;font-weight:700;color:var(--gold)">' + stats.arenaBestStreak + '</div><div class="text-dim" style="font-size:11px">最佳连胜</div></div>' +
@@ -1689,12 +1687,12 @@ const App = {
 
       // Active Affinities
       '<div class="card">' +
-        '<div style="font-size:15px;font-weight:600;margin-bottom:12px">💞 当前羁绊</div>' +
+        '<div style="font-size:15px;font-weight:600;margin-bottom:12px"> 当前羁绊</div>' +
         (affinities.length > 0 ?
           affinities.map(a => '<div style="background:var(--card2);padding:10px;border-radius:10px;margin-bottom:8px">' +
             '<div style="font-size:14px;font-weight:600">' + a.emoji + ' ' + a.name + ' <span style="color:var(--gold);font-size:12px">' + a.bonusDesc + '</span></div>' +
             '<div class="text-dim" style="font-size:12px">' + a.desc + '</div>' +
-            '<div style="font-size:12px;margin-top:4px">' + a.heroes.map(h => HEROES[h]?.emoji || '❓').join(' ') +
+            '<div style="font-size:12px;margin-top:4px">' + a.heroes.map(h => HEROES[h]?.emoji || '?').join(' ') +
               ' (' + a.matchCount + '/' + a.minRequired + ')</div>' +
           '</div>').join('')
           : '<div class="text-dim text-center">编队中没有激活的羁绊</div>'
@@ -1703,12 +1701,12 @@ const App = {
 
       // All Affinities Reference
       '<div class="card">' +
-        '<div style="font-size:15px;font-weight:600;margin-bottom:12px">📖 全部羁绊图鉴</div>' +
+        '<div style="font-size:15px;font-weight:600;margin-bottom:12px"> 全部羁绊图鉴</div>' +
         HERO_AFFINITIES.map(a => {
           const isActive = affinities.find(x => x.id === a.id);
           return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);opacity:' + (isActive ? '1' : '.6') + '">' +
             '<div style="font-size:13px">' + a.emoji + ' ' + a.name +
-              (isActive ? ' <span style="color:var(--shu)">✅</span>' : '') + '</div>' +
+              (isActive ? ' <span style="color:var(--shu)">激活</span>' : '') + '</div>' +
             '<div style="font-size:11px;color:var(--gold)">' + a.bonusDesc + '</div>' +
           '</div>';
         }).join('') +
@@ -1716,8 +1714,8 @@ const App = {
 
       // Navigation shortcuts
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px">' +
-        '<button class="btn btn-primary" onclick="App.switchPage(\'team\')">📋 编队</button>' +
-        '<button class="btn btn-primary" onclick="App.switchPage(\'leaderboard\')">🏆 排行</button>' +
+        '<button class="btn btn-primary" onclick="App.switchPage(\'team\')">编队</button>' +
+        '<button class="btn btn-primary" onclick="App.switchPage(\'leaderboard\')">排行</button>' +
       '</div>';
   },
 
@@ -1751,7 +1749,7 @@ const App = {
       Storage.addGold(500);
       Storage.addGems(20);
       setTimeout(() => {
-        this.toast('🎉 获得SSR武将: 赵云·常山赵子龙！附赠500金币+20宝石', 4000);
+        this.toast('获得SSR武将: 赵云·常山赵子龙！附赠500金币+20宝石', 4000);
       }, 500);
     }
   },
@@ -1768,7 +1766,7 @@ const App = {
     const equipped = Storage.getEquipped(heroId);
     const inv = Storage.getEquipmentInventory();
     let html = '<div class="card">' +
-      '<div style="font-size:14px;font-weight:600;margin-bottom:12px">🎒 装备栏</div>';
+      '<div style="font-size:14px;font-weight:600;margin-bottom:12px"> 装备栏</div>';
 
     for (const [slot, info] of Object.entries(Equipment.SLOTS)) {
       const uid = equipped[slot];
@@ -1778,7 +1776,7 @@ const App = {
       const stats = item ? Equipment.getEquipStats(item) : null;
 
       html += '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--card2);border-radius:10px;margin-bottom:6px">' +
-        '<div style="font-size:20px;min-width:32px;text-align:center">' + info.emoji + '</div>' +
+        '<div style="min-width:32px;text-align:center">' + Visuals.equipSlotIcon(slot) + '</div>' +
         '<div style="flex:1">' +
           '<div style="font-size:13px;font-weight:600">' + info.name + '</div>';
       if (tmpl) {
@@ -1789,7 +1787,7 @@ const App = {
         html += '<div style="font-size:12px;color:' + (rarInfo?.color || 'var(--dim)') + '">' +
           (tmpl.emoji || '') + ' ' + tmpl.name + ' +' + item.level + '/' + maxLevel + ' (' + (rarInfo?.label || '') + ')</div>' +
           '<div style="font-size:11px;color:var(--dim)">' + statStr + '</div>' +
-          '<div style="font-size:10px;margin-top:2px"><span style="color:' + scoreRar.color + ';font-weight:700">⚡' + gearScore + '</span> <span class="text-dim">装分</span></div>';
+          '<div style="font-size:10px;margin-top:2px"><span style="color:' + scoreRar.color + ';font-weight:700">' + gearScore + '</span> <span class="text-dim">装分</span></div>';
       } else {
         html += '<div style="font-size:12px;color:var(--dim)">空</div>';
       }
@@ -1806,7 +1804,7 @@ const App = {
     if (eqData.activeBonuses.length > 0) {
       html += '<div style="margin-top:8px;padding:8px;background:rgba(251,191,36,.08);border-radius:8px">';
       for (const b of eqData.activeBonuses) {
-        html += '<div style="font-size:12px;color:var(--gold)">✨ ' + b.name + ': ' + b.desc + '</div>';
+        html += '<div style="font-size:12px;color:var(--gold)">' + Visuals.secIcon('skill') + ' ' + b.name + ': ' + b.desc + '</div>';
       }
       html += '</div>';
     }
@@ -1834,13 +1832,13 @@ const App = {
         const scoreRar = Equipment.getScoreRarity(gearScore);
         html += '<div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--card2);border-radius:8px;margin-bottom:4px;cursor:pointer;border-left:3px solid ' + (rarInfo?.color || 'var(--border)') + '" ' +
           'onclick="App.equipItem(\'' + heroId + '\',\'' + item.uid + '\')">' +
-          '<span style="font-size:18px">' + (tmpl.emoji || '📦') + '</span>' +
+          '<span>' + Visuals.equipItemIcon(item.templateId, tmpl.rarity) + '</span>' +
           '<div style="flex:1">' +
             '<div style="font-size:12px;color:' + (rarInfo?.color || 'var(--dim)') + '">' + tmpl.name + ' +' + item.level + '</div>' +
             '<div style="font-size:10px;color:var(--dim)">' + statStr + '</div>' +
           '</div>' +
           '<div style="text-align:right">' +
-            '<div style="font-size:11px;color:' + scoreRar.color + ';font-weight:700">⚡' + gearScore + '</div>' +
+            '<div style="font-size:11px;color:' + scoreRar.color + ';font-weight:700">' + gearScore + '</div>' +
             '<div style="font-size:10px;color:var(--accent)">装备</div>' +
           '</div>' +
         '</div>';
@@ -1861,7 +1859,7 @@ const App = {
 
     let html = '<div class="card">' +
       '<div class="flex justify-between items-center mb-8">' +
-        '<div style="font-size:14px;font-weight:600">🌳 天赋树</div>' +
+        '<div style="font-size:14px;font-weight:600"> 天赋树</div>' +
         '<div style="font-size:12px;color:var(--gold)">可用点数: ' + available + '</div>' +
       '</div>';
 
@@ -1885,7 +1883,7 @@ const App = {
           (canUnlock ? ' onclick="App.unlockSkillNode(\'' + heroId + '\',' + bi + ',' + ni + ')"' : '') + '>' +
           '<div style="font-size:' + (isUltimate ? '11px' : '10px') + ';font-weight:600;' + (isUltimate ? 'color:var(--gold)' : '') + '">' + node.name + '</div>' +
           '<div style="font-size:9px;color:var(--dim);margin-top:2px">' + node.desc + '</div>' +
-          (isUnlocked ? '<div style="font-size:9px;color:var(--shu);margin-top:2px">✅</div>' : '') +
+          (isUnlocked ? '<div style="font-size:9px;color:var(--shu);margin-top:2px">已学</div>' : '') +
         '</div>';
       }
       html += '</div></div>';
@@ -1895,7 +1893,7 @@ const App = {
     const spent = SkillTree._getSpentPoints(heroId);
     if (spent > 0) {
       const respecCost = spent * 200;
-      html += '<button class="btn btn-sm btn-block mt-8" onclick="App.respecSkillTree(\'' + heroId + '\')" style="background:var(--card2);color:var(--hp);font-size:11px">🔄 重置天赋 (💰' + respecCost + ')</button>';
+      html += '<button class="btn btn-sm btn-block mt-8" onclick="App.respecSkillTree(\'' + heroId + '\')" style="background:var(--card2);color:var(--hp);font-size:11px">重置天赋 (' + Visuals.resIcon('gold') + respecCost + ')</button>';
     }
 
     html += '</div>';
@@ -1904,28 +1902,28 @@ const App = {
 
   unlockSkillNode(heroId, branchIdx, nodeIdx) {
     const result = SkillTree.unlockNode(heroId, branchIdx, nodeIdx);
-    if (result.error) { this.toast('❌ ' + result.error); return; }
-    this.toast('✅ 解锁天赋: ' + result.node.name);
+    if (result.error) { this.toast(result.error); return; }
+    this.toast('解锁天赋: ' + result.node.name);
     this.renderHeroDetail(heroId);
   },
 
   respecSkillTree(heroId) {
     const result = SkillTree.respec(heroId);
-    if (result.error) { this.toast('❌ ' + result.error); return; }
-    this.toast('🔄 天赋已重置，返还 ' + result.refunded + ' 点');
+    if (result.error) { this.toast(result.error); return; }
+    this.toast('天赋已重置，返还 ' + result.refunded + ' 点');
     this.renderHeroDetail(heroId);
     this.updateHeader();
   },
 
   equipItem(heroId, equipUid) {
     const result = Equipment.equipToHero(heroId, equipUid);
-    if (result.error) { this.toast('❌ ' + result.error); return; }
-    this.toast('✅ 装备成功');
+    if (result.error) { this.toast(result.error); return; }
+    this.toast('装备成功');
     this.renderHeroDetail(heroId);
     // Check first equip achievement
     if (typeof Achievements !== 'undefined') {
       const newAch = Achievements.checkAll();
-      if (newAch.length > 0) this.toast('🏅 新成就: ' + newAch.map(a => a.name).join(', '));
+      if (newAch.length > 0) this.toast('新成就: ' + newAch.map(a => a.name).join(', '));
     }
   },
 
@@ -1967,9 +1965,9 @@ const App = {
         html += '<div class="card" style="padding:12px;border-left:3px solid ' + (rarInfo?.color || 'var(--border)') + '">' +
           '<div class="flex justify-between items-center">' +
             '<div class="flex items-center gap-8">' +
-              '<span style="font-size:24px">' + (tmpl.emoji || '📦') + '</span>' +
+              '<span>' + Visuals.equipItemIcon(item.templateId, tmpl.rarity) + '</span>' +
               '<div>' +
-                '<div style="font-size:14px;font-weight:600;color:' + (rarInfo?.color || 'var(--text)') + '">' + tmpl.name + ' +' + item.level + '/' + maxLevel + ' <span style="font-size:11px;color:' + scoreRar.color + '">⚡' + gearScore + '</span></div>' +
+                '<div style="font-size:14px;font-weight:600;color:' + (rarInfo?.color || 'var(--text)') + '">' + tmpl.name + ' +' + item.level + '/' + maxLevel + ' <span style="font-size:11px;color:' + scoreRar.color + '">' + gearScore + '</span></div>' +
                 '<div style="font-size:11px;color:var(--dim)">' + (Equipment.SLOTS[tmpl.slot]?.name || '') + ' · ' + rarInfo.label + '</div>' +
                 '<div style="font-size:11px;color:var(--dim)">' + statStr + '</div>' +
                 (equippedOn ? '<div style="font-size:11px;color:var(--accent)">装备于: ' + equippedOn.emoji + ' ' + equippedOn.name + '</div>' : '') +
@@ -1988,7 +1986,7 @@ const App = {
   sellEquipment(uid) {
     const gold = Equipment.sell(uid);
     if (gold > 0) {
-      this.toast('💰 出售获得 ' + gold + ' 金币');
+      this.toast('出售获得 ' + gold + ' 金币');
       this.updateHeader();
       this.renderEquipmentPage();
     }
@@ -2013,10 +2011,10 @@ const App = {
           '<div class="dm-desc">' + def.desc + '</div>' +
         '</div>' +
         '<div class="dm-reward">' +
-          (claimed ? '<span class="dm-done">✅</span>' :
+          (claimed ? '<span class="dm-done" style="color:var(--shu)">完成</span>' :
            completed ? '<button class="btn btn-sm btn-gold" onclick="App.claimAchievement(\'' + def.id + '\')">' +
-             (def.reward.gold ? '💰' + def.reward.gold : '') + (def.reward.gems ? '💎' + def.reward.gems : '') + '</button>' :
-           '<span class="text-dim" style="font-size:12px">🔒</span>') +
+             (def.reward.gold ? def.reward.gold + '金' : '') + (def.reward.gems ? def.reward.gems + '石' : '') + '</button>' :
+           '<span class="text-dim" style="font-size:12px">' + Visuals.secIcon('lock') + '</span>') +
         '</div>' +
       '</div>';
     }
@@ -2027,7 +2025,7 @@ const App = {
     const success = Achievements.claim(id);
     if (success) {
       const def = Achievements.DEFS.find(d => d.id === id);
-      this.toast('🏅 领取成就奖励: ' + def.name);
+      this.toast('领取成就奖励: ' + def.name);
       this.updateHeader();
       this.renderAchievementsPage();
     }
@@ -2039,20 +2037,20 @@ const App = {
     const list = document.getElementById('roster-list');
 
     // After the owned heroes, show "coming soon" section
-    let comingSoonHtml = '<div style="font-size:15px;font-weight:600;margin:16px 0 8px">📋 即将推出</div>';
-    let mysteryHtml = '<div style="font-size:15px;font-weight:600;margin:16px 0 8px">❓ 神秘武将</div>';
+    let comingSoonHtml = '<div style="font-size:15px;font-weight:600;margin:16px 0 8px"> 即将推出</div>';
+    let mysteryHtml = '<div style="font-size:15px;font-weight:600;margin:16px 0 8px">? 神秘武将</div>';
 
     for (const [id, hero] of Object.entries(HEROES)) {
       if (roster[id]) continue; // Already owned
       if (hero.mystery) {
         mysteryHtml += '<div class="hero-card" style="opacity:.5">' +
-          '<div class="hero-emoji" style="background:rgba(100,100,100,.15)">❓</div>' +
+          '<div class="hero-emoji" style="opacity:.4">' + Visuals.heroPortrait(id, 'sm') + '</div>' +
           '<div class="hero-info">' +
             '<div class="hero-name">???</div>' +
             '<div class="hero-sub">' + (FACTIONS[hero.faction]?.name || '') + ' · ' + '★'.repeat(hero.rarity) + '</div>' +
             '<div class="text-dim" style="font-size:11px;font-style:italic">' + hero.lore + '</div>' +
           '</div>' +
-          '<div style="font-size:12px;color:var(--gold)">🔒</div>' +
+          '<div style="font-size:12px;color:var(--gold)">' + Visuals.secIcon('lock') + '</div>' +
         '</div>';
       } else if (hero.comingSoon) {
         comingSoonHtml += '<div class="hero-card rarity-' + hero.rarity + '" style="opacity:.65">' +
@@ -2090,16 +2088,16 @@ App.startBattle = async function() {
   const modal = document.getElementById('result-modal');
 
   if (result === 'victory') {
-    document.getElementById('result-icon').textContent = '🎉';
+    document.getElementById('result-icon').innerHTML = '<span style="font-size:48px;color:var(--gold)">胜</span>';
     document.getElementById('result-title').textContent = '胜利！';
     Storage.addGold(stage.reward.gold);
     Storage.addExp(stage.reward.exp);
 
-    let detailText = '+' + stage.reward.gold + '💰 +' + stage.reward.exp + '⭐';
+    let detailText = '+' + stage.reward.gold + '金 +' + stage.reward.exp + '经验';
 
     if (stage.reward.hero_shard) {
       Storage.addShards(stage.reward.hero_shard, 3);
-      detailText += ' +3🧩';
+      detailText += ' +3碎片';
     }
 
     // Handle different modes
@@ -2115,7 +2113,7 @@ App.startBattle = async function() {
           Storage.addEquipment(drop);
           const tmpl = Equipment.TEMPLATES[drop.templateId];
           const rarInfo = Equipment.RARITIES[tmpl?.rarity || 1];
-          detailText += '\n🎒 获得: ' + (tmpl?.emoji || '') + ' ' + (tmpl?.name || '???') + ' (' + rarInfo.label + ')';
+          detailText += '\n获得: ' + (tmpl?.emoji || '') + ' ' + (tmpl?.name || '???') + ' (' + rarInfo.label + ')';
         }
       }
       // Add pass XP
@@ -2136,7 +2134,7 @@ App.startBattle = async function() {
       }, 0);
       const raidState = Dungeon.recordRaidAttempt(totalDmg);
       detailText += ' · 造成 ' + totalDmg.toLocaleString() + ' 伤害';
-      if (raidState.defeated) detailText += ' 💀 Boss已击败！';
+      if (raidState.defeated) detailText += ' Boss已击败！';
     } else {
       // Normal campaign
       Campaign.completeStage(stage.id);
@@ -2150,7 +2148,7 @@ App.startBattle = async function() {
           Storage.addEquipment(drop);
           const tmpl = Equipment.TEMPLATES[drop.templateId];
           const rarInfo = Equipment.RARITIES[tmpl?.rarity || 1];
-          detailText += '\n🎒 获得: ' + (tmpl?.emoji || '') + ' ' + (tmpl?.name || '???') + ' (' + rarInfo.label + ')';
+          detailText += '\n获得: ' + (tmpl?.emoji || '') + ' ' + (tmpl?.name || '???') + ' (' + rarInfo.label + ')';
         }
       }
     }
@@ -2167,10 +2165,10 @@ App.startBattle = async function() {
     // Check achievements
     if (typeof Achievements !== 'undefined') {
       const newAch = Achievements.checkAll();
-      if (newAch.length > 0) setTimeout(() => this.toast('🏅 新成就: ' + newAch.map(a => a.name).join(', '), 3000), 1500);
+      if (newAch.length > 0) setTimeout(() => this.toast('新成就: ' + newAch.map(a => a.name).join(', '), 3000), 1500);
     }
   } else {
-    document.getElementById('result-icon').textContent = '💀';
+    document.getElementById('result-icon').innerHTML = '<span style="font-size:48px;color:var(--hp)">败</span>';
     document.getElementById('result-title').textContent = '败北...';
 
     if (stage._dungeonFloor) {

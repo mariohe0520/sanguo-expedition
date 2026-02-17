@@ -4,7 +4,7 @@ const Seasonal = {
   // 4 seasons per year
   SEASONS: [
     {
-      id: 1, name: '春·桃园', emoji: '🌸', color: '#f472b6',
+      id: 1, name: '春·桃园', emoji: '', color: '#f472b6',
       desc: '桃花盛开，英雄相聚',
       theme: 'shu',
       bannerHeroes: ['liubei', 'guanyu', 'zhangfei', 'zhaoyun', 'zhugeLiang'],
@@ -12,7 +12,7 @@ const Seasonal = {
       months: [3, 4, 5], // Mar-May
     },
     {
-      id: 2, name: '夏·赤壁', emoji: '🔥', color: '#ef4444',
+      id: 2, name: '夏·赤壁', emoji: '', color: '#ef4444',
       desc: '烈日炎炎，烽火燃江',
       theme: 'wu',
       bannerHeroes: ['zhouyu', 'luXun', 'sunshangxiang', 'ganningwu', 'sunce'],
@@ -20,7 +20,7 @@ const Seasonal = {
       months: [6, 7, 8], // Jun-Aug
     },
     {
-      id: 3, name: '秋·五丈原', emoji: '🍂', color: '#f59e0b',
+      id: 3, name: '秋·五丈原', emoji: '', color: '#f59e0b',
       desc: '秋风瑟瑟，壮志未酬',
       theme: 'wei',
       bannerHeroes: ['caocao', 'simayi', 'guojia', 'xunyu', 'xuhuang'],
@@ -28,7 +28,7 @@ const Seasonal = {
       months: [9, 10, 11], // Sep-Nov
     },
     {
-      id: 4, name: '冬·乱世', emoji: '❄️', color: '#6366f1',
+      id: 4, name: '冬·乱世', emoji: '', color: '#6366f1',
       desc: '寒冬凛冽，群雄割据',
       theme: 'qun',
       bannerHeroes: ['lvbu', 'diaochan', 'menghuo', 'zhurong', 'huatuo'],
@@ -96,7 +96,7 @@ const Seasonal = {
       23: { gems: 40 },
       25: { gold: 10000, shardType: 'seasonal_hero', shardCount: 15 },
       28: { gems: 50 },
-      30: { gold: 20000, gems: 100, title: '赛季霸主', exclusiveEmoji: '👑' },
+      30: { gold: 20000, gems: 100, title: '赛季霸主', exclusiveTitle: '霸' },
     },
   },
 

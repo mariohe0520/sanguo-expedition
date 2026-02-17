@@ -7,7 +7,7 @@ const SkillTree = {
   TREES: {
     zhaoyun: {
       branches: [
-        { id:'charge', name:'冲锋', icon:'🐴', desc:'突击与机动',
+        { id:'charge', name:'冲锋', icon:'冲', desc:'突击与机动',
           nodes: [
             { name:'疾驰', desc:'SPD+10%', stat:{spd_pct:10} },
             { name:'破阵', desc:'ATK+8%', stat:{atk_pct:8} },
@@ -15,7 +15,7 @@ const SkillTree = {
             { name:'穿透', desc:'无视15%防御', stat:{armor_pen_pct:15} },
             { name:'【极】龙骑冲锋', desc:'终结技：对全体250%ATK，无视50%防御', ultimate:'dragon_charge' },
           ]},
-        { id:'dragon', name:'龙胆', icon:'🐉', desc:'攻击与暴击',
+        { id:'dragon', name:'龙胆', icon:'龙', desc:'攻击与暴击',
           nodes: [
             { name:'龙吟', desc:'ATK+12%', stat:{atk_pct:12} },
             { name:'龙鳞', desc:'暴击率+10%', stat:{crit_pct:10} },
@@ -23,7 +23,7 @@ const SkillTree = {
             { name:'龙魂', desc:'击杀回复30%怒气', special:'rage_on_kill' },
             { name:'【极】七进七出·真', desc:'终结技：无敌2回合+全体200%ATK+暴击', ultimate:'true_seven' },
           ]},
-        { id:'guardian', name:'守护', icon:'🛡️', desc:'防御与生存',
+        { id:'guardian', name:'守护', icon:'盾', desc:'防御与生存',
           nodes: [
             { name:'铁壁', desc:'DEF+12%', stat:{def_pct:12} },
             { name:'坚韧', desc:'HP+15%', stat:{hp_pct:15} },
@@ -35,7 +35,7 @@ const SkillTree = {
     },
     guanyu: {
       branches: [
-        { id:'valor', name:'武勇', icon:'⚔️', desc:'纯粹攻击',
+        { id:'valor', name:'武勇', icon:'剑', desc:'纯粹攻击',
           nodes: [
             { name:'刚猛', desc:'ATK+15%', stat:{atk_pct:15} },
             { name:'斩击', desc:'暴击率+8%', stat:{crit_pct:8} },
@@ -43,7 +43,7 @@ const SkillTree = {
             { name:'破军', desc:'对HP>50%目标伤害+20%', special:'high_hp_bonus' },
             { name:'【极】温酒斩华雄', desc:'终结技：单体500%ATK必暴击', ultimate:'wine_slash' },
           ]},
-        { id:'crescent', name:'青龙', icon:'🌙', desc:'技能强化',
+        { id:'crescent', name:'青龙', icon:'月', desc:'技能强化',
           nodes: [
             { name:'月华', desc:'INT+10%', stat:{int_pct:10} },
             { name:'龙牙', desc:'技能伤害+15%', stat:{skill_dmg_pct:15} },
@@ -51,7 +51,7 @@ const SkillTree = {
             { name:'寒光', desc:'技能命中后降低目标DEF 20%', special:'skill_def_break' },
             { name:'【极】青龙偃月·极', desc:'终结技：对单体350%ATK+全体150%ATK', ultimate:'crescent_extreme' },
           ]},
-        { id:'oath', name:'忠义', icon:'🤝', desc:'团队增益',
+        { id:'oath', name:'忠义', icon:'义', desc:'团队增益',
           nodes: [
             { name:'义气', desc:'HP+10%', stat:{hp_pct:10} },
             { name:'兄弟', desc:'蜀将在队ATK+8%', stat:{faction_shu_atk:8} },
@@ -63,7 +63,7 @@ const SkillTree = {
     },
     liubei: {
       branches: [
-        { id:'mercy', name:'仁德', icon:'❤️', desc:'治疗强化',
+        { id:'mercy', name:'仁德', icon:'仁', desc:'治疗强化',
           nodes: [
             { name:'仁慈', desc:'治疗效果+15%', stat:{heal_pct:15} },
             { name:'德行', desc:'INT+10%', stat:{int_pct:10} },
@@ -71,7 +71,7 @@ const SkillTree = {
             { name:'救济', desc:'治疗时额外清除1个debuff', special:'heal_cleanse' },
             { name:'【极】仁德天下', desc:'终结技：全队回复50%HP+ATK/DEF+25% 3回合', ultimate:'mercy_world' },
           ]},
-        { id:'command', name:'统帅', icon:'👑', desc:'指挥增益',
+        { id:'command', name:'统帅', icon:'帅', desc:'指挥增益',
           nodes: [
             { name:'号令', desc:'全队SPD+8%', stat:{team_spd_pct:8} },
             { name:'激励', desc:'全队ATK+5%', stat:{team_atk_pct:5} },
@@ -79,7 +79,7 @@ const SkillTree = {
             { name:'统御', desc:'全队暴击率+8%', stat:{team_crit_pct:8} },
             { name:'【极】帝王之令', desc:'终结技：全队全属性+30% 3回合', ultimate:'emperor_decree' },
           ]},
-        { id:'shield_lord', name:'盾主', icon:'🛡️', desc:'防御坦克',
+        { id:'shield_lord', name:'盾主', icon:'盾', desc:'防御坦克',
           nodes: [
             { name:'铜墙', desc:'DEF+15%', stat:{def_pct:15} },
             { name:'铁壁', desc:'HP+20%', stat:{hp_pct:20} },
@@ -91,7 +91,7 @@ const SkillTree = {
     },
     zhangfei: {
       branches: [
-        { id:'fury', name:'暴怒', icon:'😤', desc:'攻击与控制',
+        { id:'fury', name:'暴怒', icon:'怒', desc:'攻击与控制',
           nodes: [
             { name:'怒火', desc:'ATK+12%', stat:{atk_pct:12} },
             { name:'咆哮', desc:'眩晕概率+15%', stat:{stun_chance_pct:15} },
@@ -99,7 +99,7 @@ const SkillTree = {
             { name:'狂暴', desc:'HP<50%时ATK+30%', special:'low_hp_atk_boost' },
             { name:'【极】万夫不当', desc:'终结技：全体200%ATK+眩晕2回合', ultimate:'unstoppable' },
           ]},
-        { id:'thunder', name:'雷霆', icon:'⚡', desc:'爆发伤害',
+        { id:'thunder', name:'雷霆', icon:'雷', desc:'爆发伤害',
           nodes: [
             { name:'蛮力', desc:'暴击伤害+20%', stat:{crit_dmg_pct:20} },
             { name:'雷击', desc:'暴击率+12%', stat:{crit_pct:12} },
@@ -107,7 +107,7 @@ const SkillTree = {
             { name:'破甲', desc:'攻击无视20%防御', stat:{armor_pen_pct:20} },
             { name:'【极】怒吼天地', desc:'终结技：单体400%ATK+破甲50%+眩晕', ultimate:'heaven_roar' },
           ]},
-        { id:'taunt', name:'嘲讽', icon:'🗣️', desc:'坦克与控制',
+        { id:'taunt', name:'嘲讽', icon:'嘲', desc:'坦克与控制',
           nodes: [
             { name:'虎威', desc:'HP+15%', stat:{hp_pct:15} },
             { name:'铁身', desc:'DEF+10%', stat:{def_pct:10} },
@@ -119,7 +119,7 @@ const SkillTree = {
     },
     caocao: {
       branches: [
-        { id:'ambition', name:'雄心', icon:'🖤', desc:'统帅增益',
+        { id:'ambition', name:'雄心', icon:'雄', desc:'统帅增益',
           nodes: [
             { name:'野心', desc:'ATK+10%', stat:{atk_pct:10} },
             { name:'求贤', desc:'全队INT+8%', stat:{team_int_pct:8} },
@@ -127,7 +127,7 @@ const SkillTree = {
             { name:'天子', desc:'全队ATK buff效果+20%', special:'buff_amplify' },
             { name:'【极】挟天子令诸侯', desc:'终结技：全队ATK+40%/DEF+20% 4回合', ultimate:'mandate_heaven' },
           ]},
-        { id:'scheme', name:'谋略', icon:'🧠', desc:'debuff控制',
+        { id:'scheme', name:'谋略', icon:'策', desc:'debuff控制',
           nodes: [
             { name:'机敏', desc:'SPD+10%', stat:{spd_pct:10} },
             { name:'诡计', desc:'debuff效果+15%', stat:{debuff_amp_pct:15} },
@@ -135,7 +135,7 @@ const SkillTree = {
             { name:'瓦解', desc:'每回合降低全体敌人随机属性5%', special:'erosion' },
             { name:'【极】奸雄之计', desc:'终结技：全体敌人-30%全属性 3回合', ultimate:'villain_scheme' },
           ]},
-        { id:'lord', name:'霸主', icon:'👑', desc:'生存与支配',
+        { id:'lord', name:'霸主', icon:'帅', desc:'生存与支配',
           nodes: [
             { name:'霸气', desc:'HP+12%', stat:{hp_pct:12} },
             { name:'吸血', desc:'造成伤害回复10%HP', special:'lifesteal_10' },
@@ -147,7 +147,7 @@ const SkillTree = {
     },
     lvbu: {
       branches: [
-        { id:'rampage', name:'无双', icon:'💥', desc:'极限攻击',
+        { id:'rampage', name:'无双', icon:'爆', desc:'极限攻击',
           nodes: [
             { name:'霸力', desc:'ATK+18%', stat:{atk_pct:18} },
             { name:'嗜血', desc:'暴击率+15%', stat:{crit_pct:15} },
@@ -155,7 +155,7 @@ const SkillTree = {
             { name:'毁灭', desc:'暴击伤害+40%', stat:{crit_dmg_pct:40} },
             { name:'【极】天下无双', desc:'终结技：单体600%ATK 无视防御', ultimate:'peerless' },
           ]},
-        { id:'halberd', name:'画戟', icon:'🔱', desc:'武器精通',
+        { id:'halberd', name:'画戟', icon:'戟', desc:'武器精通',
           nodes: [
             { name:'锋刃', desc:'ATK+10%', stat:{atk_pct:10} },
             { name:'横扫', desc:'普攻溅射30%伤害给相邻', special:'cleave_30' },
@@ -163,7 +163,7 @@ const SkillTree = {
             { name:'旋风', desc:'技能伤害+25%', stat:{skill_dmg_pct:25} },
             { name:'【极】方天画戟·真', desc:'终结技：全体300%ATK+30%概率即死', ultimate:'true_halberd' },
           ]},
-        { id:'berserker', name:'狂战', icon:'🔥', desc:'赌命爆发',
+        { id:'berserker', name:'狂战', icon:'焰', desc:'赌命爆发',
           nodes: [
             { name:'狂怒', desc:'SPD+12%', stat:{spd_pct:12} },
             { name:'嗜杀', desc:'造成伤害回复8%HP', special:'lifesteal_8' },
@@ -175,7 +175,7 @@ const SkillTree = {
     },
     sunshangxiang: {
       branches: [
-        { id:'precision', name:'精准', icon:'🎯', desc:'暴击专精',
+        { id:'precision', name:'精准', icon:'准', desc:'暴击专精',
           nodes: [
             { name:'瞄准', desc:'暴击率+12%', stat:{crit_pct:12} },
             { name:'穿心', desc:'暴击伤害+20%', stat:{crit_dmg_pct:20} },
@@ -183,7 +183,7 @@ const SkillTree = {
             { name:'致命', desc:'暴击时20%概率双倍暴伤', special:'mega_crit' },
             { name:'【极】百步穿杨·极', desc:'终结技：对单体300%ATK 必暴击+暴伤x3', ultimate:'perfect_shot' },
           ]},
-        { id:'volley', name:'连射', icon:'🏹', desc:'多段攻击',
+        { id:'volley', name:'连射', icon:'射', desc:'多段攻击',
           nodes: [
             { name:'速射', desc:'SPD+10%', stat:{spd_pct:10} },
             { name:'双箭', desc:'普攻额外一次50%伤害', special:'double_shot' },
@@ -191,7 +191,7 @@ const SkillTree = {
             { name:'弹幕', desc:'技能额外攻击+2次', special:'extra_hits' },
             { name:'【极】万箭齐发', desc:'终结技：全体5次80%ATK攻击', ultimate:'arrow_storm' },
           ]},
-        { id:'agility', name:'灵巧', icon:'💨', desc:'闪避与机动',
+        { id:'agility', name:'灵巧', icon:'巧', desc:'闪避与机动',
           nodes: [
             { name:'轻身', desc:'闪避+10%', stat:{dodge_pct:10} },
             { name:'疾步', desc:'SPD+8%', stat:{spd_pct:8} },
@@ -203,7 +203,7 @@ const SkillTree = {
     },
     zhangjiao: {
       branches: [
-        { id:'thunder_path', name:'天雷', icon:'⚡', desc:'雷电法术',
+        { id:'thunder_path', name:'天雷', icon:'雷', desc:'雷电法术',
           nodes: [
             { name:'蓄电', desc:'INT+12%', stat:{int_pct:12} },
             { name:'雷鸣', desc:'法术伤害+15%', stat:{skill_dmg_pct:15} },
@@ -211,7 +211,7 @@ const SkillTree = {
             { name:'连锁', desc:'法术溅射50%伤害给相邻', special:'magic_chain' },
             { name:'【极】天罚', desc:'终结技：全体250%INT+30%概率眩晕2回合', ultimate:'heaven_punishment' },
           ]},
-        { id:'plague', name:'瘟疫', icon:'☠️', desc:'持续伤害',
+        { id:'plague', name:'瘟疫', icon:'疫', desc:'持续伤害',
           nodes: [
             { name:'毒素', desc:'INT+8%', stat:{int_pct:8} },
             { name:'腐蚀', desc:'攻击附加DoT(5%INT/回合 3回合)', special:'poison_dot' },
@@ -219,7 +219,7 @@ const SkillTree = {
             { name:'虚弱', desc:'受DoT影响的目标-15%DEF', special:'dot_def_break' },
             { name:'【极】黄天之怒', desc:'终结技：全体DoT(15%INT/回合) 5回合', ultimate:'yellow_sky' },
           ]},
-        { id:'faith', name:'太平', icon:'🙏', desc:'辅助与恢复',
+        { id:'faith', name:'太平', icon:'道', desc:'辅助与恢复',
           nodes: [
             { name:'信仰', desc:'HP+15%', stat:{hp_pct:15} },
             { name:'祈祷', desc:'回合开始回复5%HP', stat:{regen_pct:5} },
@@ -231,7 +231,7 @@ const SkillTree = {
     },
     diaochan: {
       branches: [
-        { id:'charm_path', name:'魅惑', icon:'💋', desc:'控制专精',
+        { id:'charm_path', name:'魅惑', icon:'魅', desc:'控制专精',
           nodes: [
             { name:'倾城', desc:'INT+10%', stat:{int_pct:10} },
             { name:'迷惑', desc:'魅惑持续+1回合', special:'charm_duration_up' },
@@ -239,7 +239,7 @@ const SkillTree = {
             { name:'绝色', desc:'被攻击时25%概率魅惑攻击者1回合', special:'passive_charm' },
             { name:'【极】闭月羞花', desc:'终结技：全体敌人魅惑2回合+INT-30%', ultimate:'beauty_ultimate' },
           ]},
-        { id:'moon', name:'月影', icon:'🌙', desc:'法术输出',
+        { id:'moon', name:'月影', icon:'月', desc:'法术输出',
           nodes: [
             { name:'月光', desc:'INT+15%', stat:{int_pct:15} },
             { name:'银辉', desc:'法术伤害+12%', stat:{skill_dmg_pct:12} },
@@ -247,7 +247,7 @@ const SkillTree = {
             { name:'月蚀', desc:'法术命中降低目标INT 20%', special:'int_steal' },
             { name:'【极】月华天舞', desc:'终结技：全体180%INT+降低全属性20%', ultimate:'moon_dance' },
           ]},
-        { id:'shadow', name:'暗影', icon:'🌑', desc:'闪避与生存',
+        { id:'shadow', name:'暗影', icon:'影', desc:'闪避与生存',
           nodes: [
             { name:'隐身', desc:'闪避+15%', stat:{dodge_pct:15} },
             { name:'幻步', desc:'SPD+10%', stat:{spd_pct:10} },
@@ -259,7 +259,7 @@ const SkillTree = {
     },
     huangzhong: {
       branches: [
-        { id:'sniper', name:'神射', icon:'🎯', desc:'精准打击',
+        { id:'sniper', name:'神射', icon:'准', desc:'精准打击',
           nodes: [
             { name:'锐眼', desc:'暴击率+15%', stat:{crit_pct:15} },
             { name:'致命一击', desc:'暴击伤害+30%', stat:{crit_dmg_pct:30} },
@@ -267,7 +267,7 @@ const SkillTree = {
             { name:'贯穿', desc:'暴击时穿透至后排', special:'crit_pierce' },
             { name:'【极】定军斩将', desc:'终结技：单体450%ATK 必暴击+无视防御', ultimate:'dingjun_slash' },
           ]},
-        { id:'veteran', name:'老将', icon:'⏳', desc:'持久战',
+        { id:'veteran', name:'老将', icon:'老', desc:'持久战',
           nodes: [
             { name:'经验', desc:'ATK+8%', stat:{atk_pct:8} },
             { name:'老练', desc:'每3回合ATK+10%(可叠加)', special:'veteran_stack' },
@@ -275,7 +275,7 @@ const SkillTree = {
             { name:'意志', desc:'回合>5后全属性+15%', special:'late_game_boost' },
             { name:'【极】老当益壮', desc:'终结技：ATK永久+50%+3回合必暴击', ultimate:'eternal_vigor' },
           ]},
-        { id:'steadfast', name:'坚守', icon:'🏰', desc:'防御弓手',
+        { id:'steadfast', name:'坚守', icon:'守', desc:'防御弓手',
           nodes: [
             { name:'坚定', desc:'DEF+10%', stat:{def_pct:10} },
             { name:'铁弓', desc:'HP+12%', stat:{hp_pct:12} },
@@ -291,7 +291,7 @@ const SkillTree = {
   ARCHETYPES: {
     cavalry: {
       branches: [
-        { id:'rush', name:'冲锋', icon:'🐴',
+        { id:'rush', name:'冲锋', icon:'冲',
           nodes: [
             { name:'疾驰', desc:'SPD+10%', stat:{spd_pct:10} },
             { name:'突击', desc:'ATK+10%', stat:{atk_pct:10} },
@@ -299,7 +299,7 @@ const SkillTree = {
             { name:'穿刺', desc:'无视15%防御', stat:{armor_pen_pct:15} },
             { name:'【极】铁骑冲锋', desc:'终结技：全体180%ATK', ultimate:'cavalry_charge' },
           ]},
-        { id:'strike', name:'打击', icon:'⚔️',
+        { id:'strike', name:'打击', icon:'剑',
           nodes: [
             { name:'锋利', desc:'暴击率+10%', stat:{crit_pct:10} },
             { name:'重击', desc:'暴击伤害+20%', stat:{crit_dmg_pct:20} },
@@ -307,7 +307,7 @@ const SkillTree = {
             { name:'破军', desc:'ATK+12%', stat:{atk_pct:12} },
             { name:'【极】致命打击', desc:'终结技：单体350%ATK必暴击', ultimate:'lethal_strike' },
           ]},
-        { id:'armor', name:'护甲', icon:'🛡️',
+        { id:'armor', name:'护甲', icon:'盾',
           nodes: [
             { name:'坚韧', desc:'DEF+10%', stat:{def_pct:10} },
             { name:'强壮', desc:'HP+12%', stat:{hp_pct:12} },
@@ -319,7 +319,7 @@ const SkillTree = {
     },
     spear: {
       branches: [
-        { id:'formation', name:'阵型', icon:'🔱',
+        { id:'formation', name:'阵型', icon:'戟',
           nodes: [
             { name:'列阵', desc:'DEF+12%', stat:{def_pct:12} },
             { name:'枪林', desc:'ATK+8%', stat:{atk_pct:8} },
@@ -327,7 +327,7 @@ const SkillTree = {
             { name:'长枪', desc:'反击伤害+30%', stat:{counter_dmg_pct:30} },
             { name:'【极】枪阵无双', desc:'终结技：前排250%ATK+DEF+30% 2回合', ultimate:'spear_wall' },
           ]},
-        { id:'pierce', name:'穿刺', icon:'🗡️',
+        { id:'pierce', name:'穿刺', icon:'刺',
           nodes: [
             { name:'锐枪', desc:'ATK+12%', stat:{atk_pct:12} },
             { name:'刺穿', desc:'无视15%防御', stat:{armor_pen_pct:15} },
@@ -335,7 +335,7 @@ const SkillTree = {
             { name:'致命', desc:'暴击率+10%', stat:{crit_pct:10} },
             { name:'【极】万枪齐发', desc:'终结技：全体200%ATK+破甲30%', ultimate:'pierce_all' },
           ]},
-        { id:'fortify', name:'固守', icon:'🏰',
+        { id:'fortify', name:'固守', icon:'守',
           nodes: [
             { name:'坚守', desc:'HP+15%', stat:{hp_pct:15} },
             { name:'盾墙', desc:'DEF+8%', stat:{def_pct:8} },
@@ -347,7 +347,7 @@ const SkillTree = {
     },
     shield: {
       branches: [
-        { id:'block', name:'格挡', icon:'🛡️',
+        { id:'block', name:'格挡', icon:'盾',
           nodes: [
             { name:'铁盾', desc:'DEF+15%', stat:{def_pct:15} },
             { name:'格挡', desc:'25%概率格挡50%伤害', special:'block_25' },
@@ -355,7 +355,7 @@ const SkillTree = {
             { name:'反弹', desc:'格挡时反弹20%伤害', special:'block_reflect' },
             { name:'【极】绝对防御', desc:'终结技：2回合伤害减免80%+反弹50%', ultimate:'absolute_defense' },
           ]},
-        { id:'endure', name:'坚忍', icon:'💪',
+        { id:'endure', name:'坚忍', icon:'忍',
           nodes: [
             { name:'耐力', desc:'HP+20%', stat:{hp_pct:20} },
             { name:'恢复', desc:'回合开始回复3%HP', stat:{regen_pct:3} },
@@ -363,7 +363,7 @@ const SkillTree = {
             { name:'不屈', desc:'致死时50%概率存活(1HP)', special:'cheat_death_50' },
             { name:'【极】不灭之躯', desc:'终结技：3回合每回合回复15%HP+免疫控制', ultimate:'immortal_body' },
           ]},
-        { id:'rally', name:'号召', icon:'📢',
+        { id:'rally', name:'号召', icon:'令',
           nodes: [
             { name:'鼓舞', desc:'全队DEF+5%', stat:{team_def_pct:5} },
             { name:'守护', desc:'全队HP+5%', stat:{team_hp_pct:5} },
@@ -375,7 +375,7 @@ const SkillTree = {
     },
     archer: {
       branches: [
-        { id:'aim', name:'瞄准', icon:'🎯',
+        { id:'aim', name:'瞄准', icon:'准',
           nodes: [
             { name:'精准', desc:'暴击率+12%', stat:{crit_pct:12} },
             { name:'致命', desc:'暴击伤害+25%', stat:{crit_dmg_pct:25} },
@@ -383,7 +383,7 @@ const SkillTree = {
             { name:'一击', desc:'暴击时额外30%伤害', special:'crit_bonus_30' },
             { name:'【极】神箭', desc:'终结技：单体400%ATK必暴击', ultimate:'god_arrow' },
           ]},
-        { id:'speed', name:'速射', icon:'💨',
+        { id:'speed', name:'速射', icon:'巧',
           nodes: [
             { name:'疾射', desc:'SPD+10%', stat:{spd_pct:10} },
             { name:'连射', desc:'ATK+8%', stat:{atk_pct:8} },
@@ -391,7 +391,7 @@ const SkillTree = {
             { name:'箭雨', desc:'攻击30%概率溅射', special:'splash_30' },
             { name:'【极】万箭齐发', desc:'终结技：全体3次100%ATK', ultimate:'arrow_rain' },
           ]},
-        { id:'trap', name:'陷阱', icon:'🪤',
+        { id:'trap', name:'陷阱', icon:'伏',
           nodes: [
             { name:'设伏', desc:'闪避+10%', stat:{dodge_pct:10} },
             { name:'毒箭', desc:'攻击附加DoT 2回合', special:'poison_2' },
@@ -403,7 +403,7 @@ const SkillTree = {
     },
     mage: {
       branches: [
-        { id:'blast', name:'爆破', icon:'💥',
+        { id:'blast', name:'爆破', icon:'爆',
           nodes: [
             { name:'聚能', desc:'INT+12%', stat:{int_pct:12} },
             { name:'强化', desc:'法术伤害+15%', stat:{skill_dmg_pct:15} },
@@ -411,7 +411,7 @@ const SkillTree = {
             { name:'超载', desc:'法术暴击率+15%', stat:{crit_pct:15} },
             { name:'【极】毁灭法术', desc:'终结技：全体250%INT', ultimate:'destruction' },
           ]},
-        { id:'control', name:'控制', icon:'🌀',
+        { id:'control', name:'控制', icon:'控',
           nodes: [
             { name:'冥想', desc:'INT+8%', stat:{int_pct:8} },
             { name:'减速', desc:'法术命中降SPD 15%', special:'slow_on_magic' },
@@ -419,7 +419,7 @@ const SkillTree = {
             { name:'虚弱', desc:'被控制目标受伤+20%', special:'cc_vulnerability' },
             { name:'【极】法术封锁', desc:'终结技：全体沉默2回合+INT-25%', ultimate:'magic_lockdown' },
           ]},
-        { id:'wisdom', name:'智慧', icon:'📚',
+        { id:'wisdom', name:'智慧', icon:'智',
           nodes: [
             { name:'博学', desc:'HP+12%', stat:{hp_pct:12} },
             { name:'冥思', desc:'怒气获取+15%', special:'rage_gain_15' },

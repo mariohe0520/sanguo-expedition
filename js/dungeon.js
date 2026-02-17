@@ -20,21 +20,21 @@ const Dungeon = {
   ],
 
   BOSS_POOL: [
-    { id: 'zhangjiao', name: '张角·幽冥', emoji: '⚡', title: '天公复生' },
-    { id: 'lvbu', name: '吕布·修罗', emoji: '👹', title: '无双鬼神' },
-    { id: 'caocao', name: '曹操·霸王', emoji: '🖤', title: '乱世霸主' },
-    { id: 'simayi', name: '司马懿·暗影', emoji: '🦅', title: '冢虎觉醒' },
-    { id: 'zhouyu', name: '周瑜·烈焰', emoji: '🔥', title: '赤壁之魂' },
-    { id: 'luXun', name: '陆逊·焚天', emoji: '🔥', title: '夷陵之火' },
+    { id: 'zhangjiao', name: '张角·幽冥', emoji: '角', title: '天公复生' },
+    { id: 'lvbu', name: '吕布·修罗', emoji: '吕', title: '无双鬼神' },
+    { id: 'caocao', name: '曹操·霸王', emoji: '曹', title: '乱世霸主' },
+    { id: 'simayi', name: '司马懿·暗影', emoji: '司', title: '冢虎觉醒' },
+    { id: 'zhouyu', name: '周瑜·烈焰', emoji: '瑜', title: '赤壁之魂' },
+    { id: 'luXun', name: '陆逊·焚天', emoji: '逊', title: '夷陵之火' },
   ],
 
   EVENT_TYPES: [
-    { type: 'merchant', name: '神秘商人', emoji: '🏪', desc: '以优惠价格出售装备和补给' },
-    { type: 'treasure', name: '宝箱', emoji: '🎁', desc: '发现远古宝箱！' },
-    { type: 'trap', name: '陷阱', emoji: '⚠️', desc: '前方有埋伏！全队损失HP' },
-    { type: 'ally_rescue', name: '援军', emoji: '🆘', desc: '解救被困武将，获得临时增益' },
-    { type: 'shrine', name: '祭坛', emoji: '⛩️', desc: '远古祭坛，祈祷获得祝福' },
-    { type: 'challenge', name: '精英挑战', emoji: '💀', desc: '精英怪物出没，击败获双倍奖励' },
+    { type: 'merchant', name: '神秘商人', emoji: '', desc: '以优惠价格出售装备和补给' },
+    { type: 'treasure', name: '宝箱', emoji: '', desc: '发现远古宝箱！' },
+    { type: 'trap', name: '陷阱', emoji: '', desc: '前方有埋伏！全队损失HP' },
+    { type: 'ally_rescue', name: '援军', emoji: '', desc: '解救被困武将，获得临时增益' },
+    { type: 'shrine', name: '祭坛', emoji: '', desc: '远古祭坛，祈祷获得祝福' },
+    { type: 'challenge', name: '精英挑战', emoji: '', desc: '精英怪物出没，击败获双倍奖励' },
   ],
 
   TERRAINS: ['plains', 'mountain', 'river', 'forest', 'castle'],
@@ -171,7 +171,7 @@ const Dungeon = {
       case 'treasure':
         const gold = 300 + floorNumber * 30;
         const gems = Math.floor(floorNumber / 20) + 1;
-        results.message = `发现宝箱！获得 ${gold}💰 ${gems}💎`;
+        results.message = `发现宝箱！获得 ${gold}金币 ${gems}宝石`;
         results.rewards = { gold, gems };
         Storage.addGold(gold);
         Storage.addGems(gems);
@@ -240,7 +240,7 @@ const Dungeon = {
   DAILY_DUNGEONS: {
     gold: {
       name: '金币副本',
-      emoji: '💰',
+      emoji: '',
       desc: '击败守财奴，掠夺金库！',
       color: '#fbbf24',
       baseReward: { gold: 2000 },
@@ -248,7 +248,7 @@ const Dungeon = {
     },
     exp: {
       name: '经验副本',
-      emoji: '📚',
+      emoji: '',
       desc: '挑战经验丰富的老将！',
       color: '#6366f1',
       baseReward: { exp: 1500 },
@@ -256,7 +256,7 @@ const Dungeon = {
     },
     material: {
       name: '材料副本',
-      emoji: '⚒️',
+      emoji: '',
       desc: '收集精良材料，打造神兵！',
       color: '#22c55e',
       baseReward: { gold: 500, equipChance: 1.0 },
@@ -344,16 +344,16 @@ const Dungeon = {
 
   // ===== WEEKLY BOSS RAID (周常Boss) =====
   RAID_BOSSES: [
-    { id: 'raid_dongzhuo', name: '董卓·暴君', emoji: '👺', hp: 50000, atk: 200, def: 150, int: 80, spd: 40, element: 'fire', phases: 3, desc: '暴虐无道的西凉太师' },
-    { id: 'raid_yuanshao', name: '袁绍·盟主', emoji: '🦁', hp: 45000, atk: 180, def: 180, int: 100, spd: 50, element: 'earth', phases: 3, desc: '四世三公的讨董盟主' },
-    { id: 'raid_lvbu_rage', name: '吕布·狂暴', emoji: '😈', hp: 60000, atk: 280, def: 120, int: 50, spd: 100, element: 'none', phases: 4, desc: '暴走的飞将军' },
-    { id: 'raid_guandu', name: '官渡之魂', emoji: '💀', hp: 55000, atk: 220, def: 160, int: 120, spd: 60, element: 'dark', phases: 3, desc: '官渡战场的亡灵大军' },
-    { id: 'raid_chibi', name: '赤壁火神', emoji: '🔥', hp: 48000, atk: 250, def: 100, int: 200, spd: 70, element: 'fire', phases: 3, desc: '赤壁之火凝聚的元素体' },
-    { id: 'raid_wuzhang', name: '五丈原幽灵', emoji: '👻', hp: 52000, atk: 200, def: 140, int: 250, spd: 55, element: 'dark', phases: 4, desc: '五丈原未散的执念' },
-    { id: 'raid_hulao', name: '虎牢关守卫', emoji: '🏰', hp: 70000, atk: 160, def: 250, int: 60, spd: 35, element: 'earth', phases: 3, desc: '永恒守护虎牢关的石像兵' },
-    { id: 'raid_nanman', name: '南蛮兽王', emoji: '🐘', hp: 58000, atk: 240, def: 170, int: 70, spd: 45, element: 'nature', phases: 3, desc: '南蛮深处的远古巨兽' },
-    { id: 'raid_yiling', name: '夷陵劫火', emoji: '🌋', hp: 50000, atk: 260, def: 110, int: 180, spd: 80, element: 'fire', phases: 3, desc: '七百里连营的业火化身' },
-    { id: 'raid_sima', name: '司马·天命', emoji: '🦅', hp: 65000, atk: 230, def: 200, int: 230, spd: 65, element: 'dark', phases: 4, desc: '窃取天命的终极敌人' },
+    { id: 'raid_dongzhuo', name: '董卓·暴君', emoji: '卓', hp: 50000, atk: 200, def: 150, int: 80, spd: 40, element: 'fire', phases: 3, desc: '暴虐无道的西凉太师' },
+    { id: 'raid_yuanshao', name: '袁绍·盟主', emoji: '绍', hp: 45000, atk: 180, def: 180, int: 100, spd: 50, element: 'earth', phases: 3, desc: '四世三公的讨董盟主' },
+    { id: 'raid_lvbu_rage', name: '吕布·狂暴', emoji: '吕', hp: 60000, atk: 280, def: 120, int: 50, spd: 100, element: 'none', phases: 4, desc: '暴走的飞将军' },
+    { id: 'raid_guandu', name: '官渡之魂', emoji: '', hp: 55000, atk: 220, def: 160, int: 120, spd: 60, element: 'dark', phases: 3, desc: '官渡战场的亡灵大军' },
+    { id: 'raid_chibi', name: '赤壁火神', emoji: '赤', hp: 48000, atk: 250, def: 100, int: 200, spd: 70, element: 'fire', phases: 3, desc: '赤壁之火凝聚的元素体' },
+    { id: 'raid_wuzhang', name: '五丈原幽灵', emoji: '幽', hp: 52000, atk: 200, def: 140, int: 250, spd: 55, element: 'dark', phases: 4, desc: '五丈原未散的执念' },
+    { id: 'raid_hulao', name: '虎牢关守卫', emoji: '关', hp: 70000, atk: 160, def: 250, int: 60, spd: 35, element: 'earth', phases: 3, desc: '永恒守护虎牢关的石像兵' },
+    { id: 'raid_nanman', name: '南蛮兽王', emoji: '蛮', hp: 58000, atk: 240, def: 170, int: 70, spd: 45, element: 'nature', phases: 3, desc: '南蛮深处的远古巨兽' },
+    { id: 'raid_yiling', name: '夷陵劫火', emoji: '焰', hp: 50000, atk: 260, def: 110, int: 180, spd: 80, element: 'fire', phases: 3, desc: '七百里连营的业火化身' },
+    { id: 'raid_sima', name: '司马·天命', emoji: '司', hp: 65000, atk: 230, def: 200, int: 230, spd: 65, element: 'dark', phases: 4, desc: '窃取天命的终极敌人' },
   ],
 
   MAX_RAID_ATTEMPTS: 3,
@@ -417,7 +417,7 @@ const Dungeon = {
       entries.push({
         name,
         damage: Math.floor(rng() * boss.hp * 0.4),
-        emoji: '⚔️',
+        emoji: '',
       });
     }
     // Add player
@@ -425,7 +425,7 @@ const Dungeon = {
     entries.push({
       name: Storage.getPlayer().name + '的军队',
       damage: state.totalDamage,
-      emoji: '👑',
+      emoji: '',
       isPlayer: true,
     });
     entries.sort((a, b) => b.damage - a.damage);

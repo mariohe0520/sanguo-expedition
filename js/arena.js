@@ -4,11 +4,11 @@ const Arena = {
   MAX_DAILY_ATTEMPTS: 5,
 
   RANKS: {
-    bronze:  { name: '青铜', emoji: '🥉', minRating: 0,    color: '#cd7f32', weeklyGold: 500,  weeklyGems: 5 },
-    silver:  { name: '白银', emoji: '🥈', minRating: 1000, color: '#c0c0c0', weeklyGold: 1000, weeklyGems: 10 },
-    gold:    { name: '黄金', emoji: '🏅', minRating: 1500, color: '#fbbf24', weeklyGold: 2000, weeklyGems: 20 },
-    diamond: { name: '钻石', emoji: '💎', minRating: 2000, color: '#3b82f6', weeklyGold: 3500, weeklyGems: 35 },
-    legend:  { name: '传说', emoji: '👑', minRating: 2500, color: '#a855f7', weeklyGold: 5000, weeklyGems: 50 },
+    bronze:  { name: '青铜', emoji: '', minRating: 0,    color: '#cd7f32', weeklyGold: 500,  weeklyGems: 5 },
+    silver:  { name: '白银', emoji: '', minRating: 1000, color: '#c0c0c0', weeklyGold: 1000, weeklyGems: 10 },
+    gold:    { name: '黄金', emoji: '', minRating: 1500, color: '#fbbf24', weeklyGold: 2000, weeklyGems: 20 },
+    diamond: { name: '钻石', emoji: '', minRating: 2000, color: '#3b82f6', weeklyGold: 3500, weeklyGems: 35 },
+    legend:  { name: '传说', emoji: '', minRating: 2500, color: '#a855f7', weeklyGold: 5000, weeklyGems: 50 },
   },
 
   RANK_ORDER: ['bronze', 'silver', 'gold', 'diamond', 'legend'],

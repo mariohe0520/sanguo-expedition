@@ -46,12 +46,12 @@ const Idle = {
 
   rollLoot() {
     const items = [
-      { name: '铁剑', stat: 'atk', value: 5, rarity: 1, emoji: '🗡️' },
-      { name: '皮甲', stat: 'def', value: 5, rarity: 1, emoji: '🛡️' },
-      { name: '草鞋', stat: 'spd', value: 3, rarity: 1, emoji: '👟' },
-      { name: '青铜剑', stat: 'atk', value: 10, rarity: 2, emoji: '⚔️' },
-      { name: '锁子甲', stat: 'def', value: 10, rarity: 2, emoji: '🛡️' },
-      { name: '战马', stat: 'spd', value: 8, rarity: 2, emoji: '🐴' },
+      { name: '铁剑', stat: 'atk', value: 5, rarity: 1, emoji: '' },
+      { name: '皮甲', stat: 'def', value: 5, rarity: 1, emoji: '' },
+      { name: '草鞋', stat: 'spd', value: 3, rarity: 1, emoji: '' },
+      { name: '青铜剑', stat: 'atk', value: 10, rarity: 2, emoji: '' },
+      { name: '锁子甲', stat: 'def', value: 10, rarity: 2, emoji: '' },
+      { name: '战马', stat: 'spd', value: 8, rarity: 2, emoji: '' },
     ];
     const roll = Math.random();
     const pool = roll < 0.3 ? items.filter(i => i.rarity === 2) : items.filter(i => i.rarity === 1);

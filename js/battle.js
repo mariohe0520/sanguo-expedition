@@ -119,7 +119,7 @@ const Battle = {
       if (f.passive?.condition === 'turn_start' && f.passive.heal_pct) {
         const heal = Math.floor(f.maxHp * f.passive.heal_pct / 100);
         f.hp = Math.min(f.maxHp, f.hp + heal);
-        this.addLog(`${f.emoji} ${f.name} 回复 ${heal} HP`);
+        this.addLog(`${Visuals.heroTag(f.id)} ${f.name} 回复 ${heal} HP`);
       }
     });
 
@@ -131,7 +131,7 @@ const Battle = {
     for (const fighter of order) {
       if (!fighter.alive) continue;
       if (fighter.effects.some(e => e.type === 'stun')) {
-        this.addLog(`${fighter.emoji} ${fighter.name} 被眩晕，无法行动！`);
+        this.addLog(`${Visuals.heroTag(fighter.id)} ${fighter.name} 被眩晕，无法行动！`);
         continue;
       }
       if (fighter.effects.some(e => e.type === 'charm')) {
@@ -140,7 +140,7 @@ const Battle = {
         if (allies.length > 0) {
           const target = allies[Math.floor(Math.random() * allies.length)];
           this.doAttack(fighter, target);
-          this.addLog(`${fighter.emoji} ${fighter.name} 被魅惑，攻击了 ${target.name}！`);
+          this.addLog(`${Visuals.heroTag(fighter.id)} ${fighter.name} 被魅惑，攻击了 ${target.name}！`);
         }
         continue;
       }
@@ -175,7 +175,7 @@ const Battle = {
       // Emergency dodge at low HP
       if (defender._specials.includes('emergency_dodge') && defender.hp < defender.maxHp * 0.4) dodgeChance += 30;
       if (dodgeChance > 0 && Math.random() * 100 < dodgeChance) {
-        this.addLog(`💨 ${defender.name} 闪避了攻击！`);
+        this.addLog(`${Visuals.heroTag(defender.id)} ${defender.name} 闪避了攻击！`);
         // Dodge heal
         if (defender._specials.includes('dodge_heal')) {
           const heal = Math.floor(defender.maxHp * 0.05);
@@ -185,7 +185,7 @@ const Battle = {
         if (defender._specials.includes('dodge_counter') && attacker.alive) {
           const counterDmg = Math.floor(this.getEffStat(defender, 'atk'));
           attacker.hp = Math.max(0, attacker.hp - counterDmg);
-          this.addLog(`⚡ ${defender.name} 闪避反击！${counterDmg}伤害`);
+          this.addLog(`${Visuals.heroTag(defender.id)} ${defender.name} 闪避反击！${counterDmg}伤害`);
           if (attacker.hp <= 0) attacker.alive = false;
         }
         defender.rage = Math.min(defender.maxRage, (defender.rage || 0) + 5);
@@ -217,7 +217,7 @@ const Battle = {
           defender.alive = true;
           defender._cheatedDeath = true;
           cheated = true;
-          this.addLog(`💀 ${defender.name} 不屈意志！以1HP存活！`);
+          this.addLog(`${Visuals.heroTag(defender.id)} ${defender.name} 不屈意志！以1HP存活！`);
         }
       }
       // Sima Yi passive: on_lethal
@@ -227,15 +227,15 @@ const Battle = {
           defender.alive = true;
           defender._cheatedDeath = true;
           cheated = true;
-          this.addLog(`🦅 ${defender.name} 隐忍！以1HP存活！`);
+          this.addLog(`${Visuals.heroTag(defender.id)} ${defender.name} 隐忍！以1HP存活！`);
         }
       }
       if (!cheated) {
         defender.alive = false;
-        this.addLog(`${attacker.emoji} ${attacker.name} 击杀了 ${defender.emoji} ${defender.name}！`);
+        this.addLog(`${Visuals.heroTag(attacker.id)} ${attacker.name} 击杀了 ${Visuals.heroTag(defender.id)} ${defender.name}！`);
       }
     } else {
-      this.addLog(`${attacker.emoji} ${attacker.name} → ${defender.emoji} ${defender.name} ${dmg}伤害${advMult > 1 ? ' (克制!)' : ''}`);
+      this.addLog(`${Visuals.heroTag(attacker.id)} ${attacker.name} → ${Visuals.heroTag(defender.id)} ${defender.name} ${dmg}伤害${advMult > 1 ? ' (克制!)' : ''}`);
     }
 
     // Equipment set: 玄甲 reflect damage
@@ -243,7 +243,7 @@ const Battle = {
       const reflectDmg = Math.floor(dmg * defender.equipEffects.reflect_pct / 100);
       if (reflectDmg > 0) {
         attacker.hp = Math.max(0, attacker.hp - reflectDmg);
-        this.addLog(`⬛ ${defender.name} 玄甲反弹 ${reflectDmg}伤害！`);
+        this.addLog(`${Visuals.heroTag(defender.id)} ${defender.name} 玄甲反弹 ${reflectDmg}伤害！`);
         if (attacker.hp <= 0) { attacker.alive = false; }
       }
     }
@@ -264,7 +264,7 @@ const Battle = {
         const heal = Math.floor(dmg * pct / 100);
         if (heal > 0) {
           attacker.hp = Math.min(attacker.maxHp, attacker.hp + heal);
-          this.addLog(`🩸 ${attacker.name} 吸血 +${heal} HP`);
+          this.addLog(`${Visuals.heroTag(attacker.id)} ${attacker.name} 吸血 +${heal} HP`);
         }
       }
       // Stun on hit
@@ -272,7 +272,7 @@ const Battle = {
         const chance = attacker._specials.includes('stun_on_hit') ? 20 : 15;
         if (Math.random() * 100 < chance && !defender.effects.some(e => e.type === 'invincible')) {
           defender.effects.push({ type: 'stun', duration: 1 });
-          this.addLog(`💫 ${defender.name} 被眩晕！`);
+          this.addLog(`${Visuals.heroTag(defender.id)} ${defender.name} 被眩晕！`);
         }
       }
       // Double strike
@@ -280,7 +280,7 @@ const Battle = {
         if (Math.random() * 100 < 20) {
           const extraDmg = Math.floor(dmg * 0.5);
           defender.hp = Math.max(0, defender.hp - extraDmg);
-          this.addLog(`⚔️ ${attacker.name} 连击！额外 ${extraDmg} 伤害`);
+          this.addLog(`${Visuals.heroTag(attacker.id)} ${attacker.name} 连击！额外 ${extraDmg} 伤害`);
           if (defender.hp <= 0) { defender.alive = false; }
         }
       }
@@ -290,7 +290,7 @@ const Battle = {
     if (defender.alive && defender.passive?.condition === 'on_hit' && Math.random() * 100 < (defender.passive.chance || 0)) {
       const counterDmg = Math.floor(this.calcDamage(defender, attacker) * (defender.passive.value || 0.5));
       attacker.hp = Math.max(0, attacker.hp - counterDmg);
-      this.addLog(`${defender.emoji} ${defender.name} 反击！${counterDmg}伤害`);
+      this.addLog(`${Visuals.heroTag(defender.id)} ${defender.name} 反击！${counterDmg}伤害`);
       if (attacker.hp <= 0) attacker.alive = false;
     }
 
@@ -303,7 +303,7 @@ const Battle = {
       if (counterChance > 0 && Math.random() * 100 < counterChance && !defender.effects.some(e => e.type === 'stun')) {
         const counterDmg = Math.floor(this.calcDamage(defender, attacker) * 0.8);
         attacker.hp = Math.max(0, attacker.hp - counterDmg);
-        this.addLog(`🔄 ${defender.name} 天赋反击！${counterDmg}伤害`);
+        this.addLog(`${Visuals.heroTag(defender.id)} ${defender.name} 天赋反击！${counterDmg}伤害`);
         if (attacker.hp <= 0) attacker.alive = false;
       }
     }
@@ -390,7 +390,7 @@ const Battle = {
     const enemies = (fighter.side === 'player' ? this.state.enemy : this.state.player).filter(f => f?.alive);
     const allies = (fighter.side === 'player' ? this.state.player : this.state.enemy).filter(f => f?.alive);
 
-    this.addLog(`⚡ ${fighter.emoji} ${fighter.name} 释放【${s.name}】！`);
+    this.addLog(`${Visuals.heroTag(fighter.id)} ${fighter.name} 释放【${s.name}】！`);
 
     // Equipment set: 凤翼 skill damage bonus
     const skillDmgBonus = fighter.equipEffects?.skill_dmg_pct || 0;
@@ -411,7 +411,7 @@ const Battle = {
             dmg = Math.floor(dmg * (1 + skillDmgBonus / 100));
             if (s.guaranteed_crit) dmg = Math.floor(dmg * 1.5);
             t.hp = Math.max(0, t.hp - dmg);
-            this.addLog(`  → ${t.emoji} ${t.name} -${dmg} HP`);
+            this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} -${dmg} HP`);
             if (t.hp <= 0) { t.alive = false; break; }
           }
         }
@@ -430,7 +430,7 @@ const Battle = {
           // Weather affects magic skills (e.g. rain weakens fire magic)
           dmg = Math.floor(dmg * this.getWeatherMult(fighter, this.state.weather, true));
           t.hp = Math.max(0, t.hp - dmg);
-          this.addLog(`  → ${t.emoji} ${t.name} -${dmg} 法伤`);
+          this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} -${dmg} 法伤`);
           if (t.hp <= 0) t.alive = false;
           // Element reaction from skills
           else if (fighter.element && typeof ELEMENT_REACTIONS !== 'undefined') {
@@ -444,7 +444,7 @@ const Battle = {
         for (const t of targets) {
           const heal = Math.floor(t.maxHp * s.value);
           t.hp = Math.min(t.maxHp, t.hp + heal);
-          this.addLog(`  → ${t.emoji} ${t.name} +${heal} HP`);
+          this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} +${heal} HP`);
         }
         break;
       }
@@ -452,7 +452,7 @@ const Battle = {
         const targets = s.target === 'all_ally' ? allies : [fighter];
         for (const t of targets) {
           t.buffs.push({ stat: s.stat, pct: s.pct, duration: s.duration });
-          this.addLog(`  → ${t.emoji} ${t.name} ${s.stat}+${s.pct}% (${s.duration}回合)`);
+          this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} ${s.stat}+${s.pct}% (${s.duration}回合)`);
         }
         break;
       }
@@ -463,10 +463,10 @@ const Battle = {
         else targets = [enemies[0]];
         for (const t of targets) {
           if (t.effects.some(e => e.type === 'invincible')) {
-            this.addLog(`  → ${t.emoji} ${t.name} 无敌，免疫控制！`);
+            this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} 无敌，免疫控制！`);
           } else {
             t.effects.push({ type: s.effect, duration: s.duration });
-            this.addLog(`  → ${t.emoji} ${t.name} 被${s.effect === 'stun' ? '眩晕' : '魅惑'}${s.duration}回合！`);
+            this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} 被${s.effect === 'stun' ? '眩晕' : '魅惑'}${s.duration}回合！`);
           }
         }
         break;
@@ -580,7 +580,7 @@ const Battle = {
         this.addLog(reaction.name + '！元素反应触发！');
         for (const t of targets) {
           t.hp = Math.max(0, t.hp - aoeDmg);
-          this.addLog(`  🔥 ${t.name} 受到 ${aoeDmg} 火风暴伤害`);
+          this.addLog(`  ${Visuals.heroTag(t.id)} ${t.name} 受到 ${aoeDmg} 火风暴伤害`);
           if (t.hp <= 0) { t.alive = false; }
         }
         break;
