@@ -867,8 +867,8 @@ const App = {
         '<div class="progress" style="width:80px;height:6px"><div class="progress-fill" style="width:' + (pullState.pity / Gacha.SSR_PITY * 100) + '%;background:linear-gradient(90deg,var(--accent),var(--gold))"></div></div>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
-        '<button class="btn btn-primary" onclick="App.doGachaPull(1)">单抽 · ' + Visuals.resIcon('gold') + + Gacha.PULL_COST + '</button>' +
-        '<button class="btn btn-gold" onclick="App.doGachaPull(10)">十连 · ' + Visuals.resIcon('gold') + + Gacha.TEN_PULL_COST + '</button>' +
+        '<button class="btn btn-primary" onclick="App.doGachaPull(1)">单抽 · ' + Visuals.resIcon('gold') + Gacha.PULL_COST + '</button>' +
+        '<button class="btn btn-gold" onclick="App.doGachaPull(10)">十连 · ' + Visuals.resIcon('gold') + Gacha.TEN_PULL_COST + '</button>' +
       '</div>' +
       '<div style="text-align:center;margin-top:8px">' +
         '<div class="text-dim" style="font-size:11px">SSR: 关羽 曹操 赵云 吕布 | SR: 刘备 张飞 孙尚香 貂蝉 张角</div>' +
@@ -948,7 +948,7 @@ const App = {
       box.innerHTML = '<div class="text-center" style="padding:20px">' +
         '<div class="text-dim">本次拜访结束</div>' +
         '<div class="mt-8">诚意度: ' + status.sincerity + '</div>' +
-        '<button class="btn btn-gold btn-block mt-16" onclick="App.startVisit(\'' + heroId + '\')">再次拜访 (' + Visuals.resIcon('gold') + + visit.cost + ')</button>' +
+        '<button class="btn btn-gold btn-block mt-16" onclick="App.startVisit(\'' + heroId + '\')">再次拜访 (' + Visuals.resIcon('gold') + visit.cost + ')</button>' +
         '<button class="btn btn-sm btn-block mt-8" onclick="App.switchPage(\'gacha\')" style="background:var(--card2);color:var(--text)">返回求贤馆</button>' +
         '</div>';
     }
@@ -981,7 +981,7 @@ const App = {
           ? '<div class="text-center mt-16">' +
               '<div style="font-size:14px;font-weight:600;color:var(--hp)">招募失败</div>' +
               '<div class="text-dim mt-8">诚意不足，下次再努力！</div>' +
-              '<button class="btn btn-gold btn-block mt-16" onclick="App.startVisit(\'' + this.currentVisitHero + '\')">再次拜访 (' + Visuals.resIcon('gold') + + visit.cost + ')</button>' +
+              '<button class="btn btn-gold btn-block mt-16" onclick="App.startVisit(\'' + this.currentVisitHero + '\')">再次拜访 (' + Visuals.resIcon('gold') + visit.cost + ')</button>' +
               '<button class="btn btn-sm btn-block mt-8" onclick="App.switchPage(\'gacha\')" style="background:var(--card2);color:var(--text)">返回求贤馆</button>' +
             '</div>'
           : '<button class="btn btn-primary btn-block mt-16" onclick="App.updateVisitUI()">继续</button>'
@@ -1195,8 +1195,8 @@ const App = {
 
       html += '<div style="font-size:13px;margin-bottom:8px">敌人: ' +
         floorData.enemies.map(e => HEROES[e]?.emoji || '?').join(' ') + '</div>' +
-        '<div style="font-size:12px;color:var(--gold)">奖励: ' + Visuals.resIcon('gold') + + floorData.reward.gold + ' ' + Visuals.resIcon('exp') + + floorData.reward.exp +
-          (floorData.reward.gems ? ' ' + Visuals.resIcon('gem') + + floorData.reward.gems : '') + '</div>' +
+        '<div style="font-size:12px;color:var(--gold)">奖励: ' + Visuals.resIcon('gold') + floorData.reward.gold + ' ' + Visuals.resIcon('exp') + floorData.reward.exp +
+          (floorData.reward.gems ? ' ' + Visuals.resIcon('gem') + floorData.reward.gems : '') + '</div>' +
         '<button class="btn btn-primary btn-block mt-16" onclick="App.fightDungeonFloor()">挑战本层</button>' +
         '<button class="btn btn-sm btn-block mt-8" onclick="App.retreatDungeon()" style="background:var(--card2);color:var(--text)">撤退（保留进度）</button>' +
       '</div>';
@@ -1608,7 +1608,7 @@ const App = {
   claimArenaWeekly() {
     const result = Arena.claimWeeklyReward();
     if (result) {
-      this.toast('周奖励: ' + result.gold + '金 Visuals.resIcon('gem') + + result.gems + ' (' + result.rank + ')');
+      this.toast('周奖励: ' + result.gold + '金 ' + Visuals.resIcon('gem') + result.gems + ' (' + result.rank + ')');
       this.updateHeader();
       this.renderArena();
     } else {
