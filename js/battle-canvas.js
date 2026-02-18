@@ -46,7 +46,7 @@ const BattleCanvas = {
     const parent = this.canvas.parentElement;
     const dpr = window.devicePixelRatio || 1;
     this.width = parent.clientWidth;
-    this.height = Math.min(320, Math.floor(this.width * 0.75));
+    this.height = Math.min(380, Math.floor(this.width * 0.85));
     this.canvas.width = this.width * dpr;
     this.canvas.height = this.height * dpr;
     this.canvas.style.width = this.width + 'px';
@@ -60,8 +60,14 @@ const BattleCanvas = {
     if (!battleState) return;
     const leftX = this.width * 0.22;
     const rightX = this.width * 0.78;
-    const startY = 38;
-    const gapY = 50;
+    // Dynamic sizing: fewer fighters = bigger portraits
+    const playerCount = battleState.player.filter(f => f).length;
+    const enemyCount = battleState.enemy.filter(f => f).length;
+    const maxCount = Math.max(playerCount, enemyCount, 3);
+    const availH = this.height - 60; // top/bottom margins
+    const gapY = Math.min(56, Math.floor(availH / maxCount));
+    const totalH = (maxCount - 1) * gapY;
+    const startY = Math.floor((this.height - totalH) / 2);
 
     for (const f of battleState.player) {
       if (!f) continue;
@@ -103,7 +109,7 @@ const BattleCanvas = {
 
     const x = sprite.x + sprite.shakeX;
     const y = sprite.y + sprite.shakeY;
-    const size = 40 * sprite.scale;
+    const size = 48 * sprite.scale;
     const halfSize = size / 2;
 
     ctx.save();
@@ -242,6 +248,12 @@ const BattleCanvas = {
       ctx.beginPath();
       ctx.roundRect(barX, barY, barW * hpPct, barH, 2.5);
       ctx.fill();
+
+      // HP number
+      ctx.font = '600 8px -apple-system, system-ui, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      ctx.textAlign = 'center';
+      ctx.fillText(Math.ceil(f.hp) + '/' + f.maxHp, x, barY + barH + 9);
 
       // Rage bar (thin, below HP)
       const rageW = barW;
@@ -517,25 +529,68 @@ const BattleCanvas = {
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, w, h);
 
+    // Ground area with terrain texture
+    const groundY = h - 30;
+    const groundGrad = ctx.createLinearGradient(0, groundY, 0, h);
+    groundGrad.addColorStop(0, 'rgba(255,255,255,0.03)');
+    groundGrad.addColorStop(1, 'rgba(0,0,0,0.2)');
+    ctx.fillStyle = groundGrad;
+    ctx.fillRect(0, groundY, w, 30);
+
     // Ground line
-    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(0, h - 20);
-    ctx.lineTo(w, h - 20);
+    ctx.moveTo(0, groundY);
+    ctx.lineTo(w, groundY);
     ctx.stroke();
 
-    // VS divider
+    // Terrain-specific ground details
+    if (terrain === 'mountain' || terrain === 'castle') {
+      ctx.fillStyle = 'rgba(255,255,255,0.02)';
+      for (let i = 0; i < 8; i++) {
+        const mx = (i * w / 7) + Math.sin(i * 2.1) * 15;
+        const mh = 8 + Math.sin(i * 1.7) * 5;
+        ctx.beginPath();
+        ctx.moveTo(mx - 20, groundY);
+        ctx.lineTo(mx, groundY - mh);
+        ctx.lineTo(mx + 20, groundY);
+        ctx.fill();
+      }
+    }
+    if (terrain === 'forest') {
+      ctx.fillStyle = 'rgba(34,100,34,0.06)';
+      for (let i = 0; i < 6; i++) {
+        const tx = 15 + i * (w / 5);
+        ctx.beginPath();
+        ctx.moveTo(tx - 8, groundY);
+        ctx.lineTo(tx, groundY - 12 - Math.sin(i) * 4);
+        ctx.lineTo(tx + 8, groundY);
+        ctx.fill();
+      }
+    }
+
+    // VS divider — subtle golden glow
     ctx.save();
-    ctx.globalAlpha = 0.08;
-    ctx.strokeStyle = '#d4a843';
+    const vsGrad = ctx.createLinearGradient(w/2, 15, w/2, h - 15);
+    vsGrad.addColorStop(0, 'rgba(212,168,67,0)');
+    vsGrad.addColorStop(0.3, 'rgba(212,168,67,0.08)');
+    vsGrad.addColorStop(0.5, 'rgba(212,168,67,0.12)');
+    vsGrad.addColorStop(0.7, 'rgba(212,168,67,0.08)');
+    vsGrad.addColorStop(1, 'rgba(212,168,67,0)');
+    ctx.strokeStyle = vsGrad;
     ctx.lineWidth = 1;
-    ctx.setLineDash([4, 4]);
+    ctx.setLineDash([6, 4]);
     ctx.beginPath();
-    ctx.moveTo(w / 2, 10);
-    ctx.lineTo(w / 2, h - 10);
+    ctx.moveTo(w / 2, 15);
+    ctx.lineTo(w / 2, h - 15);
     ctx.stroke();
     ctx.setLineDash([]);
+    // VS text
+    ctx.font = 'bold 12px -apple-system, system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(212,168,67,0.15)';
+    ctx.textAlign = 'center';
+    ctx.fillText('VS', w / 2, h / 2);
     ctx.restore();
 
     // Weather effects
@@ -568,12 +623,42 @@ const BattleCanvas = {
       ctx.fillRect(0, h - 50, w, 50);
     }
 
+    // Ambient floating particles
+    if (!this._ambientParticles) {
+      this._ambientParticles = [];
+      for (let i = 0; i < 12; i++) {
+        this._ambientParticles.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          vx: (Math.random() - 0.5) * 0.3,
+          vy: -0.2 - Math.random() * 0.3,
+          size: 1 + Math.random() * 1.5,
+          alpha: 0.1 + Math.random() * 0.15,
+          phase: Math.random() * Math.PI * 2,
+        });
+      }
+    }
+    ctx.save();
+    for (const ap of this._ambientParticles) {
+      ap.x += ap.vx + Math.sin(Date.now() * 0.001 + ap.phase) * 0.2;
+      ap.y += ap.vy;
+      if (ap.y < -5) { ap.y = h + 5; ap.x = Math.random() * w; }
+      if (ap.x < -5) ap.x = w + 5;
+      if (ap.x > w + 5) ap.x = -5;
+      ctx.globalAlpha = ap.alpha * (0.5 + Math.sin(Date.now() * 0.002 + ap.phase) * 0.5);
+      ctx.fillStyle = weather === 'fire' ? '#ff8844' : '#d4a843';
+      ctx.beginPath();
+      ctx.arc(ap.x, ap.y, ap.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
     // Turn counter
     if (Battle.state) {
       ctx.font = '600 11px -apple-system, system-ui, sans-serif';
       ctx.fillStyle = 'rgba(212,168,67,0.4)';
       ctx.textAlign = 'center';
-      ctx.fillText('回合 ' + Battle.state.turn, w / 2, h - 6);
+      ctx.fillText('回合 ' + Battle.state.turn, w / 2, h - 8);
     }
   },
 
