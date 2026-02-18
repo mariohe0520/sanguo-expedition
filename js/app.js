@@ -620,15 +620,16 @@ const App = {
     renderTeam(state.enemy, 'team-enemy');
     document.getElementById('battle-turn').textContent = '回合 ' + state.turn;
 
-    // Process visual effects queue — send to Canvas renderer
-    if (Battle.vfx && Battle.vfx.length > 0) {
-      try {
-        if (typeof BattleCanvas !== 'undefined' && BattleCanvas.running) {
+    // Sync canvas fighter state (HP/rage/alive) and process VFX
+    try {
+      if (typeof BattleCanvas !== 'undefined' && BattleCanvas.running) {
+        BattleCanvas.syncState(state);
+        if (Battle.vfx && Battle.vfx.length > 0) {
           BattleCanvas.processVFX(Battle.vfx);
         }
-      } catch(e) { /* VFX errors should never break gameplay */ }
-      Battle.vfx = [];
-    }
+      }
+    } catch(e) { /* VFX errors should never break gameplay */ }
+    if (Battle.vfx) Battle.vfx = [];
   },
 
   async startBattle() {

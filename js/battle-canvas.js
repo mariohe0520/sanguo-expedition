@@ -617,6 +617,20 @@ const BattleCanvas = {
     this.initFighters(battleState);
   },
 
+  // Sync fighter state from battle engine (HP/rage/alive changes)
+  syncState(battleState) {
+    if (!battleState) return;
+    const all = [...(battleState.player || []), ...(battleState.enemy || [])];
+    for (const f of all) {
+      if (!f) continue;
+      const key = f.side + '-' + f.pos;
+      const sprite = this.fighters[key];
+      if (sprite) {
+        sprite.f = f; // Update reference to latest fighter state
+      }
+    }
+  },
+
   // ═══ LIFECYCLE ═══
   start(battleState) {
     this.particles = [];
