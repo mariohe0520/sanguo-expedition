@@ -2319,6 +2319,17 @@ App.startBattle = async function() {
     }
   } catch(e) {}
 
+  // Canvas victory/defeat effects
+  try {
+    if (typeof BattleCanvas !== 'undefined' && BattleCanvas.running) {
+      if (result === 'victory') BattleCanvas.showVictory();
+      else BattleCanvas.showDefeat();
+    }
+  } catch(e) {}
+
+  // Delay modal slightly to let canvas effects play
+  await new Promise(r => setTimeout(r, 800));
+
   // Apply victory/defeat animation class
   modal.classList.remove('result-victory', 'result-defeat');
   modal.classList.add(result === 'victory' ? 'result-victory' : 'result-defeat');

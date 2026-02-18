@@ -405,11 +405,13 @@ const Battle = {
     switch (s.type) {
       case 'damage': {
         let targets;
-        if (s.target === 'single_enemy') targets = [enemies.sort((a,b) => a.hp - b.hp)[0]]; // lowest HP
+        if (enemies.length === 0) break; // No targets — skip
+        if (s.target === 'single_enemy') targets = [enemies.sort((a,b) => a.hp - b.hp)[0]];
         else if (s.target === 'all_enemy') targets = enemies;
         else if (s.target === 'back_row') targets = enemies.filter(f => f.pos >= 2).length > 0 ? enemies.filter(f => f.pos >= 2) : enemies;
         else if (s.target === 'front_row') targets = enemies.filter(f => f.pos < 2).length > 0 ? enemies.filter(f => f.pos < 2) : enemies;
         else targets = [enemies[0]];
+        targets = targets.filter(Boolean); // Safety: remove nulls
 
         for (const t of targets) {
           const hits = s.hits || 1;
@@ -439,6 +441,7 @@ const Battle = {
         break;
       }
       case 'magic': {
+        if (enemies.length === 0) break;
         const targets = s.target === 'all_enemy' ? enemies : [enemies.sort((a,b) => a.hp - b.hp)[0]];
         for (const t of targets) {
           let dmg = Math.floor(this.getEffStat(fighter, 'int') * s.value);
@@ -456,7 +459,8 @@ const Battle = {
         break;
       }
       case 'heal': {
-        const targets = s.target === 'all_ally' ? allies : [allies.sort((a,b) => a.hp/a.maxHp - b.hp/b.maxHp)[0]];
+        if (allies.length === 0) break;
+        const targets = (s.target === 'all_ally' ? allies : [allies.sort((a,b) => a.hp/a.maxHp - b.hp/b.maxHp)[0]]).filter(Boolean);
         for (const t of targets) {
           const heal = Math.floor(t.maxHp * s.value);
           t.hp = Math.min(t.maxHp, t.hp + heal);
@@ -473,10 +477,12 @@ const Battle = {
         break;
       }
       case 'cc': {
+        if (enemies.length === 0) break;
         let targets;
         if (s.target === 'all_enemy') targets = enemies;
         else if (s.target === 'highest_atk_enemy') targets = [enemies.sort((a,b) => b.atk - a.atk)[0]];
         else targets = [enemies[0]];
+        targets = targets.filter(Boolean);
         for (const t of targets) {
           if (t.effects.some(e => e.type === 'invincible')) {
             this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} 无敌，免疫控制！`);
@@ -488,8 +494,9 @@ const Battle = {
         break;
       }
       case 'debuff': {
+        if (enemies.length === 0) break;
         // Apply debuffs to enemies (e.g. Guo Jia's 十胜十败)
-        const debuffTargets = s.target === 'all_enemy' ? enemies : [enemies[0]];
+        const debuffTargets = (s.target === 'all_enemy' ? enemies : [enemies[0]]).filter(Boolean);
         for (const t of debuffTargets) {
           if (t.effects.some(e => e.type === 'invincible')) {
             this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} 无敌，免疫减益！`);
@@ -509,6 +516,7 @@ const Battle = {
         break;
       }
       case 'mirror': {
+        if (enemies.length === 0) break;
         // Copy the strongest enemy's skill and use it against them
         const strongest = enemies.sort((a,b) => (b.atk + b.int) - (a.atk + a.int))[0];
         if (strongest && strongest.skill) {
