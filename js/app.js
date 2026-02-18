@@ -283,6 +283,7 @@ const App = {
   currentDetailHero: null,
 
   init() {
+    this._showSplash();
     this.updateHeader();
     this.renderHome();
     this.renderCampaign();
@@ -290,6 +291,39 @@ const App = {
     this.renderTeam();
     this.renderGacha();
     this.checkIdleReward();
+  },
+
+  _showSplash() {
+    const splash = document.createElement('div');
+    splash.id = 'splash-screen';
+    splash.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#060810;display:flex;align-items:center;justify-content:center;flex-direction:column;transition:opacity 0.6s';
+    splash.innerHTML = `
+      <style>
+        @keyframes splashGlow { 0%,100%{text-shadow:0 0 20px rgba(212,168,67,.3)} 50%{text-shadow:0 0 40px rgba(212,168,67,.6),0 0 80px rgba(212,168,67,.2)} }
+        @keyframes splashLine { 0%{width:0;opacity:0} 50%{opacity:1} 100%{width:120px;opacity:.4} }
+        @keyframes splashFadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes splashPulse { 0%,100%{opacity:.3} 50%{opacity:.8} }
+      </style>
+      <div style="animation:splashFadeUp .8s .1s both">
+        <div style="font-size:42px;font-weight:900;color:#d4a843;letter-spacing:8px;animation:splashGlow 2s ease-in-out infinite;
+          background:linear-gradient(135deg,#d4a843,#f5d98a,#d4a843);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+          filter:drop-shadow(0 2px 8px rgba(212,168,67,.4))">三国·天命</div>
+      </div>
+      <div style="animation:splashFadeUp .8s .4s both">
+        <div style="height:1px;background:linear-gradient(90deg,transparent,#d4a84366,transparent);margin:16px auto;animation:splashLine 1s .5s both"></div>
+      </div>
+      <div style="animation:splashFadeUp .8s .7s both">
+        <div style="font-size:12px;color:#8a7e6d;letter-spacing:6px;margin-top:4px">SANGUO · DESTINY</div>
+      </div>
+      <div style="position:absolute;bottom:60px;animation:splashPulse 1.5s infinite">
+        <div style="font-size:11px;color:#5c5448;letter-spacing:3px">加载中...</div>
+      </div>
+    `;
+    document.body.appendChild(splash);
+    setTimeout(() => {
+      splash.style.opacity = '0';
+      setTimeout(() => splash.remove(), 600);
+    }, 1800);
   },
 
   currentDungeonTab: 'endless',
