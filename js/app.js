@@ -585,6 +585,11 @@ const App = {
         BattleCanvas.init(canvasEl);
         BattleCanvas.setupFighters(Battle.state);
         BattleCanvas.start();
+        // Safety re-resize after layout settles (mobile Safari can be slow)
+        setTimeout(() => {
+          BattleCanvas.resize();
+          BattleCanvas.initFighters(Battle.state);
+        }, 150);
       }
     } catch(e) { console.error('[BattleCanvas init]', e); }
 

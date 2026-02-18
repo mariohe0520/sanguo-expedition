@@ -264,6 +264,226 @@ const Portraits = {
       frameBorder: 'rgba(168,85,247,0.5)',
       eyeColor: '#3a1a4a',
     },
+
+    zhugeLiang: {
+      id: 'zhugeLiang',
+      bg1: '#1a3a2a', bg2: '#0a2018',
+      skin1: '#f0d8b8', skin2: '#d0b890',
+      armor: '#2d6a4f',
+      armorDetail: `<path d="M26 68 Q40 58 54 68" stroke="#4a8c6f" stroke-width="1.5" fill="none"/>`,
+      hairColor: '#1a1a1a',
+      hair: `<ellipse cx="40" cy="24" rx="14" ry="10" fill="#1a1a1a"/>
+             <rect x="27" y="22" width="26" height="5" fill="#1a1a1a" rx="2"/>`,
+      headpiece: `<rect x="26" y="17" width="28" height="6" fill="#5a9a6f" rx="2"/>
+                  <path d="M38 12 L40 8 L42 12" fill="#d4a843"/>`,
+      weapon: `<line x1="12" y1="14" x2="8" y2="68" stroke="#8a7a5a" stroke-width="2"/>
+               <path d="M6 10 Q12 6 18 10 Q12 14 6 10Z" fill="#e8d8b0" opacity="0.8"/>`,
+      beard: `<path d="M36 44 Q40 52 44 44" stroke="#2a2a2a" stroke-width="1.5" fill="none"/>`,
+      frameBorder: 'rgba(212,168,67,0.7)',
+      frameGlow: `<circle cx="40" cy="40" r="35" fill="none" stroke="rgba(212,168,67,0.2)" stroke-width="2"/>`,
+      eyeColor: '#1a2a1a',
+    },
+
+    zhouyu: {
+      id: 'zhouyu',
+      bg1: '#3a1a18', bg2: '#1a0a08',
+      skin1: '#f0d8b8', skin2: '#d8c098',
+      armor: '#8b1a1a',
+      hairColor: '#1a1a1a',
+      hair: `<ellipse cx="40" cy="24" rx="14" ry="11" fill="#1a1a1a"/>
+             <rect x="27" y="22" width="26" height="5" fill="#1a1a1a" rx="2"/>`,
+      headpiece: `<rect x="28" y="18" width="24" height="5" fill="#c04040" rx="1"/>
+                  <circle cx="40" cy="20" r="2" fill="#d4a843"/>`,
+      frameBorder: 'rgba(239,68,68,0.5)',
+      eyeColor: '#1a1a2a',
+    },
+
+    simayi: {
+      id: 'simayi',
+      bg1: '#1a2040', bg2: '#0a1028',
+      skin1: '#e0c8a0', skin2: '#c0a880',
+      armor: '#1a3a6a',
+      hairColor: '#1a1a1a',
+      hair: `<ellipse cx="40" cy="24" rx="14" ry="10" fill="#1a1a1a"/>
+             <rect x="28" y="22" width="24" height="5" fill="#1a1a1a" rx="2"/>`,
+      headpiece: `<rect x="26" y="17" width="28" height="6" fill="#2a4a7a" rx="2"/>
+                  <circle cx="40" cy="20" r="2.5" fill="#94a3b8"/>`,
+      beard: `<path d="M36 44 Q40 50 44 44" stroke="#333" stroke-width="1.5" fill="none"/>`,
+      frameBorder: 'rgba(59,130,246,0.5)',
+      eyeColor: '#1a1a3a',
+    },
+
+    machao: {
+      id: 'machao',
+      bg1: '#2a3a1a', bg2: '#1a2a0a',
+      skin1: '#e8c8a0', skin2: '#c8a878',
+      armor: '#4a6a2a',
+      hairColor: '#1a1a1a',
+      hair: `<ellipse cx="40" cy="24" rx="15" ry="11" fill="#1a1a1a"/>
+             <path d="M25 26 Q35 16 40 14 Q45 16 55 26" fill="#1a1a1a"/>`,
+      headpiece: `<path d="M30 18 L40 12 L50 18" stroke="#d4a843" stroke-width="2" fill="none"/>`,
+      weapon: `<line x1="60" y1="14" x2="68" y2="66" stroke="#c0c8d4" stroke-width="2.5"/>`,
+      frameBorder: 'rgba(168,85,247,0.5)',
+      eyeColor: '#1a2a1a',
+    },
+
+    guojia: {
+      id: 'guojia',
+      bg1: '#1a2a4a', bg2: '#0a1428',
+      skin1: '#f0d8b8', skin2: '#d8c098',
+      armor: '#1a3a6a',
+      hairColor: '#1a1a1a',
+      hair: `<ellipse cx="40" cy="24" rx="14" ry="10" fill="#1a1a1a"/>
+             <rect x="28" y="22" width="24" height="5" fill="#1a1a1a" rx="2"/>`,
+      headpiece: `<rect x="28" y="18" width="24" height="5" fill="#3a5a8a" rx="1"/>`,
+      frameBorder: 'rgba(59,130,246,0.4)',
+      eyeColor: '#1a1a3a',
+    },
+
+    dongzhuo: {
+      id: 'dongzhuo',
+      bg1: '#3a1a0a', bg2: '#1a0a00',
+      skin1: '#d8b890', skin2: '#b89868',
+      armor: '#5a1a0a',
+      hairColor: '#1a1a1a',
+      hair: `<ellipse cx="40" cy="24" rx="16" ry="12" fill="#1a1a1a"/>`,
+      beard: `<path d="M32 44 Q40 56 48 44" stroke="#2a2a2a" stroke-width="2.5" fill="none"/>`,
+      headpiece: `<rect x="26" y="16" width="28" height="8" fill="#8a6a2a" rx="2"/>
+                  <circle cx="40" cy="20" r="3" fill="#d4a843"/>`,
+      frameBorder: 'rgba(168,85,247,0.5)',
+      eyeColor: '#2a1a0a',
+    },
+
+    sunce: {
+      id: 'sunce',
+      bg1: '#3a1a18', bg2: '#1a0a08',
+      skin1: '#e8c8a0', skin2: '#c8a878',
+      armor: '#8b1a1a',
+      hairColor: '#1a1a1a',
+      hair: `<ellipse cx="40" cy="24" rx="15" ry="11" fill="#1a1a1a"/>
+             <path d="M25 26 Q35 16 40 14 Q45 16 55 26" fill="#1a1a1a"/>`,
+      headpiece: `<rect x="30" y="18" width="20" height="4" fill="#c04040" rx="1"/>`,
+      frameBorder: 'rgba(239,68,68,0.4)',
+      eyeColor: '#1a1a2a',
+    },
+
+    pangtong: {
+      id: 'pangtong',
+      bg1: '#2a2a1a', bg2: '#1a1a0a',
+      skin1: '#d8c0a0', skin2: '#b8a080',
+      armor: '#4a5a3a',
+      hairColor: '#2a2a1a',
+      hair: `<ellipse cx="40" cy="22" rx="16" ry="13" fill="#2a2a1a"/>
+             <path d="M24 26 Q22 36 28 44" stroke="#2a2a1a" stroke-width="3" fill="none"/>`,
+      headpiece: `<ellipse cx="40" cy="16" rx="14" ry="6" fill="#6a5a3a" opacity="0.7"/>`,
+      beard: `<path d="M36 44 Q40 50 44 44" stroke="#3a3a2a" stroke-width="1.5" fill="none"/>`,
+      frameBorder: 'rgba(168,85,247,0.4)',
+      eyeColor: '#2a2a1a',
+    },
+
+    huangyueying: {
+      id: 'huangyueying',
+      bg1: '#2a3a2a', bg2: '#1a2a1a',
+      skin1: '#f0d8c0', skin2: '#d8c0a0',
+      armor: '#3a6a4a',
+      hairColor: '#2a1a1a',
+      hair: `<ellipse cx="40" cy="22" rx="16" ry="12" fill="#2a1a1a"/>
+             <path d="M24 26 Q22 38 26 48" stroke="#2a1a1a" stroke-width="3.5" fill="none"/>
+             <path d="M56 26 Q58 38 54 48" stroke="#2a1a1a" stroke-width="3.5" fill="none"/>`,
+      headpiece: `<circle cx="40" cy="16" r="3" fill="#d4a843"/>`,
+      frameBorder: 'rgba(74,140,111,0.5)',
+      eyeColor: '#1a2a1a',
+      lipColor: '#b04050',
+    },
+
+    huatuo: {
+      id: 'huatuo',
+      bg1: '#1a3a2a', bg2: '#0a2018',
+      skin1: '#e0c8a0', skin2: '#c0a880',
+      armor: '#2d5a3f',
+      hairColor: '#888',
+      hair: `<ellipse cx="40" cy="23" rx="15" ry="11" fill="#888"/>
+             <rect x="26" y="22" width="28" height="5" fill="#777" rx="2"/>`,
+      beard: `<path d="M34 44 Q40 56 46 44" stroke="#999" stroke-width="2" fill="none"/>`,
+      headpiece: `<rect x="30" y="18" width="20" height="4" fill="#4a8a5a" rx="1"/>`,
+      frameBorder: 'rgba(34,197,94,0.4)',
+      eyeColor: '#2a3a2a',
+    },
+
+    yuanshao: {
+      id: 'yuanshao',
+      bg1: '#3a2a1a', bg2: '#1a1408',
+      skin1: '#e8c8a0', skin2: '#c8a878',
+      armor: '#6a4a1a',
+      hairColor: '#1a1a1a',
+      hair: `<ellipse cx="40" cy="24" rx="15" ry="11" fill="#1a1a1a"/>`,
+      headpiece: `<rect x="26" y="16" width="28" height="8" fill="#b8922e" rx="2"/>
+                  <rect x="30" y="12" width="20" height="5" fill="#d4a843" rx="1"/>`,
+      beard: `<path d="M36 44 Q40 50 44 44" stroke="#2a2a2a" stroke-width="1.5" fill="none"/>`,
+      frameBorder: 'rgba(168,85,247,0.5)',
+      eyeColor: '#1a1a1a',
+    },
+
+    weiyan: {
+      id: 'weiyan',
+      bg1: '#2a1a1a', bg2: '#1a0a0a',
+      skin1: '#d8b888', skin2: '#b89868',
+      armor: '#4a3a2a',
+      hairColor: '#0a0a0a',
+      hair: `<ellipse cx="40" cy="24" rx="16" ry="12" fill="#0a0a0a"/>`,
+      headpiece: `<path d="M28 18 L34 12 L40 16 L46 12 L52 18" stroke="#6a5a4a" stroke-width="2" fill="none"/>`,
+      weapon: `<line x1="60" y1="16" x2="66" y2="64" stroke="#8a8a8a" stroke-width="2.5"/>`,
+      frameBorder: 'rgba(168,85,247,0.4)',
+      eyeColor: '#2a1a1a',
+    },
+
+    zhurong: {
+      id: 'zhurong',
+      bg1: '#3a2a1a', bg2: '#1a1408',
+      skin1: '#d8b890', skin2: '#b89870',
+      armor: '#8a3a1a',
+      hairColor: '#1a1a1a',
+      hair: `<ellipse cx="40" cy="22" rx="16" ry="12" fill="#1a1a1a"/>
+             <path d="M24 26 Q20 40 26 50" stroke="#1a1a1a" stroke-width="3" fill="none"/>
+             <path d="M56 26 Q60 40 54 50" stroke="#1a1a1a" stroke-width="3" fill="none"/>`,
+      headpiece: `<path d="M30 16 L40 8 L50 16" fill="#c04020"/>
+                  <circle cx="40" cy="12" r="2" fill="#ffd700"/>`,
+      weapon: `<line x1="62" y1="20" x2="68" y2="60" stroke="#8a6a4a" stroke-width="2"/>`,
+      frameBorder: 'rgba(239,68,68,0.4)',
+      eyeColor: '#2a1a0a',
+      lipColor: '#c04050',
+    },
+
+    menghuo: {
+      id: 'menghuo',
+      bg1: '#3a2a10', bg2: '#1a1408',
+      skin1: '#c8a878', skin2: '#a88858',
+      armor: '#5a4a2a',
+      hairColor: '#0a0a0a',
+      hair: `<ellipse cx="40" cy="22" rx="17" ry="14" fill="#0a0a0a"/>`,
+      beard: `<path d="M30 44 Q40 62 50 44" stroke="#0a0a0a" stroke-width="3" fill="none"/>`,
+      headpiece: `<path d="M26 18 L40 10 L54 18" stroke="#8a6a2a" stroke-width="2.5" fill="none"/>
+                  <circle cx="40" cy="14" r="3" fill="#c04020"/>`,
+      frameBorder: 'rgba(168,85,247,0.4)',
+      eyeColor: '#2a1a0a',
+    },
+
+    zhenji: {
+      id: 'zhenji',
+      bg1: '#1a2040', bg2: '#0a1028',
+      skin1: '#f8e0c8', skin2: '#e8c8a8',
+      armor: '#2a4a8a',
+      hairColor: '#1a1a2a',
+      hair: `<ellipse cx="40" cy="22" rx="16" ry="12" fill="#1a1a2a"/>
+             <path d="M24 26 Q22 38 26 48" stroke="#1a1a2a" stroke-width="3.5" fill="none"/>
+             <path d="M56 26 Q58 38 54 48" stroke="#1a1a2a" stroke-width="3.5" fill="none"/>`,
+      headpiece: `<circle cx="36" cy="17" r="2.5" fill="#d4a843"/>
+                  <circle cx="44" cy="17" r="2.5" fill="#d4a843"/>
+                  <path d="M36 17 Q40 12 44 17" stroke="#d4a843" stroke-width="1" fill="none"/>`,
+      frameBorder: 'rgba(59,130,246,0.5)',
+      eyeColor: '#1a1a3a',
+      lipColor: '#c04060',
+    },
   },
 };
 

@@ -58,10 +58,10 @@ const BattleCanvas = {
   initFighters(battleState) {
     this.fighters = {};
     if (!battleState) return;
-    const leftX = this.width * 0.18;
-    const rightX = this.width * 0.82;
-    const startY = 35;
-    const gapY = 52;
+    const leftX = this.width * 0.22;
+    const rightX = this.width * 0.78;
+    const startY = 38;
+    const gapY = 50;
 
     for (const f of battleState.player) {
       if (!f) continue;
