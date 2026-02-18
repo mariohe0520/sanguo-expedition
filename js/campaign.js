@@ -256,7 +256,25 @@ const Campaign = {
 
   makeDestinyChoice(chapterId, choiceId) {
     const progress = Storage.getCampaignProgress?.() || { chapter: 1, stage: 1, choices: {} };
+    if (!progress.choices) progress.choices = {};
     progress.choices[chapterId] = choiceId;
+
+    // Skip over branch stages that don't match the chosen path
+    // (e.g., chose B → skip stages 6,7 which are branch A → land on stage 8)
+    const chapter = this.CHAPTERS.find(c => c.id === chapterId);
+    if (chapter) {
+      let safety = 0;
+      while (safety++ < 20) {
+        const nextStage = chapter.stages.find(s => s.id === progress.stage);
+        if (!nextStage) break;
+        if (nextStage.branch && nextStage.branch !== choiceId) {
+          progress.stage++;
+        } else {
+          break;
+        }
+      }
+    }
+
     Storage.saveCampaignProgress?.(progress);
     return progress;
   }

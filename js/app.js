@@ -2288,6 +2288,15 @@ App.startBattle = async function() {
     } catch(e2) { console.error('[fallback completeStage]', e2); }
   }
 
+  // Show/hide "下一关" button — only for campaign victory
+  try {
+    const nextBtn = document.getElementById('btn-next-stage');
+    if (nextBtn) {
+      const isCampaign = !stage._dungeonFloor && !stage._dailyDungeon && !stage._arenaFight && !stage._raidBoss;
+      nextBtn.style.display = (result === 'victory' && isCampaign) ? 'block' : 'none';
+    }
+  } catch(e) {}
+
   // ALWAYS show modal — never leave player stuck
   modal.classList.remove('hidden');
   try { this.updateHeader(); } catch(e) {}
@@ -2310,6 +2319,8 @@ App.closeResult = function() {
     this.currentDungeonTab = 'raid';
     this.switchPage('dungeon');
   } else {
+    // Reset chapter view to current progress chapter (don't get stuck on old tab)
+    this.selectedCampaignChapter = null;
     this.switchPage('campaign');
   }
 };
@@ -2335,7 +2346,30 @@ App.init = function() {
 // Emergency return — if battle gets stuck, player can always go back
 App.emergencyReturn = function() {
   document.getElementById('result-modal').classList.add('hidden');
+  this.selectedCampaignChapter = null;
   this.switchPage('campaign');
+};
+
+// Direct "next stage" — skip result screen and jump straight into the next campaign stage
+App.goNextStage = function() {
+  document.getElementById('result-modal').classList.add('hidden');
+  this.selectedCampaignChapter = null;
+  const progress = Storage.getCampaignProgress();
+  const chapter = Campaign.CHAPTERS.find(c => c.id === progress.chapter);
+  if (!chapter) { this.switchPage('campaign'); return; }
+  const nextStage = chapter.stages.find(s => {
+    if (s.id !== progress.stage) return false;
+    if (s.branch) {
+      const choice = progress.choices[chapter.id];
+      return choice === s.branch || (!choice && s.branch === 'A');
+    }
+    return true;
+  });
+  if (nextStage) {
+    this.enterStage(nextStage, chapter);
+  } else {
+    this.switchPage('campaign');
+  }
 };
 
 // Show emergency button 10s after battle starts
