@@ -529,8 +529,9 @@ const App = {
     this.currentStage._chapter = chapter;
     // Apply chapter difficulty scaling
     this.currentStage._scaleMult = Campaign.getEnemyScale(chapter.id);
-    this.prepareBattle(stage);
     this.switchPage('battle');
+    // Delay prepareBattle so canvas parent has dimensions after page becomes visible
+    requestAnimationFrame(() => this.prepareBattle(stage));
   },
 
   showDestinyChoice(dc, chapterId) {

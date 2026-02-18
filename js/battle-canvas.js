@@ -110,10 +110,22 @@ const BattleCanvas = {
     ctx.globalAlpha = sprite.alpha * (f.alive ? 1 : 0.3);
 
     // Portrait circle with faction color
-    const vd = Visuals.HERO_DATA[f.id] || { ch: '?', c1: '#3a3f47', c2: '#6c757d' };
-    const hero = HEROES[f.id];
+    const vd = (typeof Visuals !== 'undefined' && Visuals.HERO_DATA[f.id]) || { ch: '?', c1: '#3a3f47', c2: '#6c757d' };
+    const hero = (typeof HEROES !== 'undefined') ? HEROES[f.id] : null;
     const factionColors = { shu: '#4a8c6f', wei: '#5a8fc7', wu: '#c04040', qun: '#9a6dd7' };
     const factionColor = factionColors[hero?.faction] || '#6c757d';
+
+    // Try to render SVG portrait as cached image
+    if (!this._portraitImages) this._portraitImages = {};
+    if (typeof Portraits !== 'undefined' && Portraits.DATA[f.id] && !this._portraitImages[f.id]) {
+      try {
+        const svgStr = Portraits.get(f.id, 80);
+        const img = new Image();
+        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+        this._portraitImages[f.id] = img;
+      } catch(e) {}
+    }
+    const portraitImg = this._portraitImages[f.id];
 
     // Skill glow aura
     if (sprite.skillGlow > 0) {
@@ -144,20 +156,44 @@ const BattleCanvas = {
     ctx.ellipse(x, y + halfSize + 4, halfSize * 0.7, 4, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Character circle — gradient bg
-    const grad = ctx.createLinearGradient(x - halfSize, y - halfSize, x + halfSize, y + halfSize);
-    grad.addColorStop(0, vd.c1);
-    grad.addColorStop(1, vd.c2);
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(x, y, halfSize, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Rarity border
+    // Character portrait — use SVG portrait if available, fallback to gradient circle
     const rarityColors = { 1: '#6c757d', 2: '#22c55e', 3: '#3b82f6', 4: '#a855f7', 5: '#d4a843' };
     const r = hero?.rarity || 1;
+
+    if (portraitImg && portraitImg.complete && portraitImg.naturalWidth > 0) {
+      // Draw SVG portrait image
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, halfSize, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(portraitImg, x - halfSize, y - halfSize, size, size);
+      ctx.restore();
+    } else {
+      // Fallback: gradient circle + Chinese character
+      const grad = ctx.createLinearGradient(x - halfSize, y - halfSize, x + halfSize, y + halfSize);
+      grad.addColorStop(0, vd.c1);
+      grad.addColorStop(1, vd.c2);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(x, y, halfSize, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Chinese character
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold ' + Math.floor(size * 0.45) + 'px -apple-system, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.shadowBlur = 4;
+      ctx.fillText(vd.ch, x, y + 1);
+      ctx.shadowBlur = 0;
+    }
+
+    // Rarity border
     ctx.strokeStyle = rarityColors[r] || '#6c757d';
     ctx.lineWidth = r >= 4 ? 3 : 2;
+    ctx.beginPath();
+    ctx.arc(x, y, halfSize, 0, Math.PI * 2);
     ctx.stroke();
 
     // R5 animated border
@@ -170,16 +206,6 @@ const BattleCanvas = {
       ctx.stroke();
       ctx.restore();
     }
-
-    // Chinese character
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold ' + Math.floor(size * 0.45) + 'px -apple-system, system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.shadowColor = 'rgba(0,0,0,0.5)';
-    ctx.shadowBlur = 4;
-    ctx.fillText(vd.ch, x, y + 1);
-    ctx.shadowBlur = 0;
 
     // Name below
     ctx.font = '600 10px -apple-system, system-ui, sans-serif';

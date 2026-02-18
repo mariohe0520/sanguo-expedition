@@ -1710,7 +1710,7 @@ p, .dialogue-text, .destiny-desc, .destiny-option-desc {
 
 /* ─── §28  PAGE HEADER ───────────────────────────────────────────── */
 .page-header {
-  padding-top: env(safe-area-inset-top, 0);
+  padding-top: max(16px, env(safe-area-inset-top, 16px));
   margin-bottom: var(--sp-20);
 }
 

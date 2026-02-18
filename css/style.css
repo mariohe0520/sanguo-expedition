@@ -46,7 +46,8 @@ body { font-family:-apple-system,system-ui,sans-serif; background:var(--bg); col
 .rarity-5 .hero-emoji { background:rgba(251,191,36,.15); }
 
 /* Battle */
-.battle-field { display:flex; justify-content:space-between; padding:20px 0; }
+.battle-field { display:none; justify-content:space-between; padding:20px 0; }
+.battle-field.active { display:flex; }
 .team-col { display:flex; flex-direction:column; gap:6px; width:45%; }
 .fighter-row { display:flex; align-items:center; gap:8px; padding:8px; border-radius:10px; background:var(--card2); transition:.3s; position:relative; }
 .fighter-row.dead { opacity:.3; }
