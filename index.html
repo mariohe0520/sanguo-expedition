@@ -117,7 +117,12 @@
     <div class="page-title" id="battle-title">战斗</div>
     <div id="battle-turn" class="text-dim" style="font-size:13px">回合 0</div>
   </div>
-  <div class="battle-field" id="battle-field">
+  <!-- Canvas battle scene -->
+  <div id="battle-canvas-wrap" style="position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--border);margin-bottom:12px">
+    <canvas id="battle-canvas" style="display:block;width:100%;background:#0a0e1a"></canvas>
+  </div>
+  <!-- Legacy DOM battle (hidden, kept for data) -->
+  <div class="battle-field" id="battle-field" style="display:none">
     <div class="team-col" id="team-player"></div>
     <div id="vs-icon-container"></div>
     <div class="team-col" id="team-enemy"></div>
@@ -397,6 +402,7 @@
 <script src="js/arena.js"></script>
 <script src="js/seasonal.js"></script>
 <script src="js/skilltree.js"></script>
+<script src="js/battle-canvas.js"></script>
 <script src="js/app.js"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
 </body>

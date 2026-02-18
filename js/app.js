@@ -532,6 +532,17 @@ const App = {
     const weather = stage.weather || stage._weather || chapter.weather || 'clear';
     const enemyScale = stage._scaleMult || 1;
     Battle.init(team, stage.enemies, terrain, weather, enemyScale);
+
+    // Initialize canvas renderer
+    try {
+      const canvasEl = document.getElementById('battle-canvas');
+      if (canvasEl && typeof BattleCanvas !== 'undefined') {
+        BattleCanvas.init(canvasEl);
+        BattleCanvas.setupFighters(Battle.state);
+        BattleCanvas.start();
+      }
+    } catch(e) { console.error('[BattleCanvas init]', e); }
+
     this.renderBattleField();
   },
 
@@ -565,45 +576,13 @@ const App = {
     renderTeam(state.enemy, 'team-enemy');
     document.getElementById('battle-turn').textContent = '回合 ' + state.turn;
 
-    // Process visual effects queue
+    // Process visual effects queue — send to Canvas renderer
     if (Battle.vfx && Battle.vfx.length > 0) {
-      for (const fx of Battle.vfx) {
-        try {
-          if (fx.type === 'attack' || fx.type === 'kill') {
-            const targetEl = document.querySelector('[data-fighter="' + fx.target + '"]');
-            if (targetEl) {
-              targetEl.classList.add('shake');
-              setTimeout(() => targetEl.classList.remove('shake'), 300);
-              // Floating damage number
-              if (fx.dmg) {
-                const popup = document.createElement('div');
-                popup.className = 'dmg-popup';
-                popup.textContent = (fx.isCrit ? '暴击!' : '-') + fx.dmg;
-                if (fx.isCrit) popup.style.color = 'var(--gold)';
-                if (fx.isCrit) popup.style.fontSize = '20px';
-                targetEl.appendChild(popup);
-                setTimeout(() => popup.remove(), 1000);
-              }
-            }
-            // Highlight attacker
-            if (fx.attacker) {
-              const atkEl = document.querySelector('[data-fighter="' + fx.attacker + '"]');
-              if (atkEl) {
-                atkEl.classList.add('acting');
-                setTimeout(() => atkEl.classList.remove('acting'), 400);
-              }
-            }
-          }
-          if (fx.type === 'skill') {
-            const casterEl = document.querySelector('[data-fighter="' + fx.caster + '"]');
-            if (casterEl) {
-              casterEl.classList.add('acting');
-              casterEl.style.boxShadow = '0 0 20px rgba(168,85,247,.6)';
-              setTimeout(() => { casterEl.classList.remove('acting'); casterEl.style.boxShadow = ''; }, 600);
-            }
-          }
-        } catch(e) { /* VFX errors should never break gameplay */ }
-      }
+      try {
+        if (typeof BattleCanvas !== 'undefined' && BattleCanvas.running) {
+          BattleCanvas.processVFX(Battle.vfx);
+        }
+      } catch(e) { /* VFX errors should never break gameplay */ }
       Battle.vfx = [];
     }
   },
@@ -2353,6 +2332,7 @@ App.startBattle = async function() {
 const _originalCloseResult = App.closeResult;
 App.closeResult = function() {
   document.getElementById('result-modal').classList.add('hidden');
+  try { if (typeof BattleCanvas !== 'undefined') BattleCanvas.stop(); } catch(e) {}
   const stage = this.currentStage;
   if (stage._dungeonFloor) {
     this.currentDungeonTab = 'endless';
@@ -2393,6 +2373,7 @@ App.init = function() {
 // Emergency return — if battle gets stuck, player can always go back
 App.emergencyReturn = function() {
   document.getElementById('result-modal').classList.add('hidden');
+  try { if (typeof BattleCanvas !== 'undefined') BattleCanvas.stop(); } catch(e) {}
   this.selectedCampaignChapter = null;
   this.switchPage('campaign');
 };
