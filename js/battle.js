@@ -9,6 +9,7 @@ const Battle = {
   // Create battle state
   init(playerTeam, enemyTeam, terrain='plains', weather='clear', enemyScale=1) {
     this.log = [];
+    this.vfx = []; // Visual effects queue for UI layer
     this.state = {
       turn: 0,
       phase: 'ready', // ready, fighting, victory, defeat
@@ -233,6 +234,7 @@ const Battle = {
       if (!cheated) {
         defender.alive = false;
         this.addLog(`${Visuals.heroTag(attacker.id)} ${attacker.name} 击杀了 ${Visuals.heroTag(defender.id)} ${defender.name}！`);
+        this.vfx.push({ type: 'kill', target: `${defender.side}-${defender.pos}` });
       }
     } else {
       this.addLog(`${Visuals.heroTag(attacker.id)} ${attacker.name} → ${Visuals.heroTag(defender.id)} ${defender.name} ${dmg}伤害${advMult > 1 ? ' (克制!)' : ''}`);
@@ -256,6 +258,9 @@ const Battle = {
     // Gain rage
     attacker.rage = Math.min(attacker.maxRage, attacker.rage + 20);
     defender.rage = Math.min(defender.maxRage, (defender.rage || 0) + 10);
+
+    // Queue visual effects for UI layer
+    this.vfx.push({ type: 'attack', attacker: `${attacker.side}-${attacker.pos}`, target: `${defender.side}-${defender.pos}`, dmg, isCrit: this._lastCrit || false });
 
     // Skill tree specials: lifesteal
     if (attacker.alive && attacker._specials) {
@@ -327,6 +332,7 @@ const Battle = {
     // Crit damage bonus from skill tree
     let critMult = 1.5;
     if (isCrit && atk.equipEffects?.crit_dmg_pct) critMult += atk.equipEffects.crit_dmg_pct / 100;
+    this._lastCrit = isCrit; // Expose crit status for VFX
     return Math.floor(base * variance * (isCrit ? critMult : 1));
   },
 
@@ -391,6 +397,7 @@ const Battle = {
     const allies = (fighter.side === 'player' ? this.state.player : this.state.enemy).filter(f => f?.alive);
 
     this.addLog(`${Visuals.heroTag(fighter.id)} ${fighter.name} 释放【${s.name}】！`);
+    this.vfx.push({ type: 'skill', caster: `${fighter.side}-${fighter.pos}`, skillName: s.name });
 
     // Equipment set: 凤翼 skill damage bonus
     const skillDmgBonus = fighter.equipEffects?.skill_dmg_pct || 0;

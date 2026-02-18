@@ -546,6 +546,7 @@ const App = {
         if (!f) continue;
         const div = document.createElement('div');
         div.className = 'fighter-row ' + (f.alive ? '' : 'dead');
+        div.setAttribute('data-fighter', f.side + '-' + f.pos);
         const hpPct = f.alive ? (f.hp / f.maxHp * 100) : 0;
         const ragePct = f.rage / (f.maxRage || 100) * 100;
         const elemBadge = f.element && typeof ELEMENT_INFO !== 'undefined' && ELEMENT_INFO[f.element]
@@ -563,6 +564,48 @@ const App = {
     renderTeam(state.player, 'team-player');
     renderTeam(state.enemy, 'team-enemy');
     document.getElementById('battle-turn').textContent = '回合 ' + state.turn;
+
+    // Process visual effects queue
+    if (Battle.vfx && Battle.vfx.length > 0) {
+      for (const fx of Battle.vfx) {
+        try {
+          if (fx.type === 'attack' || fx.type === 'kill') {
+            const targetEl = document.querySelector('[data-fighter="' + fx.target + '"]');
+            if (targetEl) {
+              targetEl.classList.add('shake');
+              setTimeout(() => targetEl.classList.remove('shake'), 300);
+              // Floating damage number
+              if (fx.dmg) {
+                const popup = document.createElement('div');
+                popup.className = 'dmg-popup';
+                popup.textContent = (fx.isCrit ? '暴击!' : '-') + fx.dmg;
+                if (fx.isCrit) popup.style.color = 'var(--gold)';
+                if (fx.isCrit) popup.style.fontSize = '20px';
+                targetEl.appendChild(popup);
+                setTimeout(() => popup.remove(), 1000);
+              }
+            }
+            // Highlight attacker
+            if (fx.attacker) {
+              const atkEl = document.querySelector('[data-fighter="' + fx.attacker + '"]');
+              if (atkEl) {
+                atkEl.classList.add('acting');
+                setTimeout(() => atkEl.classList.remove('acting'), 400);
+              }
+            }
+          }
+          if (fx.type === 'skill') {
+            const casterEl = document.querySelector('[data-fighter="' + fx.caster + '"]');
+            if (casterEl) {
+              casterEl.classList.add('acting');
+              casterEl.style.boxShadow = '0 0 20px rgba(168,85,247,.6)';
+              setTimeout(() => { casterEl.classList.remove('acting'); casterEl.style.boxShadow = ''; }, 600);
+            }
+          }
+        } catch(e) { /* VFX errors should never break gameplay */ }
+      }
+      Battle.vfx = [];
+    }
   },
 
   async startBattle() {
@@ -2296,6 +2339,10 @@ App.startBattle = async function() {
       nextBtn.style.display = (result === 'victory' && isCampaign) ? 'block' : 'none';
     }
   } catch(e) {}
+
+  // Apply victory/defeat animation class
+  modal.classList.remove('result-victory', 'result-defeat');
+  modal.classList.add(result === 'victory' ? 'result-victory' : 'result-defeat');
 
   // ALWAYS show modal — never leave player stuck
   modal.classList.remove('hidden');

@@ -139,12 +139,25 @@ body { font-family:-apple-system,system-ui,sans-serif; background:var(--bg); col
 .hidden { display:none !important; }
 
 /* Shake animation for hits */
-@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
-.shake { animation:shake .3s; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 15%{transform:translateX(-5px)} 30%{transform:translateX(5px)} 45%{transform:translateX(-3px)} 60%{transform:translateX(3px)} }
+.shake { animation:shake .35s ease-out; }
 
 /* Damage number popup */
-.dmg-popup { position:absolute; top:-10px; right:10px; font-size:16px; font-weight:700; color:var(--hp); animation:dmgFloat 1s forwards; pointer-events:none; }
-@keyframes dmgFloat { from{opacity:1;transform:translateY(0)} to{opacity:0;transform:translateY(-30px)} }
+.dmg-popup { position:absolute; top:-10px; right:10px; font-size:16px; font-weight:700; color:var(--hp); animation:dmgFloat 1s forwards; pointer-events:none; text-shadow:0 1px 4px rgba(0,0,0,.6); z-index:10; }
+@keyframes dmgFloat { 0%{opacity:1;transform:translateY(0) scale(1.2)} 20%{transform:translateY(-8px) scale(1)} 100%{opacity:0;transform:translateY(-35px) scale(.8)} }
+
+/* Victory result animation */
+@keyframes victoryBounce { 0%{transform:scale(0);opacity:0} 50%{transform:scale(1.15)} 70%{transform:scale(.95)} 100%{transform:scale(1);opacity:1} }
+@keyframes victoryGlow { 0%,100%{box-shadow:0 0 20px rgba(251,191,36,.2)} 50%{box-shadow:0 0 50px rgba(251,191,36,.4)} }
+.result-victory .destiny-content { animation:victoryBounce .5s ease-out, victoryGlow 2s ease-in-out .5s infinite; border-color:var(--gold); }
+.result-defeat .destiny-content { animation:victoryBounce .4s ease-out; border-color:var(--hp); }
+
+/* Fighter acting glow */
+.fighter-row.acting { box-shadow:0 0 12px rgba(251,191,36,.5); transform:scale(1.03); transition:all .15s; }
+
+/* Kill flash */
+@keyframes killFlash { 0%{background:rgba(192,64,64,.3)} 100%{background:transparent} }
+.fighter-row.dead { animation:killFlash .5s ease-out; }
 
 /* ===== v2: LEADERBOARD ===== */
 .lb-entry { display:flex; align-items:center; gap:12px; padding:14px; background:var(--card); border-radius:14px; margin-bottom:8px; border:1px solid var(--border); transition:.2s; }
