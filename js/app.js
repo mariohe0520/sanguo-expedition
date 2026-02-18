@@ -1018,40 +1018,129 @@ const App = {
     if (result.error) { this.toast(result.error); return; }
     DailyMissions.trackProgress('gacha');
 
-    const container = document.getElementById('gacha-pull-result');
-    container.classList.remove('hidden');
-
-    const rarityNames = { 5: 'SSR', 4: 'SR', 3: 'R' };
-    const rarityColors = { 5: 'var(--gold)', 4: '#a855f7', 3: '#3b82f6' };
-
-    let html = '<div class="card card-glow" style="border-color:' + rarityColors[result.bestRarity] + '">' +
-      '<div style="text-align:center;font-size:14px;font-weight:600;margin-bottom:12px;color:' + rarityColors[result.bestRarity] + '">' +
-        (result.bestRarity === 5 ? '恭喜获得SSR！' : result.bestRarity === 4 ? '获得SR武将！' : '抽卡结果') +
-      '</div>' +
-      '<div style="display:grid;grid-template-columns:repeat(' + Math.min(5, count) + ',1fr);gap:6px">';
-
-    for (const r of result.results) {
-      html += '<div style="text-align:center;padding:8px 4px;background:var(--card2);border-radius:10px;border:1px solid ' + rarityColors[r.rarity] + '">' +
-        Visuals.heroPortrait(r.heroId, 'md', r.rarity) +
-        '<div style="font-size:10px;font-weight:600;color:' + rarityColors[r.rarity] + '">' + rarityNames[r.rarity] + '</div>' +
-        '<div style="font-size:11px">' + r.hero.name + '</div>' +
-        '<div style="font-size:9px;color:var(--dim)">' + (r.isNew ? '<span style="color:var(--gold)">新武将！</span>' : '+' + r.shards + '碎片') + '</div>' +
-      '</div>';
-    }
-
-    html += '</div>' +
-      '<div class="text-dim text-center" style="font-size:11px;margin-top:8px">花费 ' + result.cost + Visuals.resIcon('gold') + ' · 距SSR保底: ' + (Gacha.SSR_PITY - result.pity) + '抽</div>' +
-    '</div>';
-
-    container.innerHTML = html;
+    // Launch cinematic gacha reveal
+    this._gachaReveal(result, count);
     this.updateHeader();
-    if (result.bestRarity === 5) this.toast('获得SSR武将！', 3000);
 
     // Check achievements
     if (typeof Achievements !== 'undefined') {
-      const newAch = Achievements.checkAll();
-      if (newAch.length > 0) setTimeout(() => this.toast('新成就: ' + newAch.map(a => a.name).join(', ')), 1500);
+      setTimeout(() => {
+        const newAch = Achievements.checkAll();
+        if (newAch.length > 0) this.toast('新成就: ' + newAch.map(a => a.name).join(', '));
+      }, 3000);
     }
+  },
+
+  _gachaReveal(result, count) {
+    const rarityNames = { 5: 'SSR', 4: 'SR', 3: 'R' };
+    const rarityColors = { 5: '#d4a843', 4: '#a855f7', 3: '#3b82f6' };
+    const rarityBg = { 5: 'radial-gradient(ellipse at center, #2a2210 0%, #0a0a0a 70%)', 4: 'radial-gradient(ellipse at center, #1a1028 0%, #0a0a0a 70%)', 3: 'radial-gradient(ellipse at center, #0a1528 0%, #0a0a0a 70%)' };
+
+    // Create fullscreen overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'gacha-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column;opacity:0;transition:opacity 0.4s';
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.style.opacity = '1');
+
+    // Phase 1: Anticipation — swirling energy
+    const bestRarity = result.bestRarity;
+    overlay.style.background = rarityBg[bestRarity] || rarityBg[3];
+    overlay.innerHTML = `
+      <div class="gacha-stage" style="position:relative;width:100%;max-width:400px;text-align:center">
+        <div class="gacha-orb" style="width:120px;height:120px;margin:0 auto;border-radius:50%;
+          background:radial-gradient(circle, ${rarityColors[bestRarity]}44 0%, transparent 70%);
+          border:2px solid ${rarityColors[bestRarity]}66;
+          animation:gachaPulse 1s ease-in-out infinite;
+          box-shadow:0 0 60px ${rarityColors[bestRarity]}33, inset 0 0 30px ${rarityColors[bestRarity]}22">
+        </div>
+        <div style="margin-top:24px;font-size:13px;color:${rarityColors[bestRarity]};opacity:0.6;letter-spacing:4px">
+          ${bestRarity === 5 ? '金光乍现...' : bestRarity === 4 ? '紫气东来...' : '天命召唤...'}
+        </div>
+      </div>
+      <style>
+        @keyframes gachaPulse { 0%,100% { transform:scale(1); box-shadow:0 0 60px ${rarityColors[bestRarity]}33; } 50% { transform:scale(1.15); box-shadow:0 0 100px ${rarityColors[bestRarity]}55; } }
+        @keyframes gachaExplode { 0% { transform:scale(1); opacity:1; } 100% { transform:scale(3); opacity:0; } }
+        @keyframes gachaCardIn { 0% { transform:scale(0) rotateY(180deg); opacity:0; } 60% { transform:scale(1.1) rotateY(10deg); opacity:1; } 100% { transform:scale(1) rotateY(0); opacity:1; } }
+        @keyframes gachaShine { 0% { left:-100%; } 100% { left:200%; } }
+        @keyframes gachaFloat { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
+        .gacha-card-reveal { animation: gachaCardIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both; }
+        .gacha-card-reveal:nth-child(2) { animation-delay:0.1s; }
+        .gacha-card-reveal:nth-child(3) { animation-delay:0.15s; }
+        .gacha-card-reveal:nth-child(4) { animation-delay:0.2s; }
+        .gacha-card-reveal:nth-child(5) { animation-delay:0.25s; }
+        .gacha-card-reveal:nth-child(6) { animation-delay:0.3s; }
+        .gacha-card-reveal:nth-child(7) { animation-delay:0.35s; }
+        .gacha-card-reveal:nth-child(8) { animation-delay:0.4s; }
+        .gacha-card-reveal:nth-child(9) { animation-delay:0.45s; }
+        .gacha-card-reveal:nth-child(10) { animation-delay:0.5s; }
+      </style>
+    `;
+
+    // Phase 2: Explosion → card reveal
+    setTimeout(() => {
+      // Explosion flash
+      const flash = document.createElement('div');
+      flash.style.cssText = `position:absolute;inset:0;background:radial-gradient(circle, ${rarityColors[bestRarity]} 0%, transparent 70%);animation:gachaExplode 0.8s ease-out forwards;pointer-events:none;z-index:1`;
+      overlay.appendChild(flash);
+
+      setTimeout(() => {
+        // Build card grid
+        let cardsHtml = '<div style="display:grid;grid-template-columns:repeat(' + Math.min(5, count) + ',1fr);gap:8px;padding:16px;max-width:400px;width:100%">';
+        for (const r of result.results) {
+          const rc = rarityColors[r.rarity];
+          cardsHtml += `<div class="gacha-card-reveal" style="text-align:center;padding:10px 4px;
+            background:linear-gradient(145deg, #1a1a2e, #16213e);
+            border-radius:12px;border:2px solid ${rc};position:relative;overflow:hidden;
+            box-shadow:0 4px 20px ${rc}44">
+            <div style="position:absolute;top:0;left:-100%;width:60%;height:100%;
+              background:linear-gradient(90deg,transparent,${rc}22,transparent);
+              animation:gachaShine 2s 1s infinite"></div>
+            ${Visuals.heroPortrait(r.heroId, 'md', r.rarity)}
+            <div style="font-size:11px;font-weight:700;color:${rc};margin-top:4px;letter-spacing:1px">${rarityNames[r.rarity]}</div>
+            <div style="font-size:12px;font-weight:600;color:#f0e6d3">${r.hero.name}</div>
+            <div style="font-size:10px;color:${r.isNew ? '#d4a843' : '#666'}">${r.isNew ? '✦ 新武将' : '+' + r.shards + '碎片'}</div>
+          </div>`;
+        }
+        cardsHtml += '</div>';
+
+        // Result summary
+        const summaryHtml = `
+          <div style="text-align:center;margin-top:16px;font-size:13px;color:#888">
+            花费 ${result.cost} ${Visuals.resIcon('gold')} · 距SSR保底: ${Gacha.SSR_PITY - result.pity}抽
+          </div>
+          <button onclick="this.closest('.gacha-overlay').remove()" style="
+            margin-top:20px;padding:12px 48px;border:1px solid ${rarityColors[bestRarity]};
+            background:transparent;color:${rarityColors[bestRarity]};border-radius:24px;
+            font-size:14px;font-weight:600;cursor:pointer;letter-spacing:2px;
+            transition:all 0.3s;backdrop-filter:blur(4px)">
+            确 认
+          </button>
+        `;
+
+        overlay.innerHTML = `
+          <div style="text-align:center;font-size:20px;font-weight:700;color:${rarityColors[bestRarity]};margin-bottom:8px;letter-spacing:3px;
+            text-shadow:0 0 20px ${rarityColors[bestRarity]}66">
+            ${bestRarity === 5 ? '⚡ SSR ⚡' : bestRarity === 4 ? '✦ SR ✦' : '— R —'}
+          </div>
+          ${cardsHtml}${summaryHtml}
+          <style>
+            @keyframes gachaCardIn { 0% { transform:scale(0) rotateY(180deg); opacity:0; } 60% { transform:scale(1.1) rotateY(10deg); opacity:1; } 100% { transform:scale(1) rotateY(0); opacity:1; } }
+            @keyframes gachaShine { 0% { left:-100%; } 100% { left:200%; } }
+            .gacha-card-reveal { animation: gachaCardIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both; }
+            .gacha-card-reveal:nth-child(2) { animation-delay:0.08s; }
+            .gacha-card-reveal:nth-child(3) { animation-delay:0.16s; }
+            .gacha-card-reveal:nth-child(4) { animation-delay:0.24s; }
+            .gacha-card-reveal:nth-child(5) { animation-delay:0.32s; }
+            .gacha-card-reveal:nth-child(6) { animation-delay:0.4s; }
+            .gacha-card-reveal:nth-child(7) { animation-delay:0.48s; }
+            .gacha-card-reveal:nth-child(8) { animation-delay:0.56s; }
+            .gacha-card-reveal:nth-child(9) { animation-delay:0.64s; }
+            .gacha-card-reveal:nth-child(10) { animation-delay:0.72s; }
+          </style>
+        `;
+      }, 400);
+    }, 1500);
   },
 
   // ===== LEADERBOARD (v2 + kingdom war) =====

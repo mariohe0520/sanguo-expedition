@@ -10,9 +10,10 @@
 body { font-family:-apple-system,system-ui,sans-serif; background:var(--bg); color:var(--text); max-width:430px; margin:0 auto; min-height:100vh; overflow-x:hidden; -webkit-tap-highlight-color:transparent; }
 
 /* Pages */
-.page { display:none; padding:16px 16px 80px; animation:fadeIn .3s; }
+.page { display:none; padding:16px 16px 80px; animation:pageSlideIn .35s cubic-bezier(.25,.46,.45,.94); }
 .page.active { display:block; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes pageSlideIn { from{opacity:0;transform:translateY(12px) scale(.98)} to{opacity:1;transform:translateY(0) scale(1)} }
 
 /* Bottom Nav */
 .bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:430px; display:flex; background:rgba(10,10,18,.95); backdrop-filter:blur(20px); border-top:1px solid var(--border); padding:8px 0 env(safe-area-inset-bottom,8px); z-index:100; }

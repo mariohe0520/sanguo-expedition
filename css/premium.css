@@ -527,7 +527,8 @@ p, .dialogue-text, .destiny-desc, .destiny-option-desc {
 }
 
 .btn:active {
-  transform: scale(.96);
+  transform: scale(.94);
+  transition: transform 0.08s;
 }
 
 .btn:disabled {
