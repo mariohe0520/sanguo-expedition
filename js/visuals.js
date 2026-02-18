@@ -77,6 +77,18 @@ const Visuals = {
     const hero = (typeof HEROES !== 'undefined') ? HEROES[heroId] : null;
     const r = rarity || hero?.rarity || 1;
     const faction = hero?.faction || 'qun';
+    const sizes = { xs: 24, sm: 36, md: 50, lg: 72, xl: 100 };
+    const px = sizes[size] || 50;
+
+    // Use SVG portrait if available
+    if (typeof Portraits !== 'undefined' && Portraits.DATA[heroId]) {
+      const svg = Portraits.get(heroId, px);
+      return '<div class="hp hp-' + size + ' hp-r' + r + ' hp-f-' + faction + '" style="--hc1:' + vd.c1 + ';--hc2:' + vd.c2 + ';overflow:hidden">' +
+        svg +
+      '</div>';
+    }
+
+    // Fallback: CSS-rendered portrait
     return '<div class="hp hp-' + size + ' hp-r' + r + ' hp-f-' + faction + '" style="--hc1:' + vd.c1 + ';--hc2:' + vd.c2 + '">' +
       '<div class="hp-bg"></div>' +
       '<div class="hp-pat hp-pat-' + vd.pat + '"></div>' +
