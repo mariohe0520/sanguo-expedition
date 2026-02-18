@@ -360,6 +360,16 @@ const App = {
     document.getElementById('hdr-gems').textContent = p.gems;
   },
 
+  _logClass(msg) {
+    if (msg.includes('释放【')) return 'log-skill';
+    if (msg.includes('暴击') || msg.includes('CRIT')) return 'log-crit';
+    if (msg.includes('阵亡') || msg.includes('击杀') || msg.includes('倒下')) return 'log-kill';
+    if (msg.includes('+') && msg.includes('HP')) return 'log-heal';
+    if (msg.includes('回合')) return 'log-turn';
+    if (msg.includes('%') && (msg.includes('atk') || msg.includes('def') || msg.includes('spd'))) return 'log-buff';
+    return '';
+  },
+
   toast(msg, duration = 2500) {
     const t = document.getElementById('toast');
     t.innerHTML = msg;
@@ -628,7 +638,7 @@ const App = {
       this.renderBattleField();
       const logEl = document.getElementById('battle-log');
       const recentLogs = Battle.log.slice(-15);
-      logEl.innerHTML = recentLogs.map(l => '<div class="log-entry">' + l.msg + '</div>').join('');
+      logEl.innerHTML = recentLogs.map(l => '<div class="log-entry ' + App._logClass(l.msg) + '">' + l.msg + '</div>').join('');
       logEl.scrollTop = logEl.scrollHeight;
     };
 
@@ -2301,7 +2311,7 @@ App.startBattle = async function() {
       this.renderBattleField();
       const logEl = document.getElementById('battle-log');
       const recentLogs = Battle.log.slice(-15);
-      logEl.innerHTML = recentLogs.map(l => '<div class="log-entry">' + l.msg + '</div>').join('');
+      logEl.innerHTML = recentLogs.map(l => '<div class="log-entry ' + App._logClass(l.msg) + '">' + l.msg + '</div>').join('');
       logEl.scrollTop = logEl.scrollHeight;
     } catch(e) { console.error('[Battle.onUpdate]', e); }
   };

@@ -814,25 +814,37 @@ p, .dialogue-text, .destiny-desc, .destiny-option-desc {
 
 /* Battle log */
 .battle-log {
-  max-height: 200px;
+  max-height: 180px;
   overflow-y: auto;
-  padding: var(--sp-12);
-  background: rgba(10,14,26,.5);
+  padding: 10px 12px;
+  background: rgba(6,8,16,.7);
   border-radius: var(--r-md);
-  font-size: 12px;
-  line-height: 1.85;
-  border: 1px solid rgba(255,255,255,.03);
+  font-size: 11px;
+  line-height: 1.7;
+  border: 1px solid rgba(255,255,255,.04);
+  scroll-behavior: smooth;
+  -webkit-mask-image: linear-gradient(transparent 0%, black 10%, black 100%);
+  mask-image: linear-gradient(transparent 0%, black 10%, black 100%);
 }
 
 .battle-log .log-entry {
-  padding: 3px 0;
-  border-bottom: 1px solid rgba(255,255,255,.025);
-  transition: background var(--dur-fast);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-bottom: 2px;
+  animation: logSlideIn .25s ease-out;
+  border-left: 2px solid transparent;
 }
+@keyframes logSlideIn { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:translateX(0); } }
 
-.battle-log .log-entry:last-child {
-  border-bottom: none;
-}
+.battle-log .log-entry:last-child { background: rgba(255,255,255,.03); }
+
+/* Color-code log entries by content */
+.battle-log .log-entry.log-skill { border-left-color: #a855f7; color: #c4a0f0; }
+.battle-log .log-entry.log-crit { border-left-color: #d4a843; color: #f5d98a; font-weight: 600; }
+.battle-log .log-entry.log-kill { border-left-color: #ef4444; color: #fca5a5; font-weight: 600; }
+.battle-log .log-entry.log-heal { border-left-color: #22c55e; color: #86efac; }
+.battle-log .log-entry.log-buff { border-left-color: #3b82f6; color: #93c5fd; }
+.battle-log .log-entry.log-turn { color: #5c5448; font-size: 10px; text-align: center; letter-spacing: 1px; }
 
 /* Element badge */
 .element-badge {
