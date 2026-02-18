@@ -2303,7 +2303,8 @@ const App = {
       }
     }
 
-    list.innerHTML += comingSoonHtml + mysteryHtml;
+    // Use insertAdjacentHTML to PRESERVE onclick handlers on existing cards
+    list.insertAdjacentHTML('beforeend', comingSoonHtml + mysteryHtml);
   },
 };
 
