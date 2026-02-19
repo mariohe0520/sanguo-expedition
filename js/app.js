@@ -939,9 +939,12 @@ const App = {
       slotsEl.appendChild(div);
     });
 
-    // Hint text
+    // Hint text (remove old hint first to prevent duplication)
+    const oldHint = document.getElementById('team-hint');
+    if (oldHint) oldHint.remove();
     const hint = document.createElement('div');
-    hint.style.cssText = 'text-align:center;font-size:12px;color:var(--dim);margin:8px 0 4px';
+    hint.id = 'team-hint';
+    hint.style.cssText = 'text-align:center;font-size:13px;color:var(--dim);margin:12px 0 8px;padding:8px;background:var(--card2);border-radius:8px';
     if (this.selectedSlot >= 0) {
       const slotLabel = labels[this.selectedSlot] || '';
       hint.innerHTML = '👇 点击下方武将放入 <b style="color:var(--gold)">' + slotLabel + '</b>（再点已选槽位可移除）';

@@ -315,3 +315,36 @@ body { font-family:-apple-system,system-ui,sans-serif; background:var(--bg); col
 .kw-emoji { font-size:20px; min-width:28px; text-align:center; }
 .kw-name { flex:1; font-size:13px; font-weight:600; }
 .kw-power { font-size:12px; color:var(--gold); min-width:60px; text-align:right; }
+
+/* ═══ iOS Safari Touch Fix ═══ */
+/* Any element with onclick, role=button, or cursor:pointer must be tappable */
+[onclick], [role="button"], .hero-card, .stage-item, .team-slot,
+.destiny-option, .card[onclick], .btn, button,
+.nav-item, .tab-item {
+  cursor: pointer !important;
+  -webkit-tap-highlight-color: rgba(255,255,255,0.1) !important;
+}
+
+/* Ensure minimum touch target sizes (48px per Apple HIG) */
+.btn, button {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Fix content clipping by bottom nav */
+.page {
+  padding-bottom: max(90px, calc(80px + env(safe-area-inset-bottom, 0px))) !important;
+}
+
+/* Hero detail scroll fix */
+#hero-detail-content {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 20px;
+}
+
+/* Ensure all pages scroll properly on iOS */
+.page.active {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}

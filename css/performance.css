@@ -1,0 +1,219 @@
+/* ═══ PERFORMANCE OVERRIDE ═══
+   Loaded LAST — kills GPU-heavy effects for smooth 60fps on mobile.
+   All overrides use !important to beat premium.css specificity.
+*/
+
+/* Kill ALL infinite animations — biggest GPU killer */
+.page::before {
+  animation: none !important;
+  background-image: none !important;
+  display: none !important;
+}
+
+/* Kill dust particles entirely */
+.page::after {
+  animation: none !important;
+}
+
+/* Kill nav glow infinite animation */
+.nav-item.active::after {
+  animation: none !important;
+}
+
+/* Kill VS pulse infinite animation */
+.vs-icon {
+  animation: none !important;
+  filter: none !important;
+}
+
+/* Kill progress bar shine infinite */
+.dm-bar-fill::after,
+.sincerity-fill::after,
+.progress-fill::after {
+  animation: none !important;
+}
+
+/* Kill stage pulse infinite */
+.stage-item.current {
+  animation: none !important;
+}
+
+/* Kill hero card rarity pulse */
+.rarity-5 .hero-emoji {
+  animation: none !important;
+}
+
+/* Replace ALL backdrop-filter with solid backgrounds */
+.bottom-nav {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(10, 10, 18, 0.98) !important;
+}
+
+.toast {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(17, 24, 39, 0.98) !important;
+}
+
+.gacha-overlay button {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Replace filter: drop-shadow with box-shadow (90% less GPU) */
+.nav-svg svg {
+  filter: none !important;
+}
+
+/* Kill grayscale filters on owned/locked items — use opacity instead */
+.hero-card.owned {
+  filter: none !important;
+  opacity: 0.55 !important;
+}
+
+.stage-item.locked {
+  filter: none !important;
+  opacity: 0.35 !important;
+}
+
+/* Disable transform-style: preserve-3d everywhere */
+* {
+  transform-style: flat !important;
+}
+
+/* Limit box-shadow complexity */
+.card-glow {
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.1) !important;
+}
+
+.result-victory .destiny-content {
+  animation: victoryBounce 0.5s ease-out !important;
+  /* Kill the infinite glow after initial bounce */
+}
+
+/* Kill recruit success infinite glow */
+.recruit-success {
+  animation: none !important;
+  box-shadow: 0 0 15px var(--gold) !important;
+}
+
+/* Gacha card animations — keep but simplify */
+.gacha-card-reveal {
+  animation-duration: 0.3s !important;
+}
+
+/* Kill battle acting infinite effects */
+.fighter-row.acting {
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.3) !important;
+}
+
+/* Reduce transition complexity */
+.hero-card,
+.stage-item,
+.destiny-option,
+.btn,
+.card {
+  transition: transform 0.15s !important;
+}
+
+/* Force GPU compositing for scroll containers only */
+.page.active {
+  will-change: auto !important;
+}
+
+/* Kill any remaining filter animations */
+@media (max-width: 430px) {
+  * {
+    animation-play-state: running !important;
+  }
+  
+  /* But specifically kill infinite ones */
+  .page::before,
+  .page::after,
+  .nav-item.active::after,
+  .vs-icon,
+  .stage-item.current::before,
+  .recruit-success {
+    animation: none !important;
+  }
+}
+
+/* === enhancements.css overrides === */
+
+/* Kill rarity-5 portrait rotation */
+.rarity-5 .hp-detail-bg::before,
+.rarity-5 .hp-detail-bg::after {
+  animation: none !important;
+}
+
+/* Kill current stage pulse */
+.stage-item.current::before {
+  animation: none !important;
+}
+
+/* Kill boss glow */
+.stage-item.boss::before {
+  animation: none !important;
+}
+
+/* Kill detail page background glow */
+.hd-hero-display::after {
+  animation: none !important;
+}
+
+/* Kill skeleton shimmer */
+.skeleton-line::after {
+  animation: none !important;
+}
+
+/* Kill particle fall */
+.particle {
+  animation: none !important;
+  display: none !important;
+}
+
+/* Kill idle blink */
+.idle-reward::before {
+  animation: none !important;
+}
+
+/* Kill all filter: brightness/grayscale on non-essential elements */
+.stage-item.locked::before {
+  filter: none !important;
+}
+
+/* Kill enhancements drop-shadows */
+.r5 .hero-emoji::after,
+.hero-emoji.r5::after {
+  filter: none !important;
+}
+
+/* === visuals.css overrides === */
+
+/* Kill element glow/flicker/spin animations on portraits */
+.elem-frame::after,
+.elem-fire::before,
+.elem-wind::before,
+.elem-lightning::before,
+.elem-ice::before {
+  animation: none !important;
+  filter: none !important;
+}
+
+/* Kill VS pulse (duplicate) */
+.vs-badge {
+  animation: none !important;
+  filter: none !important;
+}
+
+/* Kill section header shimmer */
+.sec-icon-wrap::after {
+  animation: none !important;
+}
+
+/* Kill blur on ambient elements */
+.ambient-glow {
+  filter: none !important;
+  display: none !important;
+}
