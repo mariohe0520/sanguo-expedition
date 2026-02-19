@@ -737,10 +737,21 @@ const App = {
   // ===== HERO DETAIL (v2) =====
   showHeroDetail(heroId) {
     this.currentDetailHero = heroId;
-    this.renderHeroDetail(heroId);
-    // Show page without changing nav highlight
+    // Switch page FIRST so user always sees something
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page-hero-detail').classList.add('active');
+    // Then render content (with error protection)
+    try {
+      this.renderHeroDetail(heroId);
+    } catch(e) {
+      console.error('[showHeroDetail] render error:', e);
+      document.getElementById('hero-detail-content').innerHTML =
+        '<div class="card" style="text-align:center;padding:24px">' +
+          '<div style="font-size:16px;margin-bottom:8px">武将详情加载失败</div>' +
+          '<div class="text-dim" style="font-size:12px">' + (e.message || '') + '</div>' +
+          '<button class="btn btn-sm mt-16" onclick="App.switchPage(\'roster\')" style="background:var(--card2);color:var(--text)">← 返回</button>' +
+        '</div>';
+    }
   },
 
   renderHeroDetail(heroId) {
@@ -815,11 +826,11 @@ const App = {
         '</div>' +
       '</div>' +
 
-      // v3: Equipment slots
-      this._renderHeroEquipSection(heroId) +
+      // v3: Equipment slots (with error protection)
+      (function(self, hid) { try { return self._renderHeroEquipSection(hid); } catch(e) { console.error('[EquipSection]', e); return '<div class="card text-dim">装备栏加载失败</div>'; } })(this, heroId) +
 
-      // v5: Skill Tree
-      this._renderHeroSkillTreeSection(heroId);
+      // v5: Skill Tree (with error protection)
+      (function(self, hid) { try { return self._renderHeroSkillTreeSection(hid); } catch(e) { console.error('[SkillTree]', e); return '<div class="card text-dim">天赋树加载失败</div>'; } })(this, heroId);
   },
 
   doLevelUp(heroId) {
