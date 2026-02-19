@@ -217,3 +217,14 @@
   filter: none !important;
   display: none !important;
 }
+
+/* === Toast position override (must be in performance.css to beat premium/enhancements) === */
+.toast {
+  top: auto !important;
+  bottom: 80px !important;
+  animation: slideUp .3s ease-out !important;
+}
+@keyframes slideUp { 
+  from { opacity:0; transform:translateX(-50%) translateY(20px); } 
+  to { opacity:1; transform:translateX(-50%) translateY(0); } 
+}
