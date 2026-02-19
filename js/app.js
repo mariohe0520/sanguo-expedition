@@ -379,24 +379,26 @@ const App = {
 
   // ===== HOME =====
   renderHome() {
-    const p = Storage.getPlayer();
-    document.getElementById('player-name').textContent = p.name;
-    document.getElementById('player-level').textContent = p.level;
-    const expNeeded = p.level * 100;
-    document.getElementById('player-exp-bar').style.width = (p.exp / expNeeded * 100) + '%';
+    try {
+      const p = Storage.getPlayer();
+      document.getElementById('player-name').textContent = p.name;
+      document.getElementById('player-level').textContent = p.level;
+      const expNeeded = p.level * 100;
+      document.getElementById('player-exp-bar').style.width = (p.exp / expNeeded * 100) + '%';
 
-    const progress = Storage.getCampaignProgress();
-    const chapter = Campaign.getCurrentChapter();
-    document.getElementById('chapter-progress').textContent = '第' + chapter.id + '章 ' + progress.stage + '/10';
-    document.getElementById('chapter-bar').style.width = (progress.stage / 10 * 100) + '%';
-    this.updateHeader();
-    this.renderDailyMissions();
-    this.renderKingdomCard();
-    // Check achievements in background
-    if (typeof Achievements !== 'undefined') {
-      const newAch = Achievements.checkAll();
-      if (newAch.length > 0) this.toast('新成就: ' + newAch.map(a => a.name).join(', '));
-    }
+      const progress = Storage.getCampaignProgress();
+      const chapter = Campaign.getCurrentChapter();
+      document.getElementById('chapter-progress').textContent = '第' + chapter.id + '章 ' + progress.stage + '/10';
+      document.getElementById('chapter-bar').style.width = (progress.stage / 10 * 100) + '%';
+      this.updateHeader();
+      this.renderDailyMissions();
+      this.renderKingdomCard();
+      // Check achievements in background
+      if (typeof Achievements !== 'undefined') {
+        const newAch = Achievements.checkAll();
+        if (newAch.length > 0) this.toast('新成就: ' + newAch.map(a => a.name).join(', '));
+      }
+    } catch(e) { console.error('[renderHome]', e); }
   },
 
   checkIdleReward() {
@@ -414,7 +416,22 @@ const App = {
   collectIdle() {
     const result = Idle.collectRewards();
     if (!result) return;
-    this.toast('领取 ' + result.gold + '金币 + ' + result.exp + '经验！' + (result.loot.length ? ' 获得装备!' : ''));
+    let lootMsg = '';
+    // Convert idle loot to Equipment system items
+    if (result.loot.length > 0 && typeof Equipment !== 'undefined') {
+      for (const oldLoot of result.loot) {
+        try {
+          const progress = Storage.getCampaignProgress();
+          const drop = Equipment.generateDrop(progress.chapter || 1, false);
+          if (drop) {
+            Storage.addEquipment(drop);
+            const tmpl = Equipment.TEMPLATES[drop.templateId];
+            lootMsg += ' ' + (tmpl?.name || '装备');
+          }
+        } catch(e) { console.error('[idle loot]', e); }
+      }
+    }
+    this.toast('领取 ' + result.gold + '金币 + ' + result.exp + '经验！' + (lootMsg ? ' 获得:' + lootMsg : ''));
     document.getElementById('idle-card').classList.add('hidden');
     this.renderHome();
   },
@@ -426,6 +443,10 @@ const App = {
   },
 
   renderCampaign() {
+    try { this._renderCampaignInner(); } catch(e) { console.error('[renderCampaign]', e); }
+  },
+
+  _renderCampaignInner() {
     const progress = Storage.getCampaignProgress();
     const viewChapterId = this.selectedCampaignChapter || progress.chapter;
     const chapter = Campaign.CHAPTERS.find(c => c.id === viewChapterId) || Campaign.CHAPTERS[0];
@@ -730,6 +751,7 @@ const App = {
 
   // ===== ROSTER =====
   renderRoster() {
+    try {
     const roster = Storage.getRoster();
     const list = document.getElementById('roster-list');
     list.innerHTML = '';
@@ -754,6 +776,7 @@ const App = {
     if (Object.keys(roster).length === 0) {
       list.innerHTML = '<div class="text-center text-dim" style="padding:40px">还没有武将，去求贤馆招募吧！</div>';
     }
+    } catch(e) { console.error('[renderRoster]', e); }
   },
 
   // ===== HERO DETAIL (v2) =====
@@ -873,6 +896,10 @@ const App = {
 
   // ===== TEAM =====
   renderTeam() {
+    try { this._renderTeamInner(); } catch(e) { console.error('[renderTeam]', e); }
+  },
+
+  _renderTeamInner() {
     const team = Storage.getTeam();
     const roster = Storage.getRoster();
 
@@ -916,7 +943,7 @@ const App = {
       };
       avail.appendChild(div);
     }
-  },
+  },  // end _renderTeamInner
 
   // ===== AUTO FORMATION (v2) =====
   autoFormation() {
@@ -950,6 +977,10 @@ const App = {
 
   // ===== GACHA =====
   renderGacha() {
+    try { this._renderGachaInner(); } catch(e) { console.error('[renderGacha]', e); }
+  },
+
+  _renderGachaInner() {
     const list = document.getElementById('gacha-list');
     list.innerHTML = '';
 
@@ -1011,7 +1042,7 @@ const App = {
       if (!owned) div.onclick = () => this.startVisit(id);
       list.appendChild(div);
     }
-  },
+  },  // end _renderGachaInner
 
   startVisit(heroId) {
     const result = Gacha.startVisit(heroId);
@@ -1229,6 +1260,10 @@ const App = {
 
   // ===== LEADERBOARD (v2 + kingdom war) =====
   renderLeaderboard() {
+    try { this._renderLeaderboardInner(); } catch(e) { console.error('[renderLeaderboard]', e); }
+  },
+
+  _renderLeaderboardInner() {
     const rankings = Leaderboard.getRankings();
     document.getElementById('lb-reset').textContent = Leaderboard.getResetCountdown();
 
@@ -1277,10 +1312,11 @@ const App = {
 
       list.appendChild(div);
     });
-  },
+  },  // end _renderLeaderboardInner
 
   // ===== DAILY MISSIONS (v2) =====
   renderDailyMissions() {
+    try {
     const data = DailyMissions.getMissions();
     const list = document.getElementById('daily-missions-list');
     if (!list) return;
@@ -1308,6 +1344,7 @@ const App = {
         '</div>' +
       '</div>';
     }).join('');
+    } catch(e) { console.error('[renderDailyMissions]', e); }
   },
 
   claimMission(missionId) {
@@ -1327,10 +1364,12 @@ const App = {
 
   // ===== DUNGEON =====
   renderDungeon() {
-    const p = Storage.getPlayer();
-    document.getElementById('dg-gold').textContent = p.gold;
-    document.getElementById('dg-gems').textContent = p.gems;
-    this.switchDungeonTab(this.currentDungeonTab);
+    try {
+      const p = Storage.getPlayer();
+      document.getElementById('dg-gold').textContent = p.gold;
+      document.getElementById('dg-gems').textContent = p.gems;
+      this.switchDungeonTab(this.currentDungeonTab);
+    } catch(e) { console.error('[renderDungeon]', e); }
   },
 
   switchDungeonTab(tab) {
@@ -1697,6 +1736,10 @@ const App = {
 
   // ===== ARENA =====
   renderArena() {
+    try { this._renderArenaInner(); } catch(e) { console.error('[renderArena]', e); }
+  },
+
+  _renderArenaInner() {
     const state = Arena.getState();
     const rank = Arena.getCurrentRank(state.rating);
     const nextRank = Arena.getNextRank(state.rating);
@@ -1737,7 +1780,7 @@ const App = {
     }
     this._renderArenaOpponents();
     this._renderArenaLeaderboard();
-  },
+  },  // end _renderArenaInner
 
   _renderArenaOpponents() {
     const container = document.getElementById('arena-opponents');
@@ -1813,6 +1856,10 @@ const App = {
 
   // ===== PROFILE =====
   renderProfile() {
+    try { this._renderProfileInner(); } catch(e) { console.error('[renderProfile]', e); }
+  },
+
+  _renderProfileInner() {
     const stats = Storage.getProfileStats();
     const content = document.getElementById('profile-content');
     const kingdom = stats.kingdom ? KingdomSystem.KINGDOMS[stats.kingdom] : null;
@@ -1911,8 +1958,10 @@ const App = {
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px">' +
         '<button class="btn btn-primary" onclick="App.switchPage(\'team\')">编队</button>' +
         '<button class="btn btn-primary" onclick="App.switchPage(\'leaderboard\')">排行</button>' +
+        '<button class="btn btn-primary" onclick="App.switchPage(\'equipment\')" style="background:linear-gradient(135deg,#f59e0b,#d97706)">装备库</button>' +
+        '<button class="btn btn-primary" onclick="App.switchPage(\'achievements\')" style="background:linear-gradient(135deg,#a855f7,#7c3aed)">成就</button>' +
       '</div>';
-  },
+  },  // end _renderProfileInner
 
   // ===== TUTORIAL =====
   tutorialStep: 0,
@@ -2206,6 +2255,10 @@ const App = {
 
   // ===== EQUIPMENT INVENTORY PAGE =====
   renderEquipmentPage() {
+    try { this._renderEquipmentPageInner(); } catch(e) { console.error('[renderEquipmentPage]', e); }
+  },
+
+  _renderEquipmentPageInner() {
     const content = document.getElementById('equipment-content');
     if (!content) return;
     const inv = Storage.getEquipmentInventory();
@@ -2252,7 +2305,7 @@ const App = {
       }
     }
     content.innerHTML = html;
-  },
+  },  // end _renderEquipmentPageInner
 
   sellEquipment(uid) {
     const gold = Equipment.sell(uid);
@@ -2265,6 +2318,10 @@ const App = {
 
   // ===== ACHIEVEMENTS PAGE =====
   renderAchievementsPage() {
+    try { this._renderAchievementsPageInner(); } catch(e) { console.error('[renderAchievementsPage]', e); }
+  },
+
+  _renderAchievementsPageInner() {
     const content = document.getElementById('achievements-content');
     if (!content) return;
     const state = Achievements.getState();
@@ -2290,7 +2347,7 @@ const App = {
       '</div>';
     }
     content.innerHTML = html;
-  },
+  },  // end _renderAchievementsPageInner
 
   claimAchievement(id) {
     const success = Achievements.claim(id);
@@ -2346,6 +2403,12 @@ const _originalStartBattle = App.startBattle;
 App.startBattle = async function() {
   const stage = this.currentStage;
   document.getElementById('btn-battle-start').classList.add('hidden');
+
+  // Hide team preview during battle
+  try {
+    const preview = document.getElementById('battle-team-preview');
+    if (preview) preview.style.display = 'none';
+  } catch(e) {}
 
   Battle.onUpdate = (state) => {
     try {
