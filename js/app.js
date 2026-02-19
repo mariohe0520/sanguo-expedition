@@ -899,6 +899,8 @@ const App = {
     try { this._renderTeamInner(); } catch(e) { console.error('[renderTeam]', e); }
   },
 
+  selectedSlot: -1, // which team slot is selected for hero assignment
+
   _renderTeamInner() {
     const team = Storage.getTeam();
     const roster = Storage.getRoster();
@@ -910,36 +912,86 @@ const App = {
     team.forEach((heroId, i) => {
       const hero = heroId ? HEROES[heroId] : null;
       const div = document.createElement('div');
-      div.className = 'hero-card' + (hero ? ' rarity-' + hero.rarity : '');
+      const isSelected = this.selectedSlot === i;
+      div.className = 'hero-card' + (hero ? ' rarity-' + hero.rarity : '') + (isSelected ? ' slot-selected' : '');
+      if (isSelected) div.style.cssText = 'border:2px solid var(--gold);box-shadow:0 0 12px rgba(212,168,67,.5)';
+
       if (hero) {
         div.innerHTML = '<div class="hero-emoji">' + Visuals.heroPortrait(heroId, 'sm', hero.rarity) + '</div>' +
           '<div class="hero-info"><div class="hero-name">' + labels[i] + ': ' + hero.name + '</div>' +
-          '<div class="hero-sub">' + (UNIT_TYPES[hero.unit]?.name || '') + ' · ' + (FACTIONS[hero.faction]?.name || '') + '</div></div>';
-        div.onclick = () => { team[i] = null; Storage.saveTeam(team); this.renderTeam(); };
+          '<div class="hero-sub">' + (UNIT_TYPES[hero.unit]?.name || '') + ' · ' + (FACTIONS[hero.faction]?.name || '') +
+          ' <span style="color:var(--dim);font-size:11px">(点击选中换将)</span></div></div>';
       } else {
-        div.innerHTML = '<div class="hero-emoji" style="opacity:.3;font-size:24px">+</div><div class="hero-info"><div class="hero-name text-dim">' + labels[i] + ': 空位</div></div>';
+        div.innerHTML = '<div class="hero-emoji" style="opacity:.5;font-size:28px;color:var(--gold)">+</div>' +
+          '<div class="hero-info"><div class="hero-name" style="color:var(--gold)">' + labels[i] + ': ' +
+          (isSelected ? '👆 选择下方武将' : '点击添加') + '</div></div>';
       }
+      // Both empty and occupied slots are clickable — select slot for assignment
+      div.onclick = () => {
+        if (this.selectedSlot === i && hero) {
+          // Double-click on selected occupied slot = remove hero
+          team[i] = null; Storage.saveTeam(team); this.selectedSlot = -1; this.renderTeam();
+        } else {
+          this.selectedSlot = i;
+          this.renderTeam();
+        }
+      };
       slotsEl.appendChild(div);
     });
+
+    // Hint text
+    const hint = document.createElement('div');
+    hint.style.cssText = 'text-align:center;font-size:12px;color:var(--dim);margin:8px 0 4px';
+    if (this.selectedSlot >= 0) {
+      const slotLabel = labels[this.selectedSlot] || '';
+      hint.innerHTML = '👇 点击下方武将放入 <b style="color:var(--gold)">' + slotLabel + '</b>（再点已选槽位可移除）';
+    } else {
+      hint.textContent = '👆 先点击上方槽位，再点下方武将添加';
+    }
+    slotsEl.parentElement.insertBefore(hint, document.getElementById('team-available'));
 
     // Available heroes
     const avail = document.getElementById('team-available');
     avail.innerHTML = '';
-    for (const [id] of Object.entries(roster)) {
-      if (team.includes(id)) continue;
+
+    // Header
+    const header = document.createElement('div');
+    header.style.cssText = 'font-size:14px;font-weight:600;margin-bottom:8px;color:var(--text)';
+    header.textContent = '可用武将 (' + Object.keys(roster).filter(id => !team.includes(id) && HEROES[id]).length + ')';
+    avail.appendChild(header);
+
+    const heroList = Object.entries(roster)
+      .filter(([id]) => !team.includes(id) && HEROES[id])
+      .sort((a, b) => (HEROES[b[0]]?.rarity || 0) - (HEROES[a[0]]?.rarity || 0));
+
+    if (heroList.length === 0) {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'text-align:center;padding:20px;color:var(--dim);font-size:13px';
+      empty.innerHTML = '没有更多武将了<br><span style="font-size:12px">去 <b style="color:var(--gold);cursor:pointer" onclick="App.switchPage(\'gacha\')">求贤</b> 招募新武将！</span>';
+      avail.appendChild(empty);
+    }
+
+    for (const [id] of heroList) {
       const hero = HEROES[id];
-      if (!hero) continue;
       const div = document.createElement('div');
       div.className = 'hero-card rarity-' + hero.rarity;
+      div.style.cursor = 'pointer';
       div.innerHTML = '<div class="hero-emoji">' + Visuals.heroPortrait(id, 'sm', hero.rarity) + '</div>' +
         '<div class="hero-info"><div class="hero-name">' + hero.name + '</div>' +
-        '<div class="hero-sub">' + (UNIT_TYPES[hero.unit]?.name || '') + '</div></div>';
+        '<div class="hero-sub">' + (UNIT_TYPES[hero.unit]?.name || '') + ' · ' + (FACTIONS[hero.faction]?.name || '') + '</div></div>';
       div.onclick = () => {
-        const emptySlot = team.indexOf(null);
-        if (emptySlot === -1) { this.toast('队伍已满！'); return; }
-        team[emptySlot] = id;
+        let targetSlot = this.selectedSlot;
+        if (targetSlot < 0) {
+          // No slot selected — find first empty slot
+          targetSlot = team.indexOf(null);
+          if (targetSlot === -1) { this.toast('队伍已满！先点击已有武将移除'); return; }
+        }
+        // If target slot has a hero, swap it out (hero goes back to pool)
+        team[targetSlot] = id;
         Storage.saveTeam(team);
+        this.selectedSlot = -1;
         this.renderTeam();
+        this.toast(hero.name + ' → ' + labels[targetSlot]);
       };
       avail.appendChild(div);
     }
