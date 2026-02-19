@@ -136,7 +136,15 @@
   <div class="card mt-16">
     <div class="battle-log" id="battle-log"></div>
   </div>
-  <div class="text-center mt-16">
+  <!-- Pre-battle team display -->
+  <div class="card" id="battle-team-preview" style="margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-size:14px;font-weight:600">出战阵容</div>
+      <button class="btn btn-sm" onclick="App.switchPage('team')" style="background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-size:11px;padding:4px 12px">换将</button>
+    </div>
+    <div id="battle-team-list" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+  </div>
+  <div class="text-center">
     <button class="btn btn-gold btn-block" id="btn-battle-start" onclick="App.startBattle()" style="letter-spacing:4px;font-size:16px;padding:14px">⚔ 开战</button>
     <button class="btn btn-block mt-16" id="btn-battle-skip" style="display:none;background:var(--card2);border:1px solid var(--border);color:var(--dim)" onclick="App.emergencyReturn()">返回战役</button>
   </div>

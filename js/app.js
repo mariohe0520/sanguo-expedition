@@ -571,6 +571,28 @@ const App = {
     document.getElementById('battle-log').innerHTML = '<div class="text-dim text-center">准备战斗...</div>';
     document.getElementById('btn-battle-start').classList.remove('hidden');
 
+    // Render team preview with swap button
+    try {
+      const teamListEl = document.getElementById('battle-team-list');
+      const previewEl = document.getElementById('battle-team-preview');
+      if (teamListEl && previewEl) {
+        previewEl.style.display = 'block';
+        teamListEl.innerHTML = team.map(id => {
+          const hero = HEROES[id];
+          if (!hero) return '';
+          const data = Storage.getRoster()[id];
+          const level = data?.level || 1;
+          return '<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--card2);border-radius:8px;flex:1;min-width:0">' +
+            '<div style="flex-shrink:0">' + Visuals.heroPortrait(id, 'xs', hero.rarity) + '</div>' +
+            '<div style="min-width:0">' +
+              '<div style="font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + hero.name + '</div>' +
+              '<div style="font-size:9px;color:var(--dim)">Lv.' + level + ' ' + (UNIT_TYPES[hero.unit]?.name || '') + '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
+    } catch(e) { console.error('[battle-team-preview]', e); }
+
     // Use stage-specific terrain/weather, fall back to chapter defaults
     const chapter = stage._chapter || Campaign.getCurrentChapter();
     const terrain = stage.terrain || stage._terrain || chapter.terrain || 'plains';
