@@ -2178,14 +2178,14 @@ const App = {
         const canUnlock = !isUnlocked && available > 0 && (ni === 0 || unlocked.includes(ni - 1));
         const isUltimate = ni === branch.nodes.length - 1;
 
-        html += '<div style="min-width:62px;text-align:center;padding:6px 4px;border-radius:8px;font-size:10px;' +
-          'background:' + (isUnlocked ? 'rgba(212,168,67,.2)' : 'var(--card2)') + ';' +
-          'border:1px solid ' + (isUnlocked ? 'var(--gold)' : canUnlock ? 'var(--accent)' : 'var(--border)') + ';' +
-          (canUnlock ? 'cursor:pointer' : '') + '"' +
+        html += '<div role="button" tabindex="0" style="min-width:62px;text-align:center;padding:8px 6px;border-radius:8px;font-size:10px;' +
+          'background:' + (isUnlocked ? 'rgba(212,168,67,.2)' : canUnlock ? 'rgba(100,180,255,.1)' : 'var(--card2)') + ';' +
+          'border:2px solid ' + (isUnlocked ? 'var(--gold)' : canUnlock ? 'var(--accent)' : 'var(--border)') + ';' +
+          (canUnlock ? 'cursor:pointer;-webkit-tap-highlight-color:rgba(255,255,255,0.2);' : 'opacity:0.6;') + '"' +
           (canUnlock ? ' onclick="App.unlockSkillNode(\'' + heroId + '\',' + bi + ',' + ni + ')"' : '') + '>' +
-          '<div style="font-size:' + (isUltimate ? '11px' : '10px') + ';font-weight:600;' + (isUltimate ? 'color:var(--gold)' : '') + '">' + node.name + '</div>' +
-          '<div style="font-size:9px;color:var(--dim);margin-top:2px">' + node.desc + '</div>' +
-          (isUnlocked ? '<div style="font-size:9px;color:var(--shu);margin-top:2px">已学</div>' : '') +
+          '<div style="font-size:' + (isUltimate ? '12px' : '11px') + ';font-weight:700;' + (isUltimate ? 'color:var(--gold)' : isUnlocked ? 'color:var(--gold)' : canUnlock ? 'color:#fff' : '') + '">' + node.name + '</div>' +
+          '<div style="font-size:9px;color:var(--dim);margin-top:2px;line-height:1.3">' + node.desc + '</div>' +
+          (isUnlocked ? '<div style="font-size:9px;color:var(--shu);margin-top:3px">✅ 已学</div>' : canUnlock ? '<div style="font-size:9px;color:var(--accent);margin-top:3px">👆 点击学习</div>' : '') +
         '</div>';
       }
       html += '</div></div>';
