@@ -1127,15 +1127,50 @@ const BattleCanvas = {
       const attacker = this.fighters[fx.attacker];
 
       if (fx.type === 'attack') {
+        // ── ATTACKER LUNGE ANIMATION ──
+        if (attacker && target) {
+          const origX = attacker.baseX !== undefined ? attacker.baseX : attacker.x;
+          const origY = attacker.baseY !== undefined ? attacker.baseY : attacker.y;
+          if (attacker.baseX === undefined) { attacker.baseX = attacker.x; attacker.baseY = attacker.y; }
+          
+          // Calculate lunge direction (toward target, ~60% of distance)
+          const dx = target.x - origX;
+          const dy = target.y - origY;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          const lungeRatio = Math.min(0.6, 80 / (dist || 1)); // Lunge up to 60% or 80px
+          const lungeX = origX + dx * lungeRatio;
+          const lungeY = origY + dy * lungeRatio;
+          
+          // Animate: lunge forward (fast) → return (slower)
+          attacker._lungeAnim = {
+            phase: 'forward', // forward → hold → return
+            startX: origX, startY: origY,
+            targetX: lungeX, targetY: lungeY,
+            progress: 0,
+            startTime: Date.now(),
+            forwardMs: 80,  // 80ms rush forward
+            holdMs: 60,     // hold at contact for 60ms
+            returnMs: 200,  // 200ms ease back
+          };
+          
+          // Scale up slightly during attack (power feel)
+          attacker._attackScale = 1.15;
+          setTimeout(() => { if (attacker) attacker._attackScale = 1; }, 250);
+        }
+        
         if (target) {
-          // Hit shake
-          target.shakeX = (Math.random() - 0.5) * 10;
-          target.shakeY = (Math.random() - 0.5) * 6;
-          target.hitFlash = 1;
+          // Hit shake (delayed to match lunge contact)
+          setTimeout(() => {
+            if (target) {
+              target.shakeX = (Math.random() - 0.5) * 14;
+              target.shakeY = (Math.random() - 0.5) * 10;
+              target.hitFlash = 1;
+            }
+          }, 80);
 
-          // ── Slash trail at target ──
+          // ── Slash trail at target (delayed to match contact) ──
           const slashColor = fx.isCrit ? '#ffd700' : '#ffffff';
-          this.spawnSlashTrail(target.x, target.y, fx.isCrit, slashColor);
+          setTimeout(() => this.spawnSlashTrail(target.x, target.y, fx.isCrit, slashColor), 80);
 
           // ── Element-specific VFX ──
           const attackerElement = attacker ? this.getHeroElement(attacker.f.id) : null;
@@ -1769,7 +1804,38 @@ const BattleCanvas = {
       s.shakeY *= Math.pow(0.85, ts);
       s.hitFlash *= Math.pow(0.92, ts);
       s.skillGlow *= Math.pow(0.97, ts);
-      if (s.attackAnim > 0) {
+      
+      // ── Lunge animation (attacker charges toward target) ──
+      if (s._lungeAnim) {
+        const la = s._lungeAnim;
+        const elapsed = Date.now() - la.startTime;
+        if (la.phase === 'forward') {
+          const t = Math.min(1, elapsed / la.forwardMs);
+          // Ease-out for aggressive rush
+          const eased = 1 - Math.pow(1 - t, 3);
+          s.x = la.startX + (la.targetX - la.startX) * eased;
+          s.y = la.startY + (la.targetY - la.startY) * eased;
+          s.scale = 1 + 0.15 * eased; // Scale up during charge
+          if (t >= 1) { la.phase = 'hold'; la.startTime = Date.now(); }
+        } else if (la.phase === 'hold') {
+          s.x = la.targetX;
+          s.y = la.targetY;
+          s.scale = 1.15;
+          if (elapsed >= la.holdMs) { la.phase = 'return'; la.startTime = Date.now(); }
+        } else if (la.phase === 'return') {
+          const t = Math.min(1, elapsed / la.returnMs);
+          // Ease-in-out for smooth return
+          const eased = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2;
+          s.x = la.targetX + (la.startX - la.targetX) * eased;
+          s.y = la.targetY + (la.startY - la.targetY) * eased;
+          s.scale = 1.15 - 0.15 * eased;
+          if (t >= 1) {
+            s.x = la.startX; s.y = la.startY; s.scale = 1;
+            s._lungeAnim = null;
+          }
+        }
+      } else if (s.attackAnim > 0) {
+        // Legacy lunge (fallback)
         s.attackAnim -= 0.04 * ts;
         const lungeDir = s.facing;
         const lungeAmount = Math.sin(s.attackAnim * Math.PI) * 25;
