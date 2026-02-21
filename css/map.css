@@ -8,7 +8,8 @@
 #kingdom-map-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 4/3;
+  height: 0;
+  padding-bottom: 75%; /* 4:3 aspect ratio fallback for all browsers */
   border-radius: var(--r-lg, 16px);
   overflow: hidden;
   border: 1px solid rgba(212,168,67,.18);
@@ -29,6 +30,16 @@
 }
 
 /* Noise texture overlay for parchment feel */
+#kingdom-map-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 #kingdom-map-container::before {
   content: '';
   position: absolute;
