@@ -6,7 +6,11 @@
 (function () {
   'use strict';
 
-  /* ── Guard: need PIXI + WebGL ───────────────────────────────── */
+  /* ── Guard: PIXI disabled — Canvas2D + SVG cut-ins provide better mobile experience ── */
+  // PixiJS was causing rendering issues on some mobile browsers.
+  // The SVG cut-in system (skill-cutin.js) provides the premium VFX on top of Canvas2D.
+  return; // Skip PIXI override, keep Canvas2D as base renderer
+
   if (typeof PIXI === 'undefined') return;
 
   // Quick WebGL support test
