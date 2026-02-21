@@ -15,8 +15,9 @@ if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D
   };
 }
 
-// 三国·天命 — Canvas Battle Renderer
-// Replaces text-log combat with animated 2D battle scene
+// 三国·天命 — Canvas Battle Renderer (VFX Overhaul)
+// Premium battle animations: slash trails, element VFX, impact waves,
+// kill cinematics, skill cinematics, victory/defeat polish
 
 const BattleCanvas = {
   canvas: null,
@@ -29,9 +30,37 @@ const BattleCanvas = {
   screenShake: { x: 0, y: 0, intensity: 0, decay: 0.9 },
   flashAlpha: 0,
   flashColor: '#fff',
-  fighters: {}, // keyed by side-pos
+  fighters: {},
 
   running: false,
+
+  // ── VFX Overhaul state ──
+  slashTrails: [],
+  impactWaves: [],
+  cinematicActive: null,
+  timeScale: 1,
+  timeSlowFrames: 0,
+  zoomPulse: 0,
+  chromaticFrames: 0,
+  lastFrameTime: 0,
+  victoryAnim: null,
+  defeatAnim: null,
+
+  // ── Performance caps ──
+  MAX_PARTICLES: 200,
+  MAX_SLASH_TRAILS: 10,
+  MAX_IMPACT_WAVES: 5,
+
+  // ── Element color palettes ──
+  ELEMENT_COLORS: {
+    fire:      { primary: '#ff4500', secondary: '#ffd700', glow: 'rgba(255,69,0,0.3)' },
+    water:     { primary: '#00bfff', secondary: '#4169e1', glow: 'rgba(0,191,255,0.3)' },
+    lightning: { primary: '#fff44f', secondary: '#7b68ee', glow: 'rgba(255,244,79,0.4)' },
+    ice:       { primary: '#00ffff', secondary: '#e0f0ff', glow: 'rgba(0,255,255,0.3)' },
+    wind:      { primary: '#98fb98', secondary: '#ffffff', glow: 'rgba(152,251,152,0.3)' },
+    earth:     { primary: '#8B4513', secondary: '#DAA520', glow: 'rgba(139,69,19,0.3)' },
+    dark:      { primary: '#4a0080', secondary: '#800080', glow: 'rgba(74,0,128,0.4)' },
+  },
 
   // ═══ INIT ═══
   init(canvasOrId) {
@@ -54,17 +83,24 @@ const BattleCanvas = {
     this.ctx.scale(dpr, dpr);
   },
 
+  // ═══ HELPER: Get hero element ═══
+  getHeroElement(heroId) {
+    if (typeof HERO_ELEMENTS !== 'undefined' && HERO_ELEMENTS[heroId]) {
+      return HERO_ELEMENTS[heroId];
+    }
+    return null;
+  },
+
   // ═══ FIGHTER SPRITES ═══
   initFighters(battleState) {
     this.fighters = {};
     if (!battleState) return;
     const leftX = this.width * 0.22;
     const rightX = this.width * 0.78;
-    // Dynamic sizing: fewer fighters = bigger portraits
     const playerCount = battleState.player.filter(f => f).length;
     const enemyCount = battleState.enemy.filter(f => f).length;
     const maxCount = Math.max(playerCount, enemyCount, 3);
-    const availH = this.height - 60; // top/bottom margins
+    const availH = this.height - 60;
     const gapY = Math.min(56, Math.floor(availH / maxCount));
     const totalH = (maxCount - 1) * gapY;
     const startY = Math.floor((this.height - totalH) / 2);
@@ -78,10 +114,10 @@ const BattleCanvas = {
         y: startY + f.pos * gapY, baseY: startY + f.pos * gapY,
         scale: 1, alpha: 1,
         shakeX: 0, shakeY: 0,
-        attackAnim: 0, // 0-1 animation progress
+        attackAnim: 0,
         hitFlash: 0,
         skillGlow: 0,
-        facing: 1, // 1=right
+        facing: 1,
       };
     }
     for (const f of battleState.enemy) {
@@ -96,7 +132,7 @@ const BattleCanvas = {
         attackAnim: 0,
         hitFlash: 0,
         skillGlow: 0,
-        facing: -1, // -1=left
+        facing: -1,
       };
     }
   },
@@ -115,13 +151,11 @@ const BattleCanvas = {
     ctx.save();
     ctx.globalAlpha = sprite.alpha * (f.alive ? 1 : 0.3);
 
-    // Portrait circle with faction color
     const vd = (typeof Visuals !== 'undefined' && Visuals.HERO_DATA[f.id]) || { ch: '?', c1: '#3a3f47', c2: '#6c757d' };
     const hero = (typeof HEROES !== 'undefined') ? HEROES[f.id] : null;
     const factionColors = { shu: '#4a8c6f', wei: '#5a8fc7', wu: '#c04040', qun: '#9a6dd7' };
     const factionColor = factionColors[hero?.faction] || '#6c757d';
 
-    // Try to render SVG portrait as cached image
     if (!this._portraitImages) this._portraitImages = {};
     if (typeof Portraits !== 'undefined' && Portraits.DATA[f.id] && !this._portraitImages[f.id]) {
       try {
@@ -162,12 +196,11 @@ const BattleCanvas = {
     ctx.ellipse(x, y + halfSize + 4, halfSize * 0.7, 4, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Character portrait — use SVG portrait if available, fallback to gradient circle
+    // Character portrait
     const rarityColors = { 1: '#6c757d', 2: '#22c55e', 3: '#3b82f6', 4: '#a855f7', 5: '#d4a843' };
     const r = hero?.rarity || 1;
 
     if (portraitImg && portraitImg.complete && portraitImg.naturalWidth > 0) {
-      // Draw SVG portrait image
       ctx.save();
       ctx.beginPath();
       ctx.arc(x, y, halfSize, 0, Math.PI * 2);
@@ -175,7 +208,6 @@ const BattleCanvas = {
       ctx.drawImage(portraitImg, x - halfSize, y - halfSize, size, size);
       ctx.restore();
     } else {
-      // Fallback: gradient circle + Chinese character
       const grad = ctx.createLinearGradient(x - halfSize, y - halfSize, x + halfSize, y + halfSize);
       grad.addColorStop(0, vd.c1);
       grad.addColorStop(1, vd.c2);
@@ -184,7 +216,6 @@ const BattleCanvas = {
       ctx.arc(x, y, halfSize, 0, Math.PI * 2);
       ctx.fill();
 
-      // Chinese character
       ctx.fillStyle = '#fff';
       ctx.font = 'bold ' + Math.floor(size * 0.45) + 'px -apple-system, system-ui, sans-serif';
       ctx.textAlign = 'center';
@@ -226,13 +257,11 @@ const BattleCanvas = {
       const barY = y - halfSize - 10;
       const hpPct = Math.max(0, f.hp / f.maxHp);
 
-      // BG
       ctx.fillStyle = 'rgba(255,255,255,0.12)';
       ctx.beginPath();
       ctx.roundRect(barX, barY, barW, barH, 2.5);
       ctx.fill();
 
-      // Fill
       const hpGrad = ctx.createLinearGradient(barX, barY, barX + barW * hpPct, barY);
       if (hpPct > 0.5) {
         hpGrad.addColorStop(0, '#22c55e');
@@ -249,13 +278,11 @@ const BattleCanvas = {
       ctx.roundRect(barX, barY, barW * hpPct, barH, 2.5);
       ctx.fill();
 
-      // HP number
       ctx.font = '600 8px -apple-system, system-ui, sans-serif';
       ctx.fillStyle = 'rgba(255,255,255,0.8)';
       ctx.textAlign = 'center';
       ctx.fillText(Math.ceil(f.hp) + '/' + f.maxHp, x, barY + barH + 9);
 
-      // Rage bar (thin, below HP)
       const rageW = barW;
       const rageH = 3;
       const rageY = barY + barH + 2;
@@ -272,7 +299,6 @@ const BattleCanvas = {
         ctx.beginPath();
         ctx.roundRect(barX, rageY, rageW * ragePct, rageH, 1.5);
         ctx.fill();
-        // Full rage glow
         if (ragePct >= 1) {
           ctx.fillStyle = 'rgba(212,168,67,' + (0.3 + Math.sin(Date.now() * 0.005) * 0.15) + ')';
           ctx.beginPath();
@@ -298,9 +324,554 @@ const BattleCanvas = {
     ctx.restore();
   },
 
-  // ═══ PARTICLES ═══
+  // ═══════════════════════════════════════════
+  //  1. SLASH TRAIL SYSTEM
+  // ═══════════════════════════════════════════
+
+  spawnSlashTrail(x, y, isCrit, color) {
+    // Enforce cap
+    while (this.slashTrails.length >= this.MAX_SLASH_TRAILS) this.slashTrails.shift();
+
+    // Four slash arc directions with bezier control offsets
+    const dirs = [
+      { sx: -45, sy: 28, ex: 45, ey: -28, cx: 8, cy: -40 },   // ↗
+      { sx: 45, sy: 28, ex: -45, ey: -28, cx: -8, cy: -40 },   // ↖
+      { sx: -40, sy: -32, ex: 40, ey: 32, cx: 12, cy: 38 },    // ↘
+      { sx: 40, sy: -32, ex: -40, ey: 32, cx: -12, cy: 38 },   // ↙
+    ];
+
+    if (isCrit) {
+      // X-pattern: two crossing slashes in gold
+      const d1 = dirs[0];
+      const d2 = dirs[1];
+      this.slashTrails.push({
+        x, y, ...d1, color: '#ffd700', frame: 0, maxFrames: 18, lineWidth: 5
+      });
+      this.slashTrails.push({
+        x, y, ...d2, color: '#ffd700', frame: 0, maxFrames: 18, lineWidth: 5
+      });
+    } else {
+      const d = dirs[Math.floor(Math.random() * dirs.length)];
+      this.slashTrails.push({
+        x, y, ...d, color: color || '#ffffff', frame: 0, maxFrames: 15, lineWidth: 3
+      });
+    }
+  },
+
+  updateSlashTrails() {
+    const ts = this.timeScale;
+    for (let i = this.slashTrails.length - 1; i >= 0; i--) {
+      this.slashTrails[i].frame += ts;
+      if (this.slashTrails[i].frame >= this.slashTrails[i].maxFrames) {
+        this.slashTrails.splice(i, 1);
+      }
+    }
+  },
+
+  drawSlashTrails() {
+    const ctx = this.ctx;
+    for (const s of this.slashTrails) {
+      const progress = s.frame / s.maxFrames;
+      const alpha = 1 - progress;
+      if (alpha <= 0) continue;
+
+      // Draw the reveal: only show the portion of the curve that's been "drawn"
+      const drawProgress = Math.min(1, s.frame / (s.maxFrames * 0.35)); // full curve drawn in first 35% of lifetime
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = s.lineWidth * (1 - progress * 0.5);
+      ctx.lineCap = 'round';
+      ctx.shadowColor = s.color;
+      ctx.shadowBlur = 12 * alpha;
+
+      // Draw bezier arc as segmented path for trail fade
+      const segments = 20;
+      const endSeg = Math.floor(segments * drawProgress);
+      if (endSeg < 1) { ctx.restore(); continue; }
+
+      const startSeg = Math.max(0, endSeg - Math.floor(segments * (1 - progress * 0.6)));
+
+      for (let j = Math.max(0, startSeg); j < endSeg; j++) {
+        const t0 = j / segments;
+        const t1 = (j + 1) / segments;
+        const segAlpha = ((j - startSeg) / (endSeg - startSeg)) * alpha;
+
+        // Quadratic bezier point
+        const p0x = s.x + s.sx;
+        const p0y = s.y + s.sy;
+        const p1x = s.x + s.cx;
+        const p1y = s.y + s.cy;
+        const p2x = s.x + s.ex;
+        const p2y = s.y + s.ey;
+
+        const x0 = (1-t0)*(1-t0)*p0x + 2*(1-t0)*t0*p1x + t0*t0*p2x;
+        const y0 = (1-t0)*(1-t0)*p0y + 2*(1-t0)*t0*p1y + t0*t0*p2y;
+        const x1 = (1-t1)*(1-t1)*p0x + 2*(1-t1)*t1*p1x + t1*t1*p2x;
+        const y1 = (1-t1)*(1-t1)*p0y + 2*(1-t1)*t1*p1y + t1*t1*p2y;
+
+        ctx.globalAlpha = segAlpha;
+        ctx.lineWidth = s.lineWidth * (1 - progress * 0.5) * (0.3 + 0.7 * (j / segments));
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+  },
+
+  // ═══════════════════════════════════════════
+  //  2. ELEMENT-SPECIFIC VFX
+  // ═══════════════════════════════════════════
+
+  spawnElementVFX(x, y, element, intensity) {
+    if (!element) return;
+    const palette = this.ELEMENT_COLORS[element];
+    if (!palette) return;
+
+    const isSkill = intensity === 'skill';
+    const count = isSkill ? 22 : 10;
+
+    switch (element) {
+      case 'fire':
+        this.spawnParticles(x, y, palette.primary, count, {
+          type: 'ember', spread: isSkill ? 7 : 4, size: 3, upward: true
+        });
+        this.spawnParticles(x, y, palette.secondary, Math.floor(count / 2), {
+          type: 'ember', spread: 3, size: 2, upward: true
+        });
+        break;
+
+      case 'water':
+        this.spawnImpactWave(x, y, palette.primary, isSkill ? 80 : 40);
+        this.spawnParticles(x, y, palette.primary, count, {
+          type: 'droplet', spread: isSkill ? 6 : 4, size: 3
+        });
+        this.spawnParticles(x, y, palette.secondary, Math.floor(count / 3), {
+          type: 'droplet', spread: 3, size: 2
+        });
+        break;
+
+      case 'lightning':
+        this.spawnParticles(x, y, palette.primary, Math.floor(count * 0.6), {
+          type: 'lightning', spread: isSkill ? 8 : 5, size: 4
+        });
+        this.spawnParticles(x, y, palette.secondary, Math.floor(count * 0.4), {
+          type: 'spark', spread: 4, size: 2
+        });
+        this.triggerFlash(palette.primary, isSkill ? 0.3 : 0.15);
+        break;
+
+      case 'ice':
+        this.spawnParticles(x, y, palette.primary, count, {
+          type: 'crystal', spread: isSkill ? 6 : 4, size: 4
+        });
+        this.spawnImpactWave(x, y, palette.secondary, isSkill ? 70 : 35);
+        break;
+
+      case 'wind':
+        this.spawnParticles(x, y, palette.primary, count, {
+          type: 'spark', spread: isSkill ? 8 : 5, size: 3, upward: true
+        });
+        this.spawnParticles(x, y, palette.secondary, Math.floor(count / 3), {
+          type: 'spark', spread: 6, size: 2, upward: true
+        });
+        break;
+
+      case 'earth':
+        this.spawnParticles(x, y, palette.primary, count, {
+          type: 'fragment', spread: isSkill ? 7 : 4, size: 4
+        });
+        this.spawnParticles(x, y, palette.secondary, Math.floor(count / 3), {
+          type: 'fragment', spread: 3, size: 3
+        });
+        break;
+
+      case 'dark':
+        // Void particles that collapse inward
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 30 + Math.random() * 40;
+          this.particles.push({
+            x: x + Math.cos(angle) * dist,
+            y: y + Math.sin(angle) * dist,
+            vx: -Math.cos(angle) * (1.5 + Math.random()),
+            vy: -Math.sin(angle) * (1.5 + Math.random()),
+            life: 1,
+            decay: 0.02 + Math.random() * 0.01,
+            size: 3 + Math.random() * 3,
+            color: Math.random() > 0.5 ? palette.primary : palette.secondary,
+            type: 'circle',
+          });
+        }
+        break;
+    }
+  },
+
+  // Draw full-screen element effect during skill cinematic
+  drawElementFullscreen(element, frame) {
+    if (!element) return;
+    const ctx = this.ctx;
+    const w = this.width;
+    const h = this.height;
+    const palette = this.ELEMENT_COLORS[element];
+    if (!palette) return;
+
+    const progress = Math.min(1, frame / 15);
+
+    ctx.save();
+    switch (element) {
+      case 'fire': {
+        // Orange tint + flame columns
+        ctx.fillStyle = 'rgba(255,69,0,' + (0.12 * (1 - progress)) + ')';
+        ctx.fillRect(0, 0, w, h);
+        // Flame columns from bottom
+        const cols = 8;
+        for (let i = 0; i < cols; i++) {
+          const cx = (i + 0.5) * (w / cols);
+          const colH = (0.3 + Math.sin(frame * 0.5 + i * 1.3) * 0.15) * h * (1 - progress * 0.5);
+          const grad = ctx.createLinearGradient(cx, h, cx, h - colH);
+          grad.addColorStop(0, 'rgba(255,69,0,' + (0.25 * (1 - progress)) + ')');
+          grad.addColorStop(0.6, 'rgba(255,165,0,' + (0.12 * (1 - progress)) + ')');
+          grad.addColorStop(1, 'rgba(255,215,0,0)');
+          ctx.fillStyle = grad;
+          ctx.fillRect(cx - 20, h - colH, 40, colH);
+        }
+        break;
+      }
+      case 'water': {
+        // Blue wave sweep
+        ctx.fillStyle = 'rgba(0,100,200,' + (0.1 * (1 - progress)) + ')';
+        ctx.fillRect(0, 0, w, h);
+        const waveY = h * 0.6 + Math.sin(frame * 0.3) * 20;
+        ctx.beginPath();
+        ctx.moveTo(0, waveY);
+        for (let x = 0; x <= w; x += 10) {
+          ctx.lineTo(x, waveY + Math.sin(x * 0.03 + frame * 0.4) * 15);
+        }
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(0,191,255,' + (0.1 * (1 - progress)) + ')';
+        ctx.fill();
+        break;
+      }
+      case 'lightning': {
+        // Flash + lightning bolts
+        if (frame < 3) {
+          ctx.fillStyle = 'rgba(255,255,255,' + (0.3 * (1 - frame / 3)) + ')';
+          ctx.fillRect(0, 0, w, h);
+        }
+        // Random jagged bolts
+        if (frame < 10) {
+          ctx.strokeStyle = 'rgba(255,244,79,' + (0.6 * (1 - progress)) + ')';
+          ctx.lineWidth = 2 + Math.random() * 2;
+          ctx.shadowColor = '#fff44f';
+          ctx.shadowBlur = 15;
+          for (let b = 0; b < 3; b++) {
+            ctx.beginPath();
+            let bx = Math.random() * w;
+            let by = 0;
+            ctx.moveTo(bx, by);
+            while (by < h) {
+              bx += (Math.random() - 0.5) * 60;
+              by += 15 + Math.random() * 30;
+              ctx.lineTo(bx, by);
+            }
+            ctx.stroke();
+          }
+        }
+        break;
+      }
+      case 'ice': {
+        // Frost overlay + crystal patterns
+        ctx.fillStyle = 'rgba(0,255,255,' + (0.06 * (1 - progress)) + ')';
+        ctx.fillRect(0, 0, w, h);
+        // Frost border
+        const borderW = 30 * (1 - progress);
+        const frostGrad = ctx.createLinearGradient(0, 0, borderW, 0);
+        frostGrad.addColorStop(0, 'rgba(224,240,255,' + (0.3 * (1 - progress)) + ')');
+        frostGrad.addColorStop(1, 'rgba(224,240,255,0)');
+        ctx.fillStyle = frostGrad;
+        ctx.fillRect(0, 0, borderW, h);
+        const frostGrad2 = ctx.createLinearGradient(w, 0, w - borderW, 0);
+        frostGrad2.addColorStop(0, 'rgba(224,240,255,' + (0.3 * (1 - progress)) + ')');
+        frostGrad2.addColorStop(1, 'rgba(224,240,255,0)');
+        ctx.fillStyle = frostGrad2;
+        ctx.fillRect(w - borderW, 0, borderW, h);
+        break;
+      }
+      case 'wind': {
+        // Swirling wind streaks
+        ctx.globalAlpha = 0.15 * (1 - progress);
+        ctx.strokeStyle = palette.primary;
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 8; i++) {
+          const cy = (i / 8) * h;
+          const offset = frame * 8 + i * 40;
+          ctx.beginPath();
+          ctx.moveTo(-20 + (offset % (w + 80)), cy + Math.sin(frame * 0.2 + i) * 20);
+          ctx.quadraticCurveTo(
+            w * 0.5, cy + Math.sin(frame * 0.3 + i * 2) * 40,
+            w + 20, cy + Math.sin(frame * 0.2 + i + 2) * 20
+          );
+          ctx.stroke();
+        }
+        break;
+      }
+      case 'earth': {
+        // Ground crack + dust
+        ctx.fillStyle = 'rgba(139,69,19,' + (0.08 * (1 - progress)) + ')';
+        ctx.fillRect(0, 0, w, h);
+        // Cracks from center bottom
+        if (frame < 10) {
+          ctx.strokeStyle = 'rgba(218,165,32,' + (0.3 * (1 - progress)) + ')';
+          ctx.lineWidth = 2;
+          for (let i = 0; i < 5; i++) {
+            ctx.beginPath();
+            ctx.moveTo(w / 2, h);
+            let cx = w / 2;
+            let cy = h;
+            const angle = -Math.PI / 2 + (i - 2) * 0.5;
+            for (let s = 0; s < 6; s++) {
+              cx += Math.cos(angle + (Math.random() - 0.5) * 0.8) * (15 + Math.random() * 10);
+              cy += Math.sin(angle + (Math.random() - 0.5) * 0.8) * (15 + Math.random() * 10);
+              ctx.lineTo(cx, cy);
+            }
+            ctx.stroke();
+          }
+        }
+        break;
+      }
+      case 'dark': {
+        // Dark vortex
+        const vortexAlpha = 0.2 * (1 - progress);
+        const grad = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, w * 0.5);
+        grad.addColorStop(0, 'rgba(74,0,128,' + vortexAlpha + ')');
+        grad.addColorStop(0.5, 'rgba(128,0,128,' + (vortexAlpha * 0.5) + ')');
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+        break;
+      }
+    }
+    ctx.restore();
+  },
+
+  // ═══════════════════════════════════════════
+  //  3. IMPACT WAVE SYSTEM
+  // ═══════════════════════════════════════════
+
+  spawnImpactWave(x, y, color, maxRadius) {
+    while (this.impactWaves.length >= this.MAX_IMPACT_WAVES) this.impactWaves.shift();
+    this.impactWaves.push({
+      x, y, color, maxRadius: maxRadius || 50,
+      radius: 0, alpha: 1, lineWidth: 3,
+    });
+  },
+
+  updateImpactWaves() {
+    const ts = this.timeScale;
+    for (let i = this.impactWaves.length - 1; i >= 0; i--) {
+      const w = this.impactWaves[i];
+      w.radius += (w.maxRadius / 20) * ts;
+      w.alpha = 1 - (w.radius / w.maxRadius);
+      w.lineWidth = Math.max(0.5, 3 * w.alpha);
+      if (w.alpha <= 0 || w.radius >= w.maxRadius) {
+        this.impactWaves.splice(i, 1);
+      }
+    }
+  },
+
+  drawImpactWaves() {
+    const ctx = this.ctx;
+    for (const w of this.impactWaves) {
+      if (w.alpha <= 0) continue;
+      ctx.save();
+      ctx.globalAlpha = w.alpha;
+      ctx.strokeStyle = w.color;
+      ctx.lineWidth = w.lineWidth;
+      ctx.shadowColor = w.color;
+      ctx.shadowBlur = 8 * w.alpha;
+      ctx.beginPath();
+      ctx.arc(w.x, w.y, w.radius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  },
+
+  // ═══════════════════════════════════════════
+  //  4. KILL EFFECT SYSTEM
+  // ═══════════════════════════════════════════
+
+  spawnKillEffect(targetSprite) {
+    const x = targetSprite.x;
+    const y = targetSprite.y;
+
+    // Shatter fragments (20+ pieces flying outward with gravity)
+    for (let i = 0; i < 25; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2 + Math.random() * 5;
+      this.particles.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 2,
+        life: 1,
+        decay: 0.012 + Math.random() * 0.008,
+        size: 3 + Math.random() * 5,
+        color: ['#ff4444', '#ff6b6b', '#cc2222', '#ff8844'][Math.floor(Math.random() * 4)],
+        type: 'fragment',
+        rotation: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.3,
+      });
+    }
+
+    // Ghost/soul particles floating upward
+    for (let i = 0; i < 12; i++) {
+      this.particles.push({
+        x: x + (Math.random() - 0.5) * 30,
+        y: y + (Math.random() - 0.5) * 20,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: -0.4 - Math.random() * 0.8,
+        life: 1,
+        decay: 0.006 + Math.random() * 0.004,
+        size: 3 + Math.random() * 4,
+        color: '#ffffff',
+        type: 'circle',
+        ghost: true, // ethereal flag for rendering
+      });
+    }
+
+    // Zoom pulse (scale 1.02 → 1 over 10 frames)
+    this.zoomPulse = 10;
+
+    // Chromatic aberration flash (3 frames)
+    this.chromaticFrames = 3;
+
+    // Impact wave
+    this.spawnImpactWave(x, y, '#ff4444', 70);
+
+    // Large floating kill text
+    this.addFloatingText(x, y - 30, '击 杀', '#ff4444', {
+      size: 24, bold: true, outline: true, decay: 0.008, vy: -1
+    });
+  },
+
+  // ═══════════════════════════════════════════
+  //  5. SKILL CINEMATIC SYSTEM
+  // ═══════════════════════════════════════════
+
+  startCinematic(skillName, element, x, y) {
+    this.cinematicActive = {
+      phase: 0,       // 0=dim-in, 1=text, 2=element-fx, 3=fade-out
+      frame: 0,
+      totalFrame: 0,
+      skillName: skillName || '技能',
+      element: element || null,
+      x, y,
+      dimAlpha: 0,
+      textScale: 2.8,
+      textAlpha: 0,
+      effectFrame: 0,
+    };
+  },
+
+  updateCinematic() {
+    const c = this.cinematicActive;
+    if (!c) return;
+
+    c.frame += this.timeScale;
+    c.totalFrame++;
+
+    switch (c.phase) {
+      case 0: // Dim in (5 frames)
+        c.dimAlpha = Math.min(0.3, c.dimAlpha + 0.06 * this.timeScale);
+        if (c.frame >= 5) { c.phase = 1; c.frame = 0; }
+        break;
+      case 1: // Skill name text appears (20 frames)
+        c.textAlpha = Math.min(1, c.textAlpha + 0.07 * this.timeScale);
+        c.textScale = Math.max(1, c.textScale - 0.1 * this.timeScale);
+        if (c.frame >= 20) { c.phase = 2; c.frame = 0; c.effectFrame = 0; }
+        break;
+      case 2: // Element effect plays (18 frames)
+        c.effectFrame += this.timeScale;
+        if (c.frame >= 18) {
+          // Spawn impact wave at end of effect
+          this.spawnImpactWave(this.width / 2, this.height / 2, '#ffffff', this.width * 0.6);
+          c.phase = 3;
+          c.frame = 0;
+        }
+        break;
+      case 3: // Fade out (12 frames)
+        c.dimAlpha = Math.max(0, c.dimAlpha - 0.025 * this.timeScale);
+        c.textAlpha = Math.max(0, c.textAlpha - 0.1 * this.timeScale);
+        if (c.frame >= 12) { this.cinematicActive = null; }
+        break;
+    }
+  },
+
+  drawCinematic() {
+    const c = this.cinematicActive;
+    if (!c) return;
+
+    const ctx = this.ctx;
+    const w = this.width;
+    const h = this.height;
+
+    // Dim overlay
+    if (c.dimAlpha > 0) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,' + c.dimAlpha + ')';
+      ctx.fillRect(0, 0, w, h);
+      ctx.restore();
+    }
+
+    // Element-specific full-screen effect (phase 2)
+    if (c.phase === 2 || (c.phase === 3 && c.effectFrame > 0)) {
+      this.drawElementFullscreen(c.element, c.effectFrame);
+    }
+
+    // Skill name text
+    if (c.textAlpha > 0) {
+      ctx.save();
+      ctx.globalAlpha = c.textAlpha;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      const fontSize = Math.floor(32 * c.textScale);
+      ctx.font = 'bold ' + fontSize + 'px "STKaiti", "KaiTi", "楷体", serif';
+
+      // Gold outline
+      ctx.strokeStyle = '#d4a843';
+      ctx.lineWidth = 4;
+      ctx.lineJoin = 'round';
+      ctx.shadowColor = 'rgba(212,168,67,0.9)';
+      ctx.shadowBlur = 25;
+      ctx.strokeText(c.skillName, w / 2, h / 2);
+
+      // White fill
+      ctx.fillStyle = '#fff';
+      ctx.shadowColor = 'rgba(255,255,255,0.5)';
+      ctx.shadowBlur = 15;
+      ctx.fillText(c.skillName, w / 2, h / 2);
+
+      ctx.restore();
+    }
+  },
+
+  // ═══════════════════════════════════════════
+  //  PARTICLES (enhanced with new types)
+  // ═══════════════════════════════════════════
+
   spawnParticles(x, y, color, count, opts = {}) {
-    for (let i = 0; i < count; i++) {
+    // Enforce particle cap
+    const available = this.MAX_PARTICLES - this.particles.length;
+    const toSpawn = Math.min(count, Math.max(0, available));
+
+    for (let i = 0; i < toSpawn; i++) {
       this.particles.push({
         x, y,
         vx: (Math.random() - 0.5) * (opts.spread || 4),
@@ -309,25 +880,57 @@ const BattleCanvas = {
         decay: 0.02 + Math.random() * 0.02,
         size: (opts.size || 3) + Math.random() * 2,
         color,
-        type: opts.type || 'circle', // circle, spark, star
+        type: opts.type || 'circle',
+        // Extra fields for special types
+        rotation: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.2,
+        ghost: false,
+        flickerPhase: Math.random() * Math.PI * 2,
       });
     }
   },
 
   drawParticles() {
     const ctx = this.ctx;
+    const ts = this.timeScale;
+
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += 0.05; // gravity
-      p.life -= p.decay;
+      p.x += p.vx * ts;
+      p.y += p.vy * ts;
+      p.life -= p.decay * ts;
+
+      // Gravity varies by type
+      if (p.type === 'fragment') {
+        p.vy += 0.15 * ts; // heavier gravity
+        if (p.rotation !== undefined) p.rotation += (p.rotSpeed || 0) * ts;
+      } else if (p.type === 'crystal') {
+        p.vy += 0.02 * ts; // very light, drifts down
+      } else if (p.type === 'ember') {
+        p.vy -= 0.03 * ts; // embers float up
+        p.vx += (Math.random() - 0.5) * 0.3 * ts; // flicker sideways
+      } else if (p.type === 'droplet') {
+        p.vy += 0.12 * ts; // falls like water
+      } else {
+        p.vy += 0.05 * ts; // default gravity
+      }
+
       if (p.life <= 0) { this.particles.splice(i, 1); continue; }
 
       ctx.save();
-      ctx.globalAlpha = p.life;
+
+      // Ghost particles get extra ethereal glow
+      if (p.ghost) {
+        ctx.globalAlpha = p.life * (0.3 + Math.sin(Date.now() * 0.005 + i) * 0.2);
+        ctx.shadowColor = 'rgba(255,255,255,0.5)';
+        ctx.shadowBlur = 8;
+      } else {
+        ctx.globalAlpha = p.life;
+      }
+
       ctx.fillStyle = p.color;
 
+      // ── Type-specific rendering ──
       if (p.type === 'spark') {
         ctx.beginPath();
         ctx.moveTo(p.x, p.y - p.size);
@@ -336,6 +939,7 @@ const BattleCanvas = {
         ctx.lineTo(p.x - p.size * 0.3, p.y);
         ctx.closePath();
         ctx.fill();
+
       } else if (p.type === 'star') {
         const s = p.size;
         ctx.beginPath();
@@ -346,16 +950,97 @@ const BattleCanvas = {
         }
         ctx.closePath();
         ctx.fill();
+
+      } else if (p.type === 'ember') {
+        // Flickering flame particle
+        const flicker = 0.5 + Math.sin(Date.now() * 0.015 + (p.flickerPhase || 0)) * 0.5;
+        ctx.globalAlpha = p.life * flicker;
+        const eSize = p.size * p.life * (0.7 + flicker * 0.3);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, eSize, 0, Math.PI * 2);
+        ctx.fill();
+        // Tiny ember trail
+        ctx.globalAlpha = p.life * flicker * 0.3;
+        ctx.beginPath();
+        ctx.arc(p.x - p.vx * 2, p.y - p.vy * 2, eSize * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+
+      } else if (p.type === 'crystal') {
+        // Hexagonal crystal
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation || 0);
+        const cs = p.size * p.life;
+        ctx.beginPath();
+        for (let j = 0; j < 6; j++) {
+          const angle = (j / 6) * Math.PI * 2 - Math.PI / 6;
+          const hx = Math.cos(angle) * cs;
+          const hy = Math.sin(angle) * cs;
+          j === 0 ? ctx.moveTo(hx, hy) : ctx.lineTo(hx, hy);
+        }
+        ctx.closePath();
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.life * 0.7;
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 0.5;
+        ctx.globalAlpha = p.life * 0.4;
+        ctx.stroke();
+        ctx.restore();
+
+      } else if (p.type === 'lightning') {
+        // Jagged line segment near origin
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 1.5;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        let lx = p.x;
+        let ly = p.y;
+        ctx.moveTo(lx, ly);
+        const segs = 3 + Math.floor(Math.random() * 3);
+        for (let j = 0; j < segs; j++) {
+          lx += (Math.random() - 0.5) * p.size * 4;
+          ly += (Math.random() - 0.5) * p.size * 4;
+          ctx.lineTo(lx, ly);
+        }
+        ctx.stroke();
+
+      } else if (p.type === 'droplet') {
+        // Teardrop water particle
+        ctx.beginPath();
+        const ds = p.size * p.life;
+        ctx.moveTo(p.x, p.y - ds * 1.5);
+        ctx.quadraticCurveTo(p.x + ds, p.y, p.x, p.y + ds * 0.5);
+        ctx.quadraticCurveTo(p.x - ds, p.y, p.x, p.y - ds * 1.5);
+        ctx.closePath();
+        ctx.fill();
+
+      } else if (p.type === 'fragment') {
+        // Rectangular fragment chunk with rotation
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation || 0);
+        const fw = p.size * 1.2;
+        const fh = p.size * 0.7;
+        ctx.fillRect(-fw / 2, -fh / 2, fw, fh);
+        // Highlight edge
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.fillRect(-fw / 2, -fh / 2, fw, fh * 0.3);
+        ctx.restore();
+
       } else {
+        // Default circle
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
         ctx.fill();
       }
+
       ctx.restore();
     }
   },
 
-  // ═══ FLOATING TEXT ═══
+  // ═══ FLOATING TEXT (unchanged) ═══
   addFloatingText(x, y, text, color, opts = {}) {
     this.floatingTexts.push({
       x, y, text, color,
@@ -370,10 +1055,11 @@ const BattleCanvas = {
 
   drawFloatingTexts() {
     const ctx = this.ctx;
+    const ts = this.timeScale;
     for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
       const t = this.floatingTexts[i];
-      t.y += t.vy;
-      t.life -= t.decay;
+      t.y += t.vy * ts;
+      t.life -= t.decay * ts;
       if (t.life <= 0) { this.floatingTexts.splice(i, 1); continue; }
 
       ctx.save();
@@ -405,7 +1091,7 @@ const BattleCanvas = {
     this.flashAlpha = alpha || 0.4;
   },
 
-  // ═══ ATTACK LINE ═══
+  // ═══ ATTACK LINE (legacy, kept for compatibility) ═══
   drawAttackLine(fromKey, toKey) {
     const from = this.fighters[fromKey];
     const to = this.fighters[toKey];
@@ -415,7 +1101,6 @@ const BattleCanvas = {
     const progress = from.attackAnim;
     if (progress <= 0) return;
 
-    // Slash line
     const midX = from.x + (to.x - from.x) * Math.min(progress * 2, 1);
     const midY = from.y + (to.y - from.y) * Math.min(progress * 2, 1);
 
@@ -432,7 +1117,10 @@ const BattleCanvas = {
     ctx.restore();
   },
 
-  // ═══ VFX PROCESSING ═══
+  // ═══════════════════════════════════════════
+  //  VFX PROCESSING (enhanced)
+  // ═══════════════════════════════════════════
+
   processVFX(vfxList) {
     for (const fx of vfxList) {
       const target = this.fighters[fx.target];
@@ -444,12 +1132,24 @@ const BattleCanvas = {
           target.shakeX = (Math.random() - 0.5) * 10;
           target.shakeY = (Math.random() - 0.5) * 6;
           target.hitFlash = 1;
-          // Damage particles
-          this.spawnParticles(target.x, target.y, fx.isCrit ? '#ffd700' : '#ff6b6b', fx.isCrit ? 15 : 8, {
+
+          // ── Slash trail at target ──
+          const slashColor = fx.isCrit ? '#ffd700' : '#ffffff';
+          this.spawnSlashTrail(target.x, target.y, fx.isCrit, slashColor);
+
+          // ── Element-specific VFX ──
+          const attackerElement = attacker ? this.getHeroElement(attacker.f.id) : null;
+          if (attackerElement) {
+            this.spawnElementVFX(target.x, target.y, attackerElement, 'attack');
+          }
+
+          // Base damage particles (kept from original)
+          this.spawnParticles(target.x, target.y, fx.isCrit ? '#ffd700' : '#ff6b6b', fx.isCrit ? 12 : 6, {
             spread: fx.isCrit ? 6 : 3,
             type: fx.isCrit ? 'star' : 'spark',
             size: fx.isCrit ? 4 : 2,
           });
+
           // Floating damage
           this.addFloatingText(
             target.x + (Math.random() - 0.5) * 20,
@@ -458,12 +1158,20 @@ const BattleCanvas = {
             fx.isCrit ? '#ffd700' : '#ff6b6b',
             { size: fx.isCrit ? 22 : 16, bold: true, outline: true }
           );
-          // Screen shake on big hits
-          if (fx.isCrit) this.triggerShake(6);
-          else this.triggerShake(2);
+
+          // ── Impact wave ──
+          if (fx.isCrit) {
+            this.spawnImpactWave(target.x, target.y, '#ffd700', 60);
+            // Crit slow-mo: timeScale 0.3 for 8 frames
+            this.timeSlowFrames = 8;
+            this.timeScale = 0.3;
+            this.triggerShake(6);
+          } else {
+            this.spawnImpactWave(target.x, target.y, 'rgba(255,255,255,0.5)', 30);
+            this.triggerShake(2);
+          }
         }
         if (attacker) {
-          // Attack lunge
           attacker.attackAnim = 1;
         }
       }
@@ -472,17 +1180,32 @@ const BattleCanvas = {
         const caster = this.fighters[fx.caster];
         if (caster) {
           caster.skillGlow = 1;
-          // Skill name floating text
+
+          // ── Skill cinematic ──
+          const casterElement = this.getHeroElement(caster.f.id);
+          this.startCinematic(fx.skillName || '技能', casterElement, caster.x, caster.y);
+
+          // Skill name floating text on caster
           this.addFloatingText(
             caster.x, caster.y - 35,
             '【' + fx.skillName + '】',
             '#c084fc',
             { size: 14, bold: true, decay: 0.01, vy: -0.8, outline: true }
           );
-          // Skill particles
-          this.spawnParticles(caster.x, caster.y, '#c084fc', 20, {
-            spread: 5, type: 'star', size: 3, upward: true
-          });
+
+          // ── Element-specific VFX at skill intensity ──
+          if (casterElement) {
+            this.spawnElementVFX(caster.x, caster.y, casterElement, 'skill');
+          } else {
+            // Fallback: original purple particles
+            this.spawnParticles(caster.x, caster.y, '#c084fc', 20, {
+              spread: 5, type: 'star', size: 3, upward: true
+            });
+          }
+
+          // Full-width impact wave for skills
+          this.spawnImpactWave(caster.x, caster.y, '#c084fc', this.width * 0.4);
+
           this.triggerShake(4);
           this.triggerFlash('#7c3aed', 0.15);
         }
@@ -490,30 +1213,21 @@ const BattleCanvas = {
 
       if (fx.type === 'kill') {
         if (target) {
-          // Death explosion
-          this.spawnParticles(target.x, target.y, '#ff4444', 25, {
-            spread: 8, type: 'spark', size: 4
-          });
-          this.spawnParticles(target.x, target.y, '#333', 15, {
-            spread: 5, size: 3
-          });
-          this.addFloatingText(target.x, target.y - 30, '击杀!', '#ff4444', {
-            size: 20, bold: true, outline: true
-          });
-          this.triggerShake(8);
-          this.triggerFlash('#c04040', 0.2);
+          // ── Premium kill effect ──
+          this.spawnKillEffect(target);
+          this.triggerShake(10);
+          this.triggerFlash('#c04040', 0.25);
         }
       }
     }
   },
 
-  // ═══ BACKGROUND ═══
+  // ═══ BACKGROUND (unchanged) ═══
   drawBackground(terrain, weather) {
     const ctx = this.ctx;
     const w = this.width;
     const h = this.height;
 
-    // Base gradient per terrain
     const terrainGrads = {
       plains:   ['#0a1628', '#142840'],
       mountain: ['#0f1520', '#1a2535'],
@@ -529,7 +1243,6 @@ const BattleCanvas = {
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, w, h);
 
-    // Ground area with terrain texture
     const groundY = h - 30;
     const groundGrad = ctx.createLinearGradient(0, groundY, 0, h);
     groundGrad.addColorStop(0, 'rgba(255,255,255,0.03)');
@@ -537,7 +1250,6 @@ const BattleCanvas = {
     ctx.fillStyle = groundGrad;
     ctx.fillRect(0, groundY, w, 30);
 
-    // Ground line
     ctx.strokeStyle = 'rgba(255,255,255,0.08)';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -545,7 +1257,6 @@ const BattleCanvas = {
     ctx.lineTo(w, groundY);
     ctx.stroke();
 
-    // Terrain-specific ground details
     if (terrain === 'mountain' || terrain === 'castle') {
       ctx.fillStyle = 'rgba(255,255,255,0.02)';
       for (let i = 0; i < 8; i++) {
@@ -570,7 +1281,7 @@ const BattleCanvas = {
       }
     }
 
-    // VS divider — subtle golden glow
+    // VS divider
     ctx.save();
     const vsGrad = ctx.createLinearGradient(w/2, 15, w/2, h - 15);
     vsGrad.addColorStop(0, 'rgba(212,168,67,0)');
@@ -586,7 +1297,6 @@ const BattleCanvas = {
     ctx.lineTo(w / 2, h - 15);
     ctx.stroke();
     ctx.setLineDash([]);
-    // VS text
     ctx.font = 'bold 12px -apple-system, system-ui, sans-serif';
     ctx.fillStyle = 'rgba(212,168,67,0.15)';
     ctx.textAlign = 'center';
@@ -599,7 +1309,6 @@ const BattleCanvas = {
       ctx.fillRect(0, 0, w, h);
     }
     if (weather === 'wind') {
-      // Animated wind lines
       const t = Date.now() * 0.002;
       ctx.save();
       ctx.globalAlpha = 0.06;
@@ -615,7 +1324,6 @@ const BattleCanvas = {
       ctx.restore();
     }
     if (weather === 'fire') {
-      // Subtle fire glow at bottom
       const fireGrad = ctx.createLinearGradient(0, h, 0, h - 50);
       fireGrad.addColorStop(0, 'rgba(200,50,20,' + (0.08 + Math.sin(Date.now() * 0.003) * 0.04) + ')');
       fireGrad.addColorStop(1, 'rgba(200,50,20,0)');
@@ -662,18 +1370,225 @@ const BattleCanvas = {
     }
   },
 
-  // ═══ MAIN RENDER LOOP ═══
+  // ═══════════════════════════════════════════
+  //  6. VICTORY / DEFEAT ANIMATIONS (enhanced)
+  // ═══════════════════════════════════════════
+
+  drawVictoryAnim() {
+    const v = this.victoryAnim;
+    if (!v) return;
+
+    const ctx = this.ctx;
+    const w = this.width;
+    const h = this.height;
+    v.frame++;
+
+    // Golden light rays from center
+    if (v.frame < 120) {
+      ctx.save();
+      const rayAlpha = Math.min(0.15, v.frame * 0.003);
+      const rayCount = 12;
+      for (let i = 0; i < rayCount; i++) {
+        const angle = (i / rayCount) * Math.PI * 2 + v.frame * 0.01;
+        const len = w * 0.8;
+        const grad = ctx.createLinearGradient(
+          w/2, h/2,
+          w/2 + Math.cos(angle) * len, h/2 + Math.sin(angle) * len
+        );
+        grad.addColorStop(0, 'rgba(255,215,0,' + rayAlpha + ')');
+        grad.addColorStop(0.5, 'rgba(255,215,0,' + (rayAlpha * 0.3) + ')');
+        grad.addColorStop(1, 'rgba(255,215,0,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(w/2, h/2);
+        const spread = 0.08;
+        ctx.lineTo(
+          w/2 + Math.cos(angle - spread) * len,
+          h/2 + Math.sin(angle - spread) * len
+        );
+        ctx.lineTo(
+          w/2 + Math.cos(angle + spread) * len,
+          h/2 + Math.sin(angle + spread) * len
+        );
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // Confetti particles (spawn in bursts)
+    if (v.frame % 6 === 0 && v.frame < 80) {
+      const confettiColors = ['#ffd700', '#ff4444', '#22c55e', '#3b82f6', '#a855f7', '#ff8c00'];
+      for (let i = 0; i < 5; i++) {
+        const color = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+        this.spawnParticles(
+          w * 0.3 + Math.random() * w * 0.4,
+          -10,
+          color, 1,
+          { type: 'fragment', spread: 4, size: 3 }
+        );
+      }
+    }
+
+    // "胜利" text with scale bounce
+    const textFrame = Math.max(0, v.frame - 10);
+    if (textFrame > 0) {
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Bounce: overshoot then settle
+      let scale;
+      if (textFrame < 8) {
+        scale = 1.8 - (textFrame / 8) * 0.6; // 1.8 → 1.2
+      } else if (textFrame < 16) {
+        scale = 1.2 - ((textFrame - 8) / 8) * 0.3; // 1.2 → 0.9
+      } else if (textFrame < 22) {
+        scale = 0.9 + ((textFrame - 16) / 6) * 0.1; // 0.9 → 1.0
+      } else {
+        scale = 1;
+      }
+
+      const alpha = Math.min(1, textFrame / 10);
+      ctx.globalAlpha = alpha;
+
+      const fontSize = Math.floor(40 * scale);
+      ctx.font = 'bold ' + fontSize + 'px "STKaiti", "KaiTi", "楷体", -apple-system, sans-serif';
+
+      // Gold glow
+      ctx.shadowColor = 'rgba(255,215,0,0.8)';
+      ctx.shadowBlur = 30;
+      ctx.strokeStyle = '#b8860b';
+      ctx.lineWidth = 4;
+      ctx.lineJoin = 'round';
+      ctx.strokeText('胜 利', w / 2, h / 2 - 15);
+
+      ctx.fillStyle = '#ffd700';
+      ctx.fillText('胜 利', w / 2, h / 2 - 15);
+
+      ctx.restore();
+    }
+  },
+
+  drawDefeatAnim() {
+    const d = this.defeatAnim;
+    if (!d) return;
+
+    const ctx = this.ctx;
+    const w = this.width;
+    const h = this.height;
+    d.frame++;
+
+    // Desaturation overlay (slowly increasing)
+    const desatAlpha = Math.min(0.4, d.frame * 0.005);
+    ctx.save();
+    ctx.fillStyle = 'rgba(40,40,50,' + desatAlpha + ')';
+    ctx.fillRect(0, 0, w, h);
+    ctx.restore();
+
+    // Crack overlay
+    if (d.frame > 15 && d.frame < 80) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(200,200,200,' + Math.min(0.25, (d.frame - 15) * 0.005) + ')';
+      ctx.lineWidth = 1.5;
+      // Draw cracks from center
+      if (!d.cracks) {
+        d.cracks = [];
+        for (let i = 0; i < 7; i++) {
+          const crack = [];
+          let cx = w / 2 + (Math.random() - 0.5) * 40;
+          let cy = h / 2 + (Math.random() - 0.5) * 30;
+          crack.push({ x: cx, y: cy });
+          const angle = Math.random() * Math.PI * 2;
+          for (let j = 0; j < 5 + Math.floor(Math.random() * 4); j++) {
+            cx += Math.cos(angle + (Math.random() - 0.5) * 1.2) * (10 + Math.random() * 15);
+            cy += Math.sin(angle + (Math.random() - 0.5) * 1.2) * (10 + Math.random() * 15);
+            crack.push({ x: cx, y: cy });
+          }
+          d.cracks.push(crack);
+        }
+      }
+      for (const crack of d.cracks) {
+        ctx.beginPath();
+        for (let i = 0; i < crack.length; i++) {
+          i === 0 ? ctx.moveTo(crack[i].x, crack[i].y) : ctx.lineTo(crack[i].x, crack[i].y);
+        }
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // "败北" text with fade
+    if (d.frame > 20) {
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const alpha = Math.min(1, (d.frame - 20) / 30);
+      ctx.globalAlpha = alpha;
+
+      const fontSize = 38;
+      ctx.font = 'bold ' + fontSize + 'px "STKaiti", "KaiTi", "楷体", -apple-system, sans-serif';
+
+      ctx.shadowColor = 'rgba(0,0,0,0.8)';
+      ctx.shadowBlur = 15;
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 3;
+      ctx.lineJoin = 'round';
+      ctx.strokeText('败 北', w / 2, h / 2 - 15);
+
+      ctx.fillStyle = '#c04040';
+      ctx.fillText('败 北', w / 2, h / 2 - 15);
+
+      ctx.restore();
+    }
+  },
+
+  // ═══════════════════════════════════════════
+  //  MAIN RENDER LOOP (enhanced)
+  // ═══════════════════════════════════════════
+
   render() {
     if (!this.ctx || !this.canvas) return;
     const ctx = this.ctx;
+    const now = performance.now();
+
+    // ── Time-slow management ──
+    if (this.timeSlowFrames > 0) {
+      this.timeSlowFrames--;
+      if (this.timeSlowFrames <= 0) {
+        this.timeScale = 1;
+      }
+    }
+
+    // ── Zoom pulse management ──
+    let zoomScale = 1;
+    if (this.zoomPulse > 0) {
+      zoomScale = 1 + 0.02 * (this.zoomPulse / 10);
+      this.zoomPulse = Math.max(0, this.zoomPulse - 1);
+    }
 
     ctx.save();
+
+    // ── Chromatic aberration: render offset layers ──
+    if (this.chromaticFrames > 0) {
+      this.chromaticFrames--;
+      // We'll draw after the main scene for the aberration effect
+    }
+
+    // ── Zoom pulse transform ──
+    if (zoomScale > 1) {
+      const cx = this.width / 2;
+      const cy = this.height / 2;
+      ctx.translate(cx, cy);
+      ctx.scale(zoomScale, zoomScale);
+      ctx.translate(-cx, -cy);
+    }
 
     // Screen shake
     if (this.screenShake.intensity > 0.5) {
       this.screenShake.x = (Math.random() - 0.5) * this.screenShake.intensity;
       this.screenShake.y = (Math.random() - 0.5) * this.screenShake.intensity;
-      this.screenShake.intensity *= this.screenShake.decay;
+      this.screenShake.intensity *= Math.pow(this.screenShake.decay, this.timeScale);
       ctx.translate(this.screenShake.x, this.screenShake.y);
     }
 
@@ -683,26 +1598,32 @@ const BattleCanvas = {
     this.drawBackground(terrain, weather);
 
     // Update & draw fighters
+    const ts = this.timeScale;
     for (const key in this.fighters) {
       const s = this.fighters[key];
-      // Decay animations
-      s.shakeX *= 0.85;
-      s.shakeY *= 0.85;
-      s.hitFlash *= 0.92;
-      s.skillGlow *= 0.97;
+      s.shakeX *= Math.pow(0.85, ts);
+      s.shakeY *= Math.pow(0.85, ts);
+      s.hitFlash *= Math.pow(0.92, ts);
+      s.skillGlow *= Math.pow(0.97, ts);
       if (s.attackAnim > 0) {
-        s.attackAnim -= 0.04;
-        // Lunge toward target
+        s.attackAnim -= 0.04 * ts;
         const lungeDir = s.facing;
         const lungeAmount = Math.sin(s.attackAnim * Math.PI) * 25;
         s.x = s.baseX + lungeDir * lungeAmount;
       } else {
-        // Idle breathing
         s.y = s.baseY + Math.sin(Date.now() * 0.002 + s.f.pos * 1.5) * 1.5;
         s.x = s.baseX;
       }
       this.drawFighter(s);
     }
+
+    // ── Slash trails (after fighters, before floating texts) ──
+    this.updateSlashTrails();
+    this.drawSlashTrails();
+
+    // ── Impact waves ──
+    this.updateImpactWaves();
+    this.drawImpactWaves();
 
     // Particles
     this.drawParticles();
@@ -710,17 +1631,50 @@ const BattleCanvas = {
     // Floating texts
     this.drawFloatingTexts();
 
+    // ── Cinematic overlay ──
+    this.updateCinematic();
+    this.drawCinematic();
+
+    // ── Victory / Defeat animations ──
+    this.drawVictoryAnim();
+    this.drawDefeatAnim();
+
     // Screen flash
     if (this.flashAlpha > 0.01) {
       ctx.fillStyle = this.flashColor;
       ctx.globalAlpha = this.flashAlpha;
       ctx.fillRect(-10, -10, this.width + 20, this.height + 20);
-      this.flashAlpha *= 0.9;
+      this.flashAlpha *= Math.pow(0.9, ts);
     }
 
     ctx.restore();
 
+    // ── Chromatic aberration post-effect ──
+    if (this.chromaticFrames > 0 || this._chromaticFading) {
+      this._drawChromaticAberration();
+    }
+
+    this.lastFrameTime = now;
     this.animFrame = requestAnimationFrame(() => this.render());
+  },
+
+  // Chromatic aberration: overlay shifted red/blue copies
+  _drawChromaticAberration() {
+    if (this.chromaticFrames <= 0 && !this._chromaticFading) return;
+
+    const ctx = this.ctx;
+    const offset = 2;
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.globalAlpha = 0.12;
+
+    // Red shift right
+    ctx.drawImage(this.canvas, offset, 0);
+    // Blue shift left (tint with overlay)
+    ctx.drawImage(this.canvas, -offset, 0);
+
+    ctx.restore();
   },
 
   // Alias for app.js compatibility
@@ -728,7 +1682,7 @@ const BattleCanvas = {
     this.initFighters(battleState);
   },
 
-  // Sync fighter state from battle engine (HP/rage/alive changes)
+  // Sync fighter state from battle engine
   syncState(battleState) {
     if (!battleState) return;
     const all = [...(battleState.player || []), ...(battleState.enemy || [])];
@@ -737,7 +1691,7 @@ const BattleCanvas = {
       const key = f.side + '-' + f.pos;
       const sprite = this.fighters[key];
       if (sprite) {
-        sprite.f = f; // Update reference to latest fighter state
+        sprite.f = f;
       }
     }
   },
@@ -746,6 +1700,16 @@ const BattleCanvas = {
   start(battleState) {
     this.particles = [];
     this.floatingTexts = [];
+    this.slashTrails = [];
+    this.impactWaves = [];
+    this.cinematicActive = null;
+    this.victoryAnim = null;
+    this.defeatAnim = null;
+    this.timeScale = 1;
+    this.timeSlowFrames = 0;
+    this.zoomPulse = 0;
+    this.chromaticFrames = 0;
+    this.lastFrameTime = performance.now();
     this.screenShake = { x: 0, y: 0, intensity: 0, decay: 0.9 };
     this.flashAlpha = 0;
     this.running = true;
@@ -764,23 +1728,27 @@ const BattleCanvas = {
 
   // ═══ VICTORY / DEFEAT SCENE ═══
   showVictory() {
-    this.triggerFlash('#ffd700', 0.3);
-    this.spawnParticles(this.width / 2, this.height / 2, '#ffd700', 40, {
+    this.triggerFlash('#ffd700', 0.35);
+
+    // Start victory animation state
+    this.victoryAnim = { frame: 0 };
+
+    // Golden burst particles
+    this.spawnParticles(this.width / 2, this.height / 2, '#ffd700', 35, {
       spread: 10, type: 'star', size: 5, upward: true
     });
-    this.spawnParticles(this.width / 2, this.height / 2, '#f5d98a', 30, {
+    this.spawnParticles(this.width / 2, this.height / 2, '#f5d98a', 25, {
       spread: 8, type: 'spark', size: 3
     });
-    this.addFloatingText(this.width / 2, this.height / 2 - 20, '胜 利', '#ffd700', {
-      size: 36, bold: true, outline: true, decay: 0.005, vy: -0.5
-    });
+    // Impact wave
+    this.spawnImpactWave(this.width / 2, this.height / 2, '#ffd700', this.width * 0.5);
   },
 
   showDefeat() {
     this.triggerFlash('#c04040', 0.2);
-    this.addFloatingText(this.width / 2, this.height / 2 - 20, '败 北', '#c04040', {
-      size: 36, bold: true, outline: true, decay: 0.005, vy: -0.3
-    });
+
+    // Start defeat animation state
+    this.defeatAnim = { frame: 0, cracks: null };
   },
 };
 
