@@ -163,7 +163,7 @@ const Storage = {
       totalHeroesInGame,
       collectionPct: Math.floor(heroCount / totalHeroesInGame * 100),
       stagesCleared: (progress.chapter - 1) * 10 + progress.stage - 1,
-      totalChapters: 6,
+      totalChapters: 10,
       currentChapter: progress.chapter,
       totalBattles,
       wins: stats.wins,
@@ -186,6 +186,10 @@ const Storage = {
     pt.totalSessions++;
     this._set('playTime', pt);
   },
+
+  // === Difficulty Tracking ===
+  getClearedDifficulties() { return this._get('clearedDifficulties', {}); },
+  saveClearedDifficulties(d) { this._set('clearedDifficulties', d); },
 
   // === v4: Seasonal Content ===
   getSeasonalState() {

@@ -104,6 +104,74 @@ const Campaign = {
         { id: 9, name: '中原会战', enemies: ['elite_spear','crossbow_corps','elite_cavalry','strategist','elite_spear'], reward: { gold: 5600, exp: 4100 }, mechanic: 'supply_drain', branch: 'B' },
         { id: 10, name: '司马懿终战', enemies: ['strategist','crossbow_corps','simayi','elite_cavalry','strategist'], boss: true, reward: { gold: 7000, exp: 5000, hero_shard: 'jiangwei' }, mechanic: 'supply_drain', boss_enhanced: { mirror: true, teleport: true } },
       ]
+    },
+    {
+      id: 7, name: '官渡之战', icon: '官', terrain: 'plains', weather: 'clear',
+      desc: '曹操以少胜多，奇袭乌巢，大破袁绍。天下归魏之始。',
+      stages: [
+        { id: 1, name: '白马之围', enemies: ['elite_spear','shield_militia','elite_spear','crossbow_corps'], reward: { gold: 5000, exp: 4000 } },
+        { id: 2, name: '延津渡口', enemies: ['elite_cavalry','crossbow_corps','elite_spear','shield_militia'], reward: { gold: 5200, exp: 4200 } },
+        { id: 3, name: '袁军前锋', enemies: ['elite_cavalry','elite_spear','crossbow_corps','shield_militia','strategist'], reward: { gold: 5500, exp: 4400 } },
+        { id: 4, name: '粮道遭劫', enemies: ['supply_guard','crossbow_corps','elite_cavalry','supply_guard','crossbow_corps'], reward: { gold: 5800, exp: 4600 }, elite: true },
+        { id: 5, name: '颜良文丑', enemies: ['elite_cavalry','elite_spear','yuanshao','crossbow_corps','strategist'], boss: true, reward: { gold: 6200, exp: 5000 } },
+        // --- 天命抉择 #7: 火烧乌巢 vs 正面决战 ---
+        { id: 6, name: '夜袭乌巢', enemies: ['supply_guard','crossbow_corps','supply_guard','shield_militia','supply_guard'], reward: { gold: 6500, exp: 5200 }, branch: 'A' },
+        { id: 7, name: '火烧粮仓', enemies: ['supply_guard','elite_spear','strategist','supply_guard','crossbow_corps'], reward: { gold: 7000, exp: 5500 }, branch: 'A' },
+        { id: 8, name: '正面列阵', enemies: ['elite_cavalry','elite_spear','crossbow_corps','elite_cavalry','strategist'], reward: { gold: 6500, exp: 5200 }, branch: 'B' },
+        { id: 9, name: '中军突破', enemies: ['elite_spear','crossbow_corps','elite_cavalry','strategist','elite_spear'], reward: { gold: 7000, exp: 5500 }, branch: 'B' },
+        { id: 10, name: '袁绍决战', enemies: ['elite_cavalry','strategist','yuanshao','crossbow_corps','elite_spear'], boss: true, reward: { gold: 8000, exp: 6000, hero_shard: 'guojia' } },
+      ]
+    },
+    {
+      id: 8, name: '合肥之战', icon: '合', terrain: 'castle', weather: 'clear',
+      desc: '张辽威震逍遥津，八百骑破十万吴军。',
+      stages: [
+        { id: 1, name: '逍遥津前哨', enemies: ['navy_soldier','elite_spear','shield_militia','crossbow_corps'], reward: { gold: 7000, exp: 5500 } },
+        { id: 2, name: '吴军渡河', enemies: ['navy_soldier','fire_archer','navy_soldier','elite_spear','shield_militia'], reward: { gold: 7400, exp: 5800 } },
+        { id: 3, name: '八百骑出击', enemies: ['navy_soldier','crossbow_corps','fire_archer','navy_soldier','elite_spear'], reward: { gold: 7800, exp: 6100 } },
+        { id: 4, name: '逍遥津混战', enemies: ['fire_archer','navy_soldier','fire_archer','shield_militia','crossbow_corps'], reward: { gold: 8200, exp: 6500 }, elite: true },
+        { id: 5, name: '孙权亲征', enemies: ['navy_soldier','fire_archer','sunquan','elite_spear','shield_militia'], boss: true, reward: { gold: 9000, exp: 7000 } },
+        // --- 天命抉择 #8: 死守城池 vs 主动出击 ---
+        { id: 6, name: '城门死守', enemies: ['navy_soldier','fire_archer','navy_soldier','crossbow_corps','shield_militia'], reward: { gold: 9500, exp: 7200 }, terrain: 'castle', branch: 'A' },
+        { id: 7, name: '瓮城伏兵', enemies: ['crossbow_corps','fire_archer','shield_militia','crossbow_corps','elite_spear'], reward: { gold: 10000, exp: 7500 }, terrain: 'castle', branch: 'A' },
+        { id: 8, name: '出城突袭', enemies: ['elite_spear','fire_archer','navy_soldier','elite_spear','crossbow_corps'], reward: { gold: 9500, exp: 7200 }, branch: 'B' },
+        { id: 9, name: '追击吴军', enemies: ['navy_soldier','fire_archer','navy_soldier','fire_archer','elite_spear'], reward: { gold: 10000, exp: 7500 }, branch: 'B' },
+        { id: 10, name: '威震逍遥津', enemies: ['fire_archer','navy_soldier','sunquan','fire_archer','navy_soldier'], boss: true, reward: { gold: 12000, exp: 8000, hero_shard: 'pangde' } },
+      ]
+    },
+    {
+      id: 9, name: '定军山', icon: '定', terrain: 'mountain', weather: 'fog',
+      desc: '黄忠斩夏侯渊，老将之威震汉中。',
+      stages: [
+        { id: 1, name: '阳平关', enemies: ['elite_spear','crossbow_corps','supply_guard','elite_cavalry'], reward: { gold: 10000, exp: 7000 }, weather: 'fog' },
+        { id: 2, name: '山道伏击', enemies: ['elite_cavalry','strategist','crossbow_corps','elite_spear'], reward: { gold: 10500, exp: 7300 }, weather: 'fog' },
+        { id: 3, name: '争夺高地', enemies: ['elite_spear','crossbow_corps','elite_cavalry','strategist','supply_guard'], reward: { gold: 11000, exp: 7700 }, weather: 'fog' },
+        { id: 4, name: '粮草争夺', enemies: ['supply_guard','crossbow_corps','supply_guard','elite_cavalry','strategist'], reward: { gold: 11500, exp: 8000 }, weather: 'fog', elite: true },
+        { id: 5, name: '夏侯渊列阵', enemies: ['elite_cavalry','crossbow_corps','xiahouyuan','strategist','elite_spear'], boss: true, reward: { gold: 12500, exp: 8500 }, weather: 'fog' },
+        // --- 天命抉择 #9: 奇袭山顶 vs 围而不攻 ---
+        { id: 6, name: '夜登山顶', enemies: ['elite_spear','strategist','crossbow_corps','elite_spear','supply_guard'], reward: { gold: 13000, exp: 8800 }, weather: 'fog', branch: 'A' },
+        { id: 7, name: '居高临下', enemies: ['elite_cavalry','crossbow_corps','strategist','elite_cavalry','crossbow_corps'], reward: { gold: 14000, exp: 9200 }, weather: 'fog', branch: 'A' },
+        { id: 8, name: '围困断粮', enemies: ['supply_guard','elite_spear','crossbow_corps','supply_guard','strategist'], reward: { gold: 13000, exp: 8800 }, weather: 'fog', branch: 'B' },
+        { id: 9, name: '疲敌之计', enemies: ['strategist','crossbow_corps','elite_cavalry','strategist','elite_spear'], reward: { gold: 14000, exp: 9200 }, weather: 'fog', branch: 'B' },
+        { id: 10, name: '斩将定军山', enemies: ['elite_cavalry','strategist','xiahouyuan','crossbow_corps','elite_cavalry'], boss: true, reward: { gold: 16000, exp: 10000, hero_shard: 'huangzhong' } },
+      ]
+    },
+    {
+      id: 10, name: '天下归一', icon: '终', terrain: 'mixed', weather: 'clear',
+      desc: '最终章。三国归晋，天命已定。兴复汉室还是顺应天命？',
+      stages: [
+        { id: 1, name: '司马昭之心', enemies: ['strategist','elite_cavalry','crossbow_corps','elite_spear','shield_militia'], reward: { gold: 15000, exp: 9000 } },
+        { id: 2, name: '铁骑南下', enemies: ['elite_cavalry','elite_cavalry','crossbow_corps','strategist','fire_archer'], reward: { gold: 16000, exp: 9500 } },
+        { id: 3, name: '三路合围', enemies: ['elite_spear','navy_soldier','fire_archer','crossbow_corps','elite_cavalry'], reward: { gold: 17000, exp: 10000 } },
+        { id: 4, name: '最后的抵抗', enemies: ['strategist','crossbow_corps','elite_cavalry','fire_archer','supply_guard','shield_militia'], reward: { gold: 18000, exp: 11000 }, elite: true },
+        { id: 5, name: '司马昭出阵', enemies: ['elite_cavalry','strategist','simazhao','crossbow_corps','elite_spear'], boss: true, reward: { gold: 20000, exp: 12000 } },
+        // --- 天命抉择 #10: 兴复汉室 vs 顺应天命 ---
+        { id: 6, name: '复汉旗帜', enemies: ['elite_cavalry','fire_archer','strategist','crossbow_corps','elite_spear'], reward: { gold: 20000, exp: 12500 }, branch: 'A' },
+        { id: 7, name: '光复之战', enemies: ['elite_spear','crossbow_corps','elite_cavalry','strategist','fire_archer','navy_soldier'], reward: { gold: 22000, exp: 13500 }, branch: 'A' },
+        { id: 8, name: '顺天应命', enemies: ['strategist','elite_cavalry','crossbow_corps','shield_militia','supply_guard'], reward: { gold: 20000, exp: 12500 }, branch: 'B' },
+        { id: 9, name: '新朝之序', enemies: ['elite_cavalry','strategist','crossbow_corps','fire_archer','elite_spear','shield_militia'], reward: { gold: 22000, exp: 13500 }, branch: 'B' },
+        { id: 10, name: '天命终章', enemies: ['elite_cavalry','strategist','simazhao','crossbow_corps','fire_archer','elite_spear'], boss: true, reward: { gold: 25000, exp: 15000, hero_shard: 'simayi' }, boss_enhanced: { phases: 3, mirror: true, teleport: true, enrage: true } },
+      ]
     }
   ],
 
@@ -168,21 +236,102 @@ const Campaign = {
         { id: 'B', text: '全面进攻，一战定乾坤', desc: 'ATK+35，士气+50，但补给消耗翻倍', reward: { atk_bonus: 35, morale: 50, supply_penalty_multiplier: 2 }, stages: [8, 9] }
       ],
       lore: '兵马未动粮草先行。北伐之路，是稳如泰山还是破釜沉舟？'
+    },
+    7: {
+      trigger_after: 5,
+      title: '天命之选：乌巢之火',
+      desc: '袁绍大军压境，兵力悬殊。许攸来降，献计奇袭乌巢粮仓。烧毁粮草可令袁军不战自溃，但也可凭曹军精锐正面击溃袁军主力。',
+      options: [
+        { id: 'A', text: '火烧乌巢，奇兵制胜', desc: '夜袭乌巢粮仓，釜底抽薪。获得大量金币和谋士增益', reward: { gold: 3000, int_bonus: 30 }, stages: [6, 7] },
+        { id: 'B', text: '正面决战，以力破力', desc: '堂堂正正击溃袁军主力，ATK+35，获得精锐装备线索', reward: { atk_bonus: 35, equip_hint: 'guanyu_blade' }, stages: [8, 9] }
+      ],
+      lore: '以少胜多，是智者之道还是勇者之路？官渡一役，天下归属由此而定。'
+    },
+    8: {
+      trigger_after: 5,
+      title: '天命之选：合肥攻守',
+      desc: '孙权十万大军兵临合肥城下，张辽仅有七千守军。是凭坚城死守消耗吴军，还是主动出击以攻代守？',
+      options: [
+        { id: 'A', text: '死守城池，以逸待劳', desc: '依托城防消耗吴军，DEF+40，获得铁壁增益', reward: { def_bonus: 40, loyalty: 120 }, stages: [6, 7] },
+        { id: 'B', text: '主动出击，八百破十万', desc: '效仿张辽逍遥津之勇，ATK+35，SPD+20', reward: { atk_bonus: 35, spd_bonus: 20 }, stages: [8, 9] }
+      ],
+      lore: '守如磐石还是攻如烈火？合肥城下，勇气与智慧的终极抉择。'
+    },
+    9: {
+      trigger_after: 5,
+      title: '天命之选：定军山之策',
+      desc: '夏侯渊据守定军山，地势险要。法正献策可夜袭山顶居高临下，黄忠请战正面猛攻。山路崎岖，奇袭风险与收益并存。',
+      options: [
+        { id: 'A', text: '奇袭山顶，居高临下', desc: '夜间攀登，占据制高点。INT+35，获得地形优势增益', reward: { int_bonus: 35, terrain_buff: 'mountain_advantage' }, stages: [6, 7] },
+        { id: 'B', text: '围而不攻，断其粮道', desc: '切断补给，困死敌军。金+4000，获得后勤增益', reward: { gold: 4000, logistics_buff: true }, stages: [8, 9] }
+      ],
+      lore: '兵法云：攻其不备，出其不意。定军山上，老将黄忠的一刀将改写历史。'
+    },
+    10: {
+      trigger_after: 5,
+      title: '天命之选：天下归属',
+      desc: '三国鼎立数十年，司马昭已掌魏国大权。蜀汉、东吴日薄西山。是举全力兴复汉室，逆天改命？还是顺应天命，让天下归于一统？这是最后的抉择。',
+      options: [
+        { id: 'A', text: '兴复汉室！逆天改命', desc: '燃尽一切，为汉室做最后一搏。全队ATK+50%但HP-20%', reward: { atk_bonus: 50, hero_cost: { stat: 'hp', pct: -20 } }, stages: [6, 7] },
+        { id: 'B', text: '顺应天命，天下一统', desc: '放下执念，换取和平。忠义+200，全队DEF+30%', reward: { loyalty: 200, def_bonus: 30 }, stages: [8, 9] }
+      ],
+      lore: '天下大势，分久必合。但英雄之心，岂甘沉寂？最终之战，你的选择将决定这个时代的结局。'
     }
   },
 
-  // Difficulty curve: enemy stat multiplier per chapter
-  CHAPTER_SCALING: {
-    1: { enemyScale: 0.4, desc: '教程难度' },       // Tutorial — can't lose
-    2: { enemyScale: 0.75, desc: '需要阵容搭配' },   // Team composition matters
-    3: { enemyScale: 1.2, desc: '需要装备强化' },     // Need equipment upgrades
-    4: { enemyScale: 1.7, desc: '需要天赋投入' },     // Need skill tree investment
-    5: { enemyScale: 2.2, desc: '需要元素反应策略' }, // Need element reactions
-    6: { enemyScale: 2.8, desc: '终局·需要极限Build' }, // Endgame, optimized builds
+  // Difficulty modes: multiply on top of chapter scaling
+  DIFFICULTY_MODES: {
+    normal: { scale: 1, name: '普通', icon: '⚔️', desc: '标准难度', unlockReq: null },
+    elite: { scale: 2.0, name: '精英', icon: '🔥', desc: '敌人双倍属性，装备掉落+50%', unlockReq: 'clear_normal', rewardMult: 1.5 },
+    hell: { scale: 3.5, name: '地狱', icon: '💀', desc: '敌人3.5倍+随机词缀，稀有掉落+100%', unlockReq: 'clear_elite', rewardMult: 2.0 },
   },
 
-  getEnemyScale(chapterId) {
-    return this.CHAPTER_SCALING[chapterId]?.enemyScale || 1;
+  // Enemy affixes for hell mode (random 1-2 per stage)
+  HELL_AFFIXES: [
+    { id: 'thorns', name: '荆棘', desc: '反弹20%伤害', effect: { reflect_pct: 20 } },
+    { id: 'haste', name: '疾速', desc: 'SPD+30%', effect: { spd_pct: 30 } },
+    { id: 'fortified', name: '坚壁', desc: 'DEF+40%', effect: { def_pct: 40 } },
+    { id: 'vampiric', name: '吸血', desc: '攻击回复10%HP', effect: { lifesteal: 10 } },
+    { id: 'berserker', name: '狂暴', desc: 'HP<50%时ATK+50%', effect: { low_hp_atk: 50 } },
+    { id: 'shielded', name: '护盾', desc: '战斗开始获得20%HP护盾', effect: { shield_pct: 20 } },
+  ],
+
+  // Difficulty curve: enemy stat multiplier per chapter
+  CHAPTER_SCALING: {
+    1: { enemyScale: 0.4, desc: '教程难度' },
+    2: { enemyScale: 0.75, desc: '需要阵容搭配' },
+    3: { enemyScale: 1.2, desc: '需要装备强化' },
+    4: { enemyScale: 1.7, desc: '需要天赋投入' },
+    5: { enemyScale: 2.2, desc: '需要元素反应策略' },
+    6: { enemyScale: 2.8, desc: '终局·需要极限Build' },
+    7: { enemyScale: 3.2, desc: '以少胜多·智斗' },
+    8: { enemyScale: 3.6, desc: '城防攻坚战' },
+    9: { enemyScale: 4.0, desc: '山地极限战' },
+    10: { enemyScale: 5.0, desc: '天下归一·最终决战' },
+  },
+
+  getEnemyScale(chapterId, difficulty) {
+    const base = this.CHAPTER_SCALING[chapterId]?.enemyScale || 1;
+    const mode = this.DIFFICULTY_MODES[difficulty || 'normal'];
+    return base * (mode?.scale || 1);
+  },
+
+  // Check if a difficulty is unlocked for a chapter
+  isDifficultyUnlocked(chapterId, difficulty) {
+    if (difficulty === 'normal') return true;
+    const cleared = Storage.getClearedDifficulties?.() || {};
+    const chapterCleared = cleared[chapterId] || [];
+    if (difficulty === 'elite') return chapterCleared.includes('normal');
+    if (difficulty === 'hell') return chapterCleared.includes('elite');
+    return false;
+  },
+
+  // Mark a chapter+difficulty as cleared
+  markDifficultyCleared(chapterId, difficulty) {
+    const cleared = Storage.getClearedDifficulties?.() || {};
+    if (!cleared[chapterId]) cleared[chapterId] = [];
+    if (!cleared[chapterId].includes(difficulty)) cleared[chapterId].push(difficulty);
+    Storage.saveClearedDifficulties?.(cleared);
   },
 
   getCurrentChapter() {

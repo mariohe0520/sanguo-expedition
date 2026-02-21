@@ -248,6 +248,24 @@ const HEROES = {
     emoji:'辎', lore:'守护粮草辎重的坚实后盾'
   },
 
+  // ── Chapter 7-10 heroes ──────────────────────────
+  sunquan: {
+    id:'sunquan', name:'孙权', title:'碧眼儿',
+    faction:'wu', unit:'shield', rarity:5,
+    baseStats: { hp:1250, atk:85, def:115, spd:55, int:105 },
+    skill: { name:'坐断东南', desc:'全队DEF+30%+回复15%HP持续3回合', type:'buff', target:'all_ally', stat:'def', pct:30, heal:0.15, duration:3, rage:100 },
+    passive: { name:'帝王之气', desc:'吴将在队时全队HP+15%', condition:'faction_wu', stat:'hp', pct:15 },
+    emoji:'权', lore:'生子当如孙仲谋', comingSoon: true
+  },
+  simazhao: {
+    id:'simazhao', name:'司马昭', title:'天命之人',
+    faction:'wei', unit:'cavalry', rarity:5,
+    baseStats: { hp:1150, atk:120, def:100, spd:70, int:130 },
+    skill: { name:'昭心天下', desc:'对全体敌人180%INT伤害+降低全属性15%持续2回合', type:'magic', target:'all_enemy', value:1.8, debuff:{all_pct:-15, duration:2}, rage:110 },
+    passive: { name:'路人皆知', desc:'每回合获得额外10%怒气', condition:'turn_start', rage_bonus:10 },
+    emoji:'昭', lore:'司马昭之心，路人皆知', comingSoon: true
+  },
+
   // ══════════════════════════════════════════
   // "Coming Soon" heroes — 23 placeholders
   // ══════════════════════════════════════════
@@ -632,7 +650,7 @@ const HERO_ELEMENTS = {
   // Qun
   zhangjiao: 'lightning', lvbu: 'fire', diaochan: 'ice',
   menghuo: 'earth', zhurong: 'fire', dongzhuo: 'fire',
-  yuanshao: 'earth', huatuo: 'water',
+  yuanshao: 'earth', huatuo: 'water', sunquan: 'water', simazhao: 'ice',
   // Enemies
   navy_soldier: 'water', fire_archer: 'fire', fire_soldier: 'fire',
   mage_acolyte: 'fire', strategist: 'wind', supply_guard: 'earth',
