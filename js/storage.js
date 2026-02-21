@@ -203,6 +203,18 @@ const Storage = {
   getStrategyState() { return this._get('strategyState', { ownedCards: [] }); },
   saveStrategyState(s) { this._set('strategyState', s); },
 
+  // === Hero Personality System ===
+  getHeroPersonality(heroId) {
+    const all = this._get('heroPersonality', {});
+    return all[heroId] || { moodValue: 0, isFurious: false, loyalty: 60, battlesUsed: 0, battlesSinceUsed: 0, lastBattleTime: 0 };
+  },
+  saveHeroPersonality(heroId, state) {
+    const all = this._get('heroPersonality', {});
+    all[heroId] = state;
+    this._set('heroPersonality', all);
+  },
+  getAllHeroPersonality() { return this._get('heroPersonality', {}); },
+
   // === v4: Seasonal Content ===
   getSeasonalState() {
     return this._get('seasonalState', {

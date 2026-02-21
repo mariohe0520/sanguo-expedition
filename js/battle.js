@@ -19,6 +19,8 @@ const Battle = {
     };
     // Apply passives
     this.applyBattleStartPassives();
+    // Apply hero personality effects (mood, bonds, loyalty)
+    this.applyPersonalityEffects();
     return this.state;
   },
 
@@ -112,8 +114,26 @@ const Battle = {
       // Check win/lose
       const playerAlive = this.state.player.filter(f => f?.alive).length;
       const enemyAlive = this.state.enemy.filter(f => f?.alive).length;
-      if (enemyAlive === 0) { this.state.phase = 'victory'; break; }
-      if (playerAlive === 0) { this.state.phase = 'defeat'; break; }
+      if (enemyAlive === 0) {
+        this.state.phase = 'victory';
+        // Victory dialogue
+        const survivors = this.state.player.filter(f => f?.alive);
+        if (survivors.length > 0) {
+          const speaker = survivors[Math.floor(Math.random() * survivors.length)];
+          this.triggerDialogue(speaker, 'victory');
+        }
+        break;
+      }
+      if (playerAlive === 0) {
+        this.state.phase = 'defeat';
+        // Defeat dialogue (from last fallen)
+        const allPlayers = this.state.player.filter(f => f);
+        if (allPlayers.length > 0) {
+          const speaker = allPlayers[Math.floor(Math.random() * allPlayers.length)];
+          this.triggerDialogue(speaker, 'defeat');
+        }
+        break;
+      }
       if (this.state.turn > 30) { this.state.phase = 'defeat'; break; } // timeout
     }
     return this.state.phase;
@@ -153,6 +173,26 @@ const Battle = {
       }
     }
 
+    // Hero personality: battle start dialogue (turn 1 only)
+    if (this.state.turn === 1 && typeof HeroPersonality !== 'undefined') {
+      const alivePlayers = this.state.player.filter(f => f?.alive);
+      if (alivePlayers.length > 0) {
+        const speaker = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+        this.triggerDialogue(speaker, 'battleStart');
+        // Bond meeting dialogues
+        for (const f of alivePlayers) {
+          const bonds = HeroPersonality.getHeroBonds(f.id);
+          for (const bond of bonds) {
+            const partners = bond.heroes.filter(h => h !== f.id && alivePlayers.some(p => p.id === h));
+            if (partners.length > 0) {
+              this.triggerDialogue(f, 'bondMet', { partnerId: partners[0] });
+              break;
+            }
+          }
+        }
+      }
+    }
+
     for (const fighter of order) {
       if (!fighter.alive) continue;
       if (fighter.effects.some(e => e.type === 'stun')) {
@@ -170,9 +210,14 @@ const Battle = {
         continue;
       }
 
+      // Hero personality: loyalty refusal / furious ally attack
+      const personalityResult = this.checkPersonalityBeforeAction(fighter);
+      if (personalityResult === 'skip') continue;
+
       // Check if rage full → use skill (auto for enemy, manual-ready for player)
       if (fighter.rage >= fighter.maxRage && fighter.skill) {
         this.useSkill(fighter);
+        this.triggerDialogue(fighter, 'skill');
       } else {
         // Normal attack
         const enemies = (fighter.side === 'player' ? this.state.enemy : this.state.player).filter(f => f?.alive);
@@ -300,9 +345,17 @@ const Battle = {
       this.checkElementReaction(attacker, defender);
     }
 
-    // Gain rage
-    attacker.rage = Math.min(attacker.maxRage, attacker.rage + 20);
-    defender.rage = Math.min(defender.maxRage, (defender.rage || 0) + 10);
+    // Gain rage (with personality bonuses)
+    let atkRageGain = 20;
+    let defRageGain = 10;
+    // Mood: excited gives +20% rage gain
+    if (attacker._mood?.rageGainBonus) atkRageGain = Math.floor(atkRageGain * (1 + attacker._mood.rageGainBonus));
+    if (defender._mood?.rageGainBonus) defRageGain = Math.floor(defRageGain * (1 + defender._mood.rageGainBonus));
+    // Bond: rage_gain bonus
+    if (attacker._bondRageGain) atkRageGain = Math.floor(atkRageGain * (1 + attacker._bondRageGain));
+    if (defender._bondRageGain) defRageGain = Math.floor(defRageGain * (1 + defender._bondRageGain));
+    attacker.rage = Math.min(attacker.maxRage, attacker.rage + atkRageGain);
+    defender.rage = Math.min(defender.maxRage, (defender.rage || 0) + defRageGain);
 
     // Queue visual effects for UI layer
     this.vfx.push({ type: 'attack', attacker: `${attacker.side}-${attacker.pos}`, target: `${defender.side}-${defender.pos}`, dmg, isCrit: this._lastCrit || false });
@@ -372,7 +425,8 @@ const Battle = {
     const variance = 0.9 + Math.random() * 0.2;
     // Crit chance: 10% base + buff + equipment set bonus
     const equipCrit = atk.equipEffects?.crit_pct || 0;
-    const critChance = 10 + (atk.buffs.find(b => b.stat === 'crit')?.pct || 0) + equipCrit;
+    const bondCrit = atk._bondCrit || 0;
+    const critChance = 10 + (atk.buffs.find(b => b.stat === 'crit')?.pct || 0) + equipCrit + bondCrit;
     const isCrit = Math.random() * 100 < critChance;
     // Crit damage bonus from skill tree
     let critMult = 1.5;
@@ -445,7 +499,11 @@ const Battle = {
     this.vfx.push({ type: 'skill', caster: `${fighter.side}-${fighter.pos}`, skillName: s.name });
 
     // Equipment set: 凤翼 skill damage bonus
-    const skillDmgBonus = fighter.equipEffects?.skill_dmg_pct || 0;
+    let skillDmgBonus = fighter.equipEffects?.skill_dmg_pct || 0;
+    // Mood skill damage bonus (elated: +10%)
+    if (fighter._mood?.effects?.skill_dmg) skillDmgBonus += fighter._mood.effects.skill_dmg * 100;
+    // Bond skill damage bonus
+    if (fighter._bondSkillDmg) skillDmgBonus += fighter._bondSkillDmg * 100;
 
     switch (s.type) {
       case 'damage': {
@@ -716,6 +774,72 @@ const Battle = {
         break;
       }
     }
+  },
+
+  // ===== HERO PERSONALITY INTEGRATION =====
+  applyPersonalityEffects() {
+    if (typeof HeroPersonality === 'undefined') return;
+    // Apply mood & loyalty to player fighters only
+    for (const f of this.state.player) {
+      if (!f) continue;
+      HeroPersonality.applyMoodEffects(f);
+      HeroPersonality.applyLoyaltyEffects(f);
+    }
+    // Apply bond bonuses to player team
+    const playerIds = this.state.player.filter(f => f).map(f => f.id);
+    this._activeBonds = HeroPersonality.applyBondEffects(this.state.player.filter(f => f));
+    // Store active bonds for UI display
+    this._battleBondIds = playerIds;
+  },
+
+  // Check personality effects before a fighter acts
+  checkPersonalityBeforeAction(fighter) {
+    if (typeof HeroPersonality === 'undefined' || fighter.side !== 'player') return 'proceed';
+
+    // Loyalty refusal check
+    if (HeroPersonality.checkLoyaltyRefusal(fighter)) {
+      this.addLog('<span class="battle-refusal-msg">💔 ' + Visuals.heroTag(fighter.id) + ' ' + fighter.name + ' 心怀不满，拒绝出战！</span>');
+      this.triggerDialogue(fighter, 'lowMorale');
+      return 'skip';
+    }
+
+    // Furious ally attack check
+    if (HeroPersonality.checkFuriousAllyAttack(fighter)) {
+      const allies = this.state.player.filter(f => f?.alive && f !== fighter);
+      if (allies.length > 0) {
+        const target = allies[Math.floor(Math.random() * allies.length)];
+        this.addLog('<span class="battle-fury-msg">😤 ' + Visuals.heroTag(fighter.id) + ' ' + fighter.name + ' 暴怒失控，攻击了 ' + target.name + '！</span>');
+        this.doAttack(fighter, target);
+        this.triggerDialogue(fighter, 'battleStart');
+        return 'skip';
+      }
+    }
+
+    return 'proceed';
+  },
+
+  // Trigger dialogue bubble during battle
+  triggerDialogue(fighter, event, context) {
+    if (typeof HeroPersonality === 'undefined') return;
+    const line = HeroPersonality.getLine(fighter.id, event, context);
+    if (!line) return;
+
+    // Queue dialogue for UI layer to render
+    if (!this._dialogueQueue) this._dialogueQueue = [];
+    this._dialogueQueue.push({
+      heroId: fighter.id,
+      text: line,
+      side: fighter.side,
+      pos: fighter.pos,
+      time: Date.now(),
+    });
+  },
+
+  // Get and clear pending dialogues (called by UI layer)
+  popDialogues() {
+    const q = this._dialogueQueue || [];
+    this._dialogueQueue = [];
+    return q;
   },
 
   // ===== UTILS =====

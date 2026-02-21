@@ -878,6 +878,13 @@ const App = {
     const enemyScale = stage._scaleMult || 1;
     Battle.init(team, stage.enemies, terrain, weather, enemyScale);
 
+    // Reset bond display for new battle
+    try {
+      const bondEl = document.getElementById('battle-bond-display');
+      if (bondEl) { bondEl.innerHTML = ''; delete bondEl.dataset.rendered; }
+      if (typeof HeroPersonality !== 'undefined') HeroPersonality.clearAllBubbles();
+    } catch(e) {}
+
     // Initialize canvas renderer
     try {
       const canvasEl = document.getElementById('battle-canvas');
@@ -927,6 +934,18 @@ const App = {
     renderTeam(state.player, 'team-player');
     renderTeam(state.enemy, 'team-enemy');
     document.getElementById('battle-turn').textContent = '回合 ' + state.turn;
+
+    // Render active bond banner (only once, on turn 1)
+    if (state.turn <= 1 && typeof HeroPersonality !== 'undefined') {
+      try {
+        const bondContainer = document.getElementById('battle-bond-display');
+        if (bondContainer && !bondContainer.dataset.rendered) {
+          const teamIds = state.player.filter(f => f).map(f => f.id);
+          bondContainer.innerHTML = HeroPersonality.renderBattleBondBanner(teamIds);
+          bondContainer.dataset.rendered = '1';
+        }
+      } catch(e) {}
+    }
 
     // Sync canvas fighter state (HP/rage/alive) and process VFX
     try {
@@ -1154,6 +1173,10 @@ const App = {
           '</button>' +
         '</div>' +
       '</div>' +
+
+      // Hero Personality & Bonds (with error protection)
+      (function(hid) { try { return typeof HeroPersonality !== 'undefined' ? HeroPersonality.renderPersonalitySection(hid) : ''; } catch(e) { console.error('[Personality]', e); return ''; } })(heroId) +
+      (function(hid) { try { return typeof HeroPersonality !== 'undefined' ? HeroPersonality.renderBondSection(hid) : ''; } catch(e) { console.error('[Bonds]', e); return ''; } })(heroId) +
 
       // v3: Equipment slots (with error protection)
       (function(self, hid) { try { return self._renderHeroEquipSection(hid); } catch(e) { console.error('[EquipSection]', e); return '<div class="card text-dim">装备栏加载失败</div>'; } })(this, heroId) +
@@ -2774,6 +2797,21 @@ App.startBattle = async function() {
       const recentLogs = Battle.log.slice(-15);
       logEl.innerHTML = recentLogs.map(l => '<div class="log-entry ' + App._logClass(l.msg) + '">' + l.msg + '</div>').join('');
       logEl.scrollTop = logEl.scrollHeight;
+      // Render hero dialogue bubbles
+      if (typeof HeroPersonality !== 'undefined' && typeof BattleCanvas !== 'undefined') {
+        const dialogues = Battle.popDialogues();
+        const container = document.getElementById('battle-canvas')?.parentElement;
+        if (container && dialogues.length > 0) {
+          container.style.position = 'relative';
+          for (const d of dialogues) {
+            const key = d.side + '-' + d.pos;
+            const sprite = BattleCanvas.fighters[key];
+            if (sprite) {
+              HeroPersonality.showDialogueBubble(d.heroId, d.text, d.side, sprite.x, sprite.y, container);
+            }
+          }
+        }
+      }
     } catch(e) { console.error('[Battle.onUpdate]', e); }
   };
 
@@ -2877,6 +2915,17 @@ App.startBattle = async function() {
       document.getElementById('result-detail').innerHTML = detailText.replace(/\n/g, '<br>');
 
       try { Storage.recordWin(); } catch(e) {}
+      // Hero Personality: post-battle mood/loyalty update
+      try {
+        if (typeof HeroPersonality !== 'undefined') {
+          const team = Storage.getTeam().filter(Boolean);
+          const roster = Object.keys(Storage.getRoster());
+          const pResult = HeroPersonality.onBattleEnd(team, 'victory', roster);
+          if (pResult.defected && pResult.defected.length > 0) {
+            setTimeout(() => { App._showDefectionEvent(pResult.defected); }, 2000);
+          }
+        }
+      } catch(e) { console.error('[Personality victory]', e); }
       try { DailyMissions.trackProgress('stages'); } catch(e) {}
       if (stage.boss) {
         try { Storage.recordBossWin(); DailyMissions.trackProgress('boss'); } catch(e) {}
@@ -2917,6 +2966,17 @@ App.startBattle = async function() {
       }
 
       try { Storage.recordLoss(); } catch(e) {}
+      // Hero Personality: post-battle mood/loyalty update (defeat)
+      try {
+        if (typeof HeroPersonality !== 'undefined') {
+          const team = Storage.getTeam().filter(Boolean);
+          const roster = Object.keys(Storage.getRoster());
+          const pResult = HeroPersonality.onBattleEnd(team, 'defeat', roster);
+          if (pResult.defected && pResult.defected.length > 0) {
+            setTimeout(() => { App._showDefectionEvent(pResult.defected); }, 2000);
+          }
+        }
+      } catch(e) { console.error('[Personality defeat]', e); }
     }
   } catch(e) {
     // Absolute fallback — always show result
@@ -3323,6 +3383,50 @@ App.resolveCityEvent = function() {
     this.toast('🌾 丰收之喜，获得 200 金币');
   }
   this.renderCity();
+};
+
+// Hero Personality: Defection event display
+App._showDefectionEvent = function(defectedIds) {
+  if (!defectedIds || defectedIds.length === 0) return;
+  for (const heroId of defectedIds) {
+    const hero = HEROES[heroId];
+    if (!hero) continue;
+
+    // Remove from roster
+    try {
+      const roster = Storage.getRoster();
+      delete roster[heroId];
+      Storage.saveRoster(roster);
+      // Remove from team if present
+      const team = Storage.getTeam();
+      const idx = team.indexOf(heroId);
+      if (idx !== -1) { team[idx] = null; Storage.saveTeam(team); }
+    } catch(e) { console.error('[Defection roster]', e); }
+
+    // Show dramatic overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'defection-overlay';
+    overlay.innerHTML =
+      '<div class="defection-card">' +
+        '<div class="defection-title">⚠️ 武将叛离！</div>' +
+        (typeof Visuals !== 'undefined' ? '<div style="margin:12px 0">' + Visuals.heroPortrait(heroId, 'lg') + '</div>' : '') +
+        '<div class="defection-hero-name">' + hero.name + '</div>' +
+        '<div class="defection-msg">' + hero.name + '忠诚度降至零，心生二意，已离开你的队伍！<br><br><span style="color:var(--dim);font-size:12px">提示：通过出战、配合羁绊伙伴可以提升忠诚度</span></div>' +
+        '<button class="defection-btn" onclick="this.closest(\'.defection-overlay\').remove()">知道了</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
+  }
+};
+
+// Hero Personality: daily decay check on init
+App._origInit = App.init;
+App.init = function() {
+  this._origInit();
+  try {
+    if (typeof HeroPersonality !== 'undefined') {
+      HeroPersonality.dailyLoyaltyDecay();
+    }
+  } catch(e) { console.error('[Personality daily]', e); }
 };
 
 // Boot
