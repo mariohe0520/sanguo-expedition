@@ -2162,10 +2162,10 @@ const App = {
     const state = SkillTree.getUnlocked(heroId);
     const available = SkillTree.getAvailablePoints(heroId);
 
-    let html = '<div class="card">' +
+    let html = '<div class="card" id="skilltree-section-' + heroId + '">' +
       '<div class="flex justify-between items-center mb-8">' +
-        '<div style="font-size:14px;font-weight:600"> 天赋树</div>' +
-        '<div style="font-size:12px;color:var(--gold)">可用点数: ' + available + '</div>' +
+        '<div style="font-size:14px;font-weight:600">🌳 天赋树</div>' +
+        '<div style="font-size:12px;color:var(--gold)">可用点数: ' + available + (available > 0 ? ' 👆点击解锁' : ' (升级获取)') + '</div>' +
       '</div>';
 
     for (let bi = 0; bi < tree.branches.length; bi++) {
@@ -2181,14 +2181,16 @@ const App = {
         const canUnlock = !isUnlocked && available > 0 && (ni === 0 || unlocked.includes(ni - 1));
         const isUltimate = ni === branch.nodes.length - 1;
 
-        html += '<div role="button" tabindex="0" style="text-align:center;padding:10px 4px;border-radius:10px;' +
-          'background:' + (isUnlocked ? 'rgba(212,168,67,.15)' : canUnlock ? 'rgba(100,180,255,.08)' : 'var(--card2)') + ';' +
+        html += '<div role="button" tabindex="0" style="text-align:center;padding:12px 6px;border-radius:10px;min-height:56px;' +
+          'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+          'background:' + (isUnlocked ? 'rgba(212,168,67,.15)' : canUnlock ? 'rgba(100,180,255,.12)' : 'var(--card2)') + ';' +
           'border:2px solid ' + (isUnlocked ? 'var(--gold)' : canUnlock ? 'var(--accent)' : 'var(--border)') + ';' +
-          (canUnlock ? 'cursor:pointer;-webkit-tap-highlight-color:rgba(255,255,255,0.2);' : isUnlocked ? '' : 'opacity:0.5;') + '"' +
-          (canUnlock ? ' onclick="App.unlockSkillNode(\'' + heroId + '\',' + bi + ',' + ni + ')"' : '') + '>' +
-          '<div style="font-size:' + (isUltimate ? '11px' : '10px') + ';font-weight:700;line-height:1.2;' + (isUltimate ? 'color:var(--gold)' : isUnlocked ? 'color:var(--gold)' : canUnlock ? 'color:#fff' : '') + '">' + node.name + '</div>' +
+          (canUnlock ? 'cursor:pointer;-webkit-tap-highlight-color:rgba(255,255,255,0.2);box-shadow:0 0 8px rgba(100,180,255,.3);' : isUnlocked ? '' : 'opacity:0.5;') +
+          'touch-action:manipulation;"' +
+          (canUnlock ? ' onclick="event.stopPropagation();App.unlockSkillNode(\'' + heroId + '\',' + bi + ',' + ni + ')"' : '') + '>' +
+          '<div style="font-size:' + (isUltimate ? '11px' : '11px') + ';font-weight:700;line-height:1.2;' + (isUltimate ? 'color:var(--gold)' : isUnlocked ? 'color:var(--gold)' : canUnlock ? 'color:#fff' : '') + '">' + node.name + '</div>' +
           '<div style="font-size:9px;color:var(--dim);margin-top:3px;line-height:1.2">' + node.desc + '</div>' +
-          (isUnlocked ? '<div style="font-size:9px;color:var(--shu);margin-top:4px">✅</div>' : canUnlock ? '<div style="font-size:10px;color:var(--accent);margin-top:4px">👆</div>' : '') +
+          (isUnlocked ? '<div style="font-size:10px;color:var(--shu);margin-top:4px">✅</div>' : canUnlock ? '<div style="font-size:12px;color:var(--accent);margin-top:4px;animation:pulse 1.5s infinite">👆 点击</div>' : '') +
         '</div>';
       }
       html += '</div></div>';
@@ -2208,16 +2210,32 @@ const App = {
   unlockSkillNode(heroId, branchIdx, nodeIdx) {
     const result = SkillTree.unlockNode(heroId, branchIdx, nodeIdx);
     if (result.error) { this.toast(result.error); return; }
-    this.toast('解锁天赋: ' + result.node.name);
-    this.renderHeroDetail(heroId);
+    this.toast('✅ 解锁天赋: ' + result.node.name);
+    // Only re-render skill tree section, not whole page (prevents scroll jump)
+    this._refreshSkillTreeOnly(heroId);
   },
 
   respecSkillTree(heroId) {
     const result = SkillTree.respec(heroId);
     if (result.error) { this.toast(result.error); return; }
     this.toast('天赋已重置，返还 ' + result.refunded + ' 点');
-    this.renderHeroDetail(heroId);
+    this._refreshSkillTreeOnly(heroId);
     this.updateHeader();
+  },
+
+  _refreshSkillTreeOnly(heroId) {
+    // Find the skill tree container and only update that section
+    const container = document.getElementById('skilltree-section-' + heroId);
+    if (container) {
+      try {
+        container.outerHTML = this._renderHeroSkillTreeSection(heroId);
+      } catch(e) {
+        console.error('[SkillTree refresh]', e);
+        this.renderHeroDetail(heroId);
+      }
+    } else {
+      this.renderHeroDetail(heroId);
+    }
   },
 
   equipItem(heroId, equipUid) {
