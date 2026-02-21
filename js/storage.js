@@ -191,6 +191,14 @@ const Storage = {
   getClearedDifficulties() { return this._get('clearedDifficulties', {}); },
   saveClearedDifficulties(d) { this._set('clearedDifficulties', d); },
 
+  // === v5: Kingdom Map State ===
+  getMapState() { return this._get('mapState', null); },
+  saveMapState(s) { this._set('mapState', s); },
+
+  // === City Builder ===
+  getCityState() { return this._get('cityState', null); },
+  saveCityState(s) { this._set('cityState', s); },
+
   // === v4: Seasonal Content ===
   getSeasonalState() {
     return this._get('seasonalState', {

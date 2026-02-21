@@ -336,13 +336,15 @@ const App = {
     const pageEl = document.getElementById('page-' + page);
     if (!pageEl) { console.warn('Page not found: page-' + page); return; }
     pageEl.classList.add('active');
-    const navPages = ['home', 'campaign', 'dungeon', 'arena', 'roster', 'gacha'];
+    const navPages = ['home', 'city', 'map', 'dungeon', 'arena', 'roster', 'gacha'];
     document.querySelectorAll('.nav-item').forEach((n, i) => {
       n.classList.toggle('active', navPages[i] === page);
     });
     this.currentPage = page;
     if (page === 'home') this.renderHome();
+    if (page === 'city') this.renderCity();
     if (page === 'campaign') this.renderCampaign();
+    if (page === 'map') this.renderMap();
     if (page === 'roster') this.renderRoster();
     if (page === 'team') this.renderTeam();
     if (page === 'gacha') this.renderGacha();
@@ -528,6 +530,259 @@ const App = {
         div.onclick = () => this.enterStage(stageRef, chapterRef);
       }
       list.appendChild(div);
+    }
+  },
+
+  // ===== KINGDOM MAP =====
+  _mapSelectedTerritory: null,
+  _mapCurrentEvent: null,
+  _mapBattleTerritory: null,
+
+  renderMap() {
+    try { this._renderMapInner(); } catch(e) { console.error('[renderMap]', e); }
+  },
+
+  _renderMapInner() {
+    if (typeof KingdomMap === 'undefined') return;
+
+    // Initialize map state if needed
+    const state = KingdomMap.getState() || KingdomMap.initState();
+
+    // Update header resources
+    const p = Storage.getPlayer();
+    const goldEl = document.getElementById('map-gold');
+    const gemsEl = document.getElementById('map-gems');
+    if (goldEl) goldEl.textContent = p.gold;
+    if (gemsEl) gemsEl.textContent = p.gems || 0;
+
+    // Stats bar
+    const stats = KingdomMap.getStats();
+    const statsBar = document.getElementById('map-stats-bar');
+    if (statsBar) {
+      statsBar.innerHTML =
+        '<div class="stat"><div class="stat-num">' + stats.conquered + '</div><div class="stat-label">已占领</div></div>' +
+        '<div class="stat"><div class="stat-num">' + stats.available + '</div><div class="stat-label">可攻打</div></div>' +
+        '<div class="stat"><div class="stat-num">' + stats.locked + '</div><div class="stat-label">未发现</div></div>' +
+        '<div class="stat"><div class="stat-num">' + stats.pct + '%</div><div class="stat-label">天下</div></div>';
+    }
+
+    // Income card
+    const incomeCard = document.getElementById('map-income-card');
+    if (incomeCard) {
+      const conqueredCount = stats.conquered;
+      if (conqueredCount > 0) {
+        const goldPerHour = KingdomMap.INCOME_PER_HOUR.gold * conqueredCount;
+        const expPerHour = KingdomMap.INCOME_PER_HOUR.exp * conqueredCount;
+        incomeCard.style.display = 'flex';
+        incomeCard.innerHTML =
+          '<div><div style="font-size:13px;font-weight:600;color:var(--gold)">🏰 领地收益</div>' +
+          '<div style="font-size:11px;color:var(--dim);margin-top:2px">' + conqueredCount + '座城池 · 每小时 +' + goldPerHour + '金 +' + expPerHour + '经验</div></div>' +
+          '<div style="font-size:12px;color:var(--gold);font-weight:600">领取 ›</div>';
+      } else {
+        incomeCard.style.display = 'none';
+      }
+    }
+
+    // Render SVG map
+    const svgEl = document.getElementById('kingdom-map-svg');
+    KingdomMap.renderMap(svgEl, (territoryId) => this.onTerritoryClick(territoryId));
+
+    // Hide info panel and event panel by default
+    const infoPanel = document.getElementById('map-territory-info');
+    if (infoPanel) infoPanel.classList.remove('visible');
+    const eventPanel = document.getElementById('map-event-panel');
+    if (eventPanel) eventPanel.style.display = 'none';
+    this._mapSelectedTerritory = null;
+  },
+
+  onTerritoryClick(territoryId) {
+    if (typeof KingdomMap === 'undefined') return;
+    this._mapSelectedTerritory = territoryId;
+
+    const info = KingdomMap.getTerritoryInfo(territoryId);
+    if (!info) return;
+
+    const panel = document.getElementById('map-territory-info');
+    if (!panel) return;
+
+    let html = '<div class="map-info-header">' +
+      '<div class="map-info-name">' + info.icon + ' ' + info.name + '</div>' +
+      '<div class="map-info-level" style="border:1px solid ' + info.factionColor + '">Lv.' + info.level + ' · ' + info.factionName + '</div>' +
+      '</div>' +
+      '<div class="map-info-desc">' + info.desc + '</div>';
+
+    // Stage progress dots
+    html += '<div class="map-stage-dots">';
+    for (let i = 0; i < 3; i++) {
+      html += '<div class="map-stage-dot ' + (i < info.stagesCleared ? 'cleared' : '') + '"></div>';
+    }
+    html += '</div>';
+
+    if (info.status === 'conquered') {
+      html += '<div class="map-conquered-badge">🚩 已占领 · 每小时 +' + KingdomMap.INCOME_PER_HOUR.gold + '金</div>';
+    } else if (info.currentStage) {
+      html += '<div class="map-info-stage">' +
+        '<div class="map-info-stage-icon">' + info.currentStage.icon + '</div>' +
+        '<div style="flex:1">' +
+          '<div style="font-weight:600">' + info.currentStage.name + '</div>' +
+          '<div class="map-info-reward">奖励: +' + info.reward.gold + '金 +' + info.reward.exp + '经验' +
+            (info.reward.hero_shard ? ' +碎片' : '') + '</div>' +
+        '</div>' +
+        '<button class="btn btn-attack" onclick="App.attackTerritory(\'' + info.id + '\')">进攻</button>' +
+        '</div>';
+    }
+
+    panel.innerHTML = html;
+    panel.classList.add('visible');
+  },
+
+  attackTerritory(territoryId) {
+    if (typeof KingdomMap === 'undefined') return;
+
+    const team = Storage.getTeam().filter(id => id);
+    if (team.length === 0) {
+      this.toast('请先编队！');
+      this.switchPage('team');
+      return;
+    }
+
+    const stageType = KingdomMap.getCurrentStageType(territoryId);
+    if (!stageType) { this.toast('该领地已攻克！'); return; }
+
+    const t = KingdomMap.TERRITORIES[territoryId];
+    if (!t) return;
+
+    // Move player to this territory
+    KingdomMap.moveTo(territoryId);
+    this._mapBattleTerritory = territoryId;
+
+    // Check for random event
+    const event = KingdomMap.rollEvent();
+    if (event) {
+      this._mapCurrentEvent = event;
+      this._showMapEvent(event, () => {
+        // After event, start the battle
+        this._startMapBattle(territoryId, stageType);
+      });
+      return;
+    }
+
+    this._startMapBattle(territoryId, stageType);
+  },
+
+  _showMapEvent(event, onComplete) {
+    const panel = document.getElementById('map-event-panel');
+    if (!panel) { onComplete(); return; }
+
+    let html = '<div class="map-event-header">' +
+      '<div class="map-event-icon">' + event.icon + '</div>' +
+      '<div><div class="map-event-title">' + event.name + '</div></div>' +
+      '</div>' +
+      '<div class="map-event-desc">' + event.desc + '</div>' +
+      '<div class="map-event-options">';
+
+    event.options.forEach((opt, i) => {
+      html += '<div class="map-event-option" onclick="App._handleMapEvent(' + i + ')">' + opt.text + '</div>';
+    });
+
+    html += '</div>';
+    panel.innerHTML = html;
+    panel.style.display = 'block';
+
+    // Store callback
+    this._mapEventCallback = onComplete;
+  },
+
+  _handleMapEvent(optionIndex) {
+    const event = this._mapCurrentEvent;
+    if (!event || !event.options[optionIndex]) return;
+
+    const opt = event.options[optionIndex];
+    const extra = KingdomMap.applyEventEffect(opt.effect);
+
+    // Show result
+    const panel = document.getElementById('map-event-panel');
+    let resultHtml = '<div class="map-event-header">' +
+      '<div class="map-event-icon">' + event.icon + '</div>' +
+      '<div><div class="map-event-title">' + event.name + '</div></div>' +
+      '</div>' +
+      '<div style="font-size:13px;color:var(--text);margin-bottom:12px">' + opt.result;
+
+    if (extra && extra.shardHero) {
+      const hero = typeof HEROES !== 'undefined' ? HEROES[extra.shardHero] : null;
+      resultHtml += '<br><span style="color:var(--gold)">获得 ' + (hero ? hero.name : '') + ' 碎片 ×' + extra.shardCount + '</span>';
+    }
+    if (extra && extra.equipment) {
+      const tmpl = typeof Equipment !== 'undefined' ? Equipment.TEMPLATES[extra.equipment.templateId] : null;
+      resultHtml += '<br><span style="color:var(--gold)">获得装备: ' + (tmpl ? tmpl.emoji + ' ' + tmpl.name : '???') + '</span>';
+    }
+
+    resultHtml += '</div>' +
+      '<button class="btn btn-primary btn-block" onclick="App._closeMapEvent()">继续进军</button>';
+
+    panel.innerHTML = resultHtml;
+    this.updateHeader();
+
+    // Handle ambush battle
+    if (opt.effect.ambushBattle) {
+      this._mapEventCallback = () => {
+        // Start ambush (harder enemies)
+        const territoryId = this._mapBattleTerritory;
+        if (territoryId) {
+          this._startMapBattle(territoryId, KingdomMap.getCurrentStageType(territoryId));
+        }
+      };
+    }
+  },
+
+  _closeMapEvent() {
+    const panel = document.getElementById('map-event-panel');
+    if (panel) panel.style.display = 'none';
+    this._mapCurrentEvent = null;
+
+    if (this._mapEventCallback) {
+      const cb = this._mapEventCallback;
+      this._mapEventCallback = null;
+      cb();
+    }
+  },
+
+  _startMapBattle(territoryId, stageType) {
+    const t = KingdomMap.TERRITORIES[territoryId];
+    if (!t) return;
+
+    const template = KingdomMap.STAGE_TEMPLATES[stageType];
+    const enemies = KingdomMap.generateEnemies(territoryId, stageType);
+    const reward = KingdomMap.getStageReward(territoryId, stageType);
+    const scale = KingdomMap.getEnemyScale(territoryId);
+
+    // Create a stage-like object compatible with the existing battle system
+    const stage = {
+      id: territoryId + '_' + stageType,
+      name: t.name + ' — ' + (template ? template.name : '战斗'),
+      enemies: enemies,
+      reward: reward,
+      boss: stageType === 'boss',
+      _chapter: { terrain: 'plains', weather: 'clear' },
+      _scaleMult: scale,
+      _isMapBattle: true,
+      _territoryId: territoryId,
+    };
+
+    this.currentStage = stage;
+    this.switchPage('battle');
+    requestAnimationFrame(() => this.prepareBattle(stage));
+  },
+
+  collectMapIncome() {
+    if (typeof KingdomMap === 'undefined') return;
+    const income = KingdomMap.collectIncome();
+    if (income.gold > 0 || income.exp > 0) {
+      this.toast('+' + income.gold + '金 +' + income.exp + '经验 (' + income.conqueredCount + '城, ' + income.hours + 'h)');
+      this.updateHeader();
+      this.renderMap();
+    } else {
+      this.toast('暂无收益，继续征战吧！');
     }
   },
 
@@ -2525,7 +2780,32 @@ App.startBattle = async function() {
 
       // Handle different modes
       try {
-        if (stage._dungeonFloor) {
+        if (stage._isMapBattle) {
+          // Kingdom Map battle
+          const tId = stage._territoryId;
+          if (tId && typeof KingdomMap !== 'undefined') {
+            KingdomMap.completeStage(tId);
+            const stageType = KingdomMap.getCurrentStageType(tId);
+            if (!stageType) {
+              detailText += '\n🚩 占领了 ' + (KingdomMap.TERRITORIES[tId]?.name || '') + '！';
+            } else {
+              detailText += '\n下一阶段: ' + (KingdomMap.STAGE_TEMPLATES[stageType]?.name || '');
+            }
+          }
+          if (typeof Seasonal !== 'undefined') Seasonal.addPassXP(stage.boss ? 100 : 40);
+          if (typeof Equipment !== 'undefined') {
+            try {
+              const lvl = KingdomMap.TERRITORIES[tId]?.level || 1;
+              const drop = Equipment.generateDrop(Math.min(lvl, 10), !!stage.boss);
+              if (drop) {
+                Storage.addEquipment(drop);
+                const tmpl = Equipment.TEMPLATES[drop.templateId];
+                const rarInfo = Equipment.RARITIES[tmpl?.rarity || 1];
+                detailText += '\n获得: ' + (tmpl?.name || '???') + ' (' + (rarInfo?.label || '') + ')';
+              }
+            } catch(e) { console.error('[Equipment drop]', e); }
+          }
+        } else if (stage._dungeonFloor) {
           Dungeon.advanceFloor();
           detailText += ' · 进入下一层';
         } else if (stage._dailyDungeon) {
@@ -2590,7 +2870,11 @@ App.startBattle = async function() {
       document.getElementById('result-title').textContent = '败北...';
 
       try {
-        if (stage._dungeonFloor) {
+        if (stage._isMapBattle) {
+          const tName = typeof KingdomMap !== 'undefined' && KingdomMap.TERRITORIES[stage._territoryId]
+            ? KingdomMap.TERRITORIES[stage._territoryId].name : '';
+          document.getElementById('result-detail').textContent = tName + '攻略失败，升级武将再战！';
+        } else if (stage._dungeonFloor) {
           Dungeon.endRun();
           document.getElementById('result-detail').textContent = '无尽副本结束';
         } else if (stage._arenaFight) {
@@ -2617,21 +2901,47 @@ App.startBattle = async function() {
     document.getElementById('result-icon').innerHTML = '<span style="font-size:48px;color:var(--gold)">胜</span>';
     document.getElementById('result-title').textContent = '战斗结束';
     document.getElementById('result-detail').textContent = '点击继续';
-    // Still try to advance campaign
+    // Still try to advance
     try {
-      if (!stage._dungeonFloor && !stage._dailyDungeon && !stage._arenaFight && !stage._raidBoss) {
+      if (stage._isMapBattle && typeof KingdomMap !== 'undefined') {
+        KingdomMap.completeStage(stage._territoryId);
+      } else if (!stage._dungeonFloor && !stage._dailyDungeon && !stage._arenaFight && !stage._raidBoss) {
         const chapter = stage._chapter || Campaign.getCurrentChapter();
         Campaign.completeStage(stage.id, chapter.id);
       }
     } catch(e2) { console.error('[fallback completeStage]', e2); }
   }
 
-  // Show/hide "下一关" button — only for campaign victory
+  // Show/hide "下一关" button — for campaign and map victories
   try {
     const nextBtn = document.getElementById('btn-next-stage');
     if (nextBtn) {
       const isCampaign = !stage._dungeonFloor && !stage._dailyDungeon && !stage._arenaFight && !stage._raidBoss;
-      nextBtn.style.display = (result === 'victory' && isCampaign) ? 'block' : 'none';
+      if (result === 'victory' && stage._isMapBattle) {
+        // For map battles: show "continue" button for next stage or return to map
+        const stageType = typeof KingdomMap !== 'undefined' ? KingdomMap.getCurrentStageType(stage._territoryId) : null;
+        if (stageType) {
+          nextBtn.textContent = '继续进攻 ▶';
+          nextBtn.style.display = 'block';
+          nextBtn.onclick = () => {
+            document.getElementById('result-modal').classList.add('hidden');
+            try { if (typeof BattleCanvas !== 'undefined') BattleCanvas.stop(); } catch(e) {}
+            App._startMapBattle(stage._territoryId, stageType);
+          };
+        } else {
+          nextBtn.textContent = '返回天下 ▶';
+          nextBtn.style.display = 'block';
+          nextBtn.onclick = () => {
+            document.getElementById('result-modal').classList.add('hidden');
+            try { if (typeof BattleCanvas !== 'undefined') BattleCanvas.stop(); } catch(e) {}
+            App.switchPage('map');
+          };
+        }
+      } else {
+        nextBtn.style.display = (result === 'victory' && isCampaign) ? 'block' : 'none';
+        nextBtn.textContent = '下一关 ▶';
+        nextBtn.onclick = () => App.goNextStage();
+      }
     }
   } catch(e) {}
 
@@ -2668,7 +2978,9 @@ App.closeResult = function() {
   document.getElementById('result-modal').classList.add('hidden');
   try { if (typeof BattleCanvas !== 'undefined') BattleCanvas.stop(); } catch(e) {}
   const stage = this.currentStage;
-  if (stage._dungeonFloor) {
+  if (stage._isMapBattle) {
+    this.switchPage('map');
+  } else if (stage._dungeonFloor) {
     this.currentDungeonTab = 'endless';
     this.switchPage('dungeon');
   } else if (stage._dailyDungeon) {
@@ -2708,8 +3020,13 @@ App.init = function() {
 App.emergencyReturn = function() {
   document.getElementById('result-modal').classList.add('hidden');
   try { if (typeof BattleCanvas !== 'undefined') BattleCanvas.stop(); } catch(e) {}
-  this.selectedCampaignChapter = null;
-  this.switchPage('campaign');
+  const stage = this.currentStage;
+  if (stage && stage._isMapBattle) {
+    this.switchPage('map');
+  } else {
+    this.selectedCampaignChapter = null;
+    this.switchPage('campaign');
+  }
 };
 
 // Direct "next stage" — skip result screen and jump straight into the next campaign stage
@@ -2761,6 +3078,229 @@ document.addEventListener('click', function(e) {
   btn.appendChild(ripple);
   setTimeout(() => ripple.remove(), 600);
 });
+
+// ===== CITY BUILDER INTEGRATION =====
+App.renderCity = function() {
+  try {
+    if (typeof City === 'undefined') return;
+    const state = City.getState();
+    const pending = City.getPendingIncome(state);
+    const prosperity = City.getProsperity(state);
+    const bonuses = City.getCombatBonuses();
+
+    // Prosperity
+    const prosEl = document.getElementById('city-prosperity');
+    if (prosEl) prosEl.textContent = City.formatNum(prosperity);
+
+    // Income banner
+    const pendGold = document.getElementById('city-pending-gold');
+    const pendExp = document.getElementById('city-pending-exp');
+    const incTime = document.getElementById('city-income-time');
+    const banner = document.getElementById('city-income-banner');
+    if (pendGold) pendGold.textContent = '+' + City.formatNum(pending.gold) + ' 金币';
+    if (pendExp) pendExp.textContent = '+' + City.formatNum(pending.exp) + ' 经验';
+    if (incTime) incTime.textContent = City.formatTime(pending.hours) + '前收取';
+    // Show/hide banner based on whether there's income
+    const hasIncome = pending.gold > 0 || pending.exp > 0;
+    if (banner) {
+      banner.classList.toggle('city-income-empty', !hasIncome);
+      if (!hasIncome && state.buildings.granary === 0 && state.buildings.academy === 0) {
+        if (pendGold) pendGold.textContent = '升级粮仓/书院产出资源';
+        if (pendExp) pendExp.textContent = '';
+      }
+    }
+
+    // Daily event
+    const evtEl = document.getElementById('city-event');
+    const dailyEvent = City.getDailyEvent();
+    if (evtEl && dailyEvent) {
+      evtEl.style.display = 'block';
+      evtEl.innerHTML =
+        '<div class="city-event-inner">' +
+          '<div class="city-event-icon" style="background:' + dailyEvent.color + '20;color:' + dailyEvent.color + '">' + dailyEvent.icon + '</div>' +
+          '<div class="city-event-info">' +
+            '<div class="city-event-name" style="color:' + dailyEvent.color + '">' + dailyEvent.name + '</div>' +
+            '<div class="city-event-desc">' + dailyEvent.desc + '</div>' +
+          '</div>' +
+          '<button class="city-event-btn" onclick="App.resolveCityEvent()" style="border-color:' + dailyEvent.color + ';color:' + dailyEvent.color + '">' +
+            (dailyEvent.type === 'negative' ? '击退' : '领取') +
+          '</button>' +
+        '</div>';
+    } else if (evtEl) {
+      evtEl.style.display = 'none';
+    }
+
+    // Combat bonuses bar
+    const bonusEl = document.getElementById('city-bonuses');
+    if (bonusEl) {
+      const bonusList = [];
+      if (bonuses.atk_pct > 0) bonusList.push('<span class="city-bonus-tag city-bonus-atk">⚔ ATK +' + bonuses.atk_pct + '%</span>');
+      if (bonuses.def_pct > 0) bonusList.push('<span class="city-bonus-tag city-bonus-def">🛡 DEF +' + bonuses.def_pct + '%</span>');
+      if (bonuses.equip_pct > 0) bonusList.push('<span class="city-bonus-tag city-bonus-equip">🗡 装备 +' + bonuses.equip_pct + '%</span>');
+      if (bonuses.scout_pct > 0) bonusList.push('<span class="city-bonus-tag city-bonus-scout">👁 侦察 +' + bonuses.scout_pct + '%</span>');
+      if (bonusList.length > 0) {
+        bonusEl.innerHTML = '<div class="city-bonus-label">城池加成</div><div class="city-bonus-list">' + bonusList.join('') + '</div>';
+        bonusEl.style.display = '';
+      } else {
+        bonusEl.style.display = 'none';
+      }
+    }
+
+    // Buildings grid
+    const grid = document.getElementById('city-buildings');
+    if (!grid) return;
+    const order = City.getBuildingOrder();
+    const palaceLvl = state.buildings.palace || 1;
+
+    grid.innerHTML = order.map(id => {
+      const def = City.BUILDINGS[id];
+      const lvl = state.buildings[id] || 0;
+      const tier = City.getLevelTier(lvl);
+      const icon = def.icon(lvl);
+      const isLocked = lvl === 0 && id !== 'palace' && palaceLvl < def.unlock;
+      const isMaxed = lvl >= City.MAX_LEVEL;
+      const cost = City.upgradeCost(id, lvl);
+      const player = Storage.getPlayer();
+      const canAfford = player.gold >= cost;
+      const nextLvl = lvl + 1;
+
+      if (isLocked) {
+        return '<div class="city-building-card city-building-locked">' +
+          '<div class="city-building-lock">🔒</div>' +
+          '<div class="city-building-name">' + def.name + '</div>' +
+          '<div class="city-building-unlock">主公府 Lv.' + def.unlock + ' 解锁</div>' +
+        '</div>';
+      }
+
+      const bonusNow = lvl > 0 ? def.bonusDesc(lvl) : '—';
+      const bonusNext = !isMaxed ? def.bonusDesc(nextLvl) : '已满级';
+
+      return '<div class="city-building-card city-tier-' + tier + (isMaxed ? ' city-building-maxed' : '') + '" id="city-b-' + id + '">' +
+        '<div class="city-building-top">' +
+          '<div class="city-building-icon">' + icon + '</div>' +
+          (lvl > 0 ? '<div class="city-building-level">Lv.' + lvl + '</div>' : '<div class="city-building-level city-building-new">新</div>') +
+        '</div>' +
+        '<div class="city-building-name">' + def.name + '</div>' +
+        '<div class="city-building-desc">' + def.desc + '</div>' +
+        '<div class="city-building-stars">' + City.getLevelStars(lvl) + '</div>' +
+        // Bonus comparison
+        '<div class="city-building-bonus">' +
+          (lvl > 0 ? '<span class="city-bonus-now">' + bonusNow + '</span>' : '') +
+          (!isMaxed ? '<span class="city-bonus-arrow">' + (lvl > 0 ? ' → ' : '') + '</span><span class="city-bonus-next">' + bonusNext + '</span>' : '<span class="city-bonus-max">✦ 满级</span>') +
+        '</div>' +
+        // Upgrade button
+        (!isMaxed ?
+          '<button class="city-upgrade-btn' + (!canAfford ? ' city-upgrade-disabled' : '') + '" onclick="App.upgradeBuilding(\'' + id + '\')">' +
+            '<span class="city-upgrade-cost">' +
+              '<svg class="city-gold-icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#d4a843"/><text x="8" y="11" text-anchor="middle" font-size="8" font-weight="700" fill="#0a0e1a">¥</text></svg>' +
+              City.formatNum(cost) +
+            '</span>' +
+            '<span>' + (lvl === 0 ? '建造' : '升级') + '</span>' +
+          '</button>' :
+          '<div class="city-upgrade-maxed">🏆 已达巅峰</div>'
+        ) +
+      '</div>';
+    }).join('');
+
+    this.updateHeader();
+  } catch(e) {
+    console.error('[renderCity]', e);
+  }
+};
+
+App.collectCityIncome = function() {
+  if (typeof City === 'undefined') return;
+  const pending = City.getPendingIncome();
+  if (pending.gold <= 0 && pending.exp <= 0) {
+    this.toast('暂无可收取的资源');
+    return;
+  }
+  const result = City.collectIncome();
+
+  // Satisfying collection animation
+  const banner = document.getElementById('city-income-banner');
+  if (banner) {
+    banner.classList.add('city-income-collected');
+    // Spawn floating numbers
+    this._spawnCityFloater(banner, '+' + City.formatNum(result.gold) + ' 金', '#d4a843');
+    if (result.exp > 0) {
+      setTimeout(() => this._spawnCityFloater(banner, '+' + City.formatNum(result.exp) + ' 经验', '#6366f1'), 200);
+    }
+    setTimeout(() => {
+      banner.classList.remove('city-income-collected');
+      this.renderCity();
+    }, 1200);
+  } else {
+    this.renderCity();
+  }
+
+  this.updateHeader();
+  const parts = [];
+  if (result.gold > 0) parts.push(City.formatNum(result.gold) + '金');
+  if (result.exp > 0) parts.push(City.formatNum(result.exp) + '经验');
+  this.toast('收取 ' + parts.join(', '));
+};
+
+App._spawnCityFloater = function(parent, text, color) {
+  const floater = document.createElement('div');
+  floater.className = 'city-floater';
+  floater.style.color = color;
+  floater.textContent = text;
+  parent.style.position = 'relative';
+  parent.appendChild(floater);
+  setTimeout(() => floater.remove(), 1500);
+};
+
+App.upgradeBuilding = function(buildingId) {
+  if (typeof City === 'undefined') return;
+  const result = City.upgrade(buildingId);
+  if (!result.ok) {
+    this.toast(result.reason);
+    return;
+  }
+
+  // Upgrade animation on the card
+  const card = document.getElementById('city-b-' + buildingId);
+  if (card) {
+    card.classList.add('city-building-upgrading');
+    // Sparkle particles
+    for (let i = 0; i < 8; i++) {
+      const spark = document.createElement('div');
+      spark.className = 'city-sparkle';
+      spark.style.setProperty('--angle', (i * 45) + 'deg');
+      spark.style.setProperty('--delay', (i * 50) + 'ms');
+      card.appendChild(spark);
+      setTimeout(() => spark.remove(), 1000);
+    }
+    setTimeout(() => {
+      card.classList.remove('city-building-upgrading');
+      this.renderCity();
+    }, 800);
+  } else {
+    this.renderCity();
+  }
+
+  this.updateHeader();
+  const def = City.BUILDINGS[buildingId];
+  this.toast(def.name + ' 升至 Lv.' + result.newLevel + '！');
+};
+
+App.resolveCityEvent = function() {
+  if (typeof City === 'undefined') return;
+  const evt = City.resolveDailyEvent();
+  if (!evt) return;
+  this.updateHeader();
+  if (evt.id === 'bandits') {
+    this.toast('⚔️ 匪患已平！城池恢复安宁');
+  } else if (evt.id === 'scholar') {
+    this.toast('📜 名士授学，获得 500 经验');
+  } else if (evt.id === 'merchant') {
+    this.toast('🐫 商队惠赠，获得 300 金币');
+  } else if (evt.id === 'harvest') {
+    this.toast('🌾 丰收之喜，获得 200 金币');
+  }
+  this.renderCity();
+};
 
 // Boot
 document.addEventListener('DOMContentLoaded', () => App.init());

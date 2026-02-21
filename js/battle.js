@@ -64,6 +64,13 @@ const Battle = {
       specials = SkillTree.getSpecials(hero.id);
     }
 
+    // City Builder combat bonuses
+    if (side === 'player' && typeof City !== 'undefined') {
+      const cityBonus = City.getCombatBonuses();
+      if (cityBonus.atk_pct) baseATK = Math.floor(baseATK * (1 + cityBonus.atk_pct / 100));
+      if (cityBonus.def_pct) baseDEF = Math.floor(baseDEF * (1 + cityBonus.def_pct / 100));
+    }
+
     // Element from HERO_ELEMENTS map
     const element = (typeof HERO_ELEMENTS !== 'undefined') ? (HERO_ELEMENTS[hero.id] || null) : null;
 

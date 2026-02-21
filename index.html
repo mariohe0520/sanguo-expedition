@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="css/visuals.css">
 <link rel="stylesheet" href="css/enhancements.css">
 <link rel="stylesheet" href="css/performance.css">
+<link rel="stylesheet" href="css/map.css">
 <link rel="stylesheet" href="css/battle-vfx.css">
 </head>
 <body>
@@ -64,9 +65,9 @@
   <div class="card">
     <div style="font-size:15px;font-weight:600;margin-bottom:12px">快捷入口</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
-      <div class="hero-card" onclick="App.switchPage('campaign')" style="margin:0;justify-content:center">
-        <span class="qa-icon"><svg viewBox="0 0 24 24"><path d="M6 2l6 6 6-6M5 8v12l7-4 7 4V8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-        <span style="font-size:12px;font-weight:600">战役</span>
+      <div class="hero-card" onclick="App.switchPage('map')" style="margin:0;justify-content:center">
+        <span class="qa-icon"><svg viewBox="0 0 24 24"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 2v16M16 6v16" stroke="currentColor" stroke-width="1.5"/></svg></span>
+        <span style="font-size:12px;font-weight:600">天下</span>
       </div>
       <div class="hero-card" onclick="App.switchPage('dungeon')" style="margin:0;justify-content:center">
         <span class="qa-icon"><svg viewBox="0 0 24 24"><path d="M2 20l5-8 4 4 4-6 5 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="17" cy="6" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span>
@@ -119,6 +120,32 @@
     </div>
   </div>
   <div class="stage-list" id="stage-list"></div>
+</div>
+
+<!-- ===== PAGE: MAP (Kingdom) ===== -->
+<div id="page-map" class="page">
+  <div class="page-header">
+    <div class="page-title">天下</div>
+    <div class="resource-bar">
+      <span><svg class="res-icon ri-gold" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#d4a843"/><circle cx="8" cy="8" r="5" fill="none" stroke="#b8922e" stroke-width="1"/><text x="8" y="11" text-anchor="middle" font-size="8" font-weight="700" fill="#0a0e1a">¥</text></svg> <b id="map-gold">0</b></span>
+      <span><svg class="res-icon ri-gem" viewBox="0 0 16 16"><polygon points="8,1 14,6 8,15 2,6" fill="#6366f1"/><polygon points="8,1 11,6 8,10 5,6" fill="#818cf8"/></svg> <b id="map-gems">0</b></span>
+    </div>
+  </div>
+
+  <!-- Conquest Stats -->
+  <div class="map-stats-bar" id="map-stats-bar"></div>
+
+  <!-- Passive Income Card -->
+  <div class="map-income-card" id="map-income-card" onclick="App.collectMapIncome()"></div>
+
+  <!-- The Map -->
+  <div id="kingdom-map-container">
+    <svg id="kingdom-map-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"></svg>
+    <div id="map-territory-info"></div>
+  </div>
+
+  <!-- Event Panel -->
+  <div id="map-event-panel" class="card mt-16" style="display:none"></div>
 </div>
 
 <!-- ===== PAGE: BATTLE ===== -->
@@ -399,13 +426,52 @@
   <div id="profile-content"></div>
 </div>
 
+<!-- ===== PAGE: CITY ===== -->
+<div id="page-city" class="page">
+  <div class="page-header">
+    <div class="page-title">城池</div>
+    <div style="display:flex;gap:12px;align-items:center">
+      <span class="city-prosperity-badge"><svg class="res-icon" viewBox="0 0 16 16"><polygon points="8,1 10,6 15,6 11,9 12.5,14 8,11 3.5,14 5,9 1,6 6,6" fill="#d4a843"/></svg> <b id="city-prosperity">0</b></span>
+    </div>
+  </div>
+
+  <!-- Income Collection Banner -->
+  <div id="city-income-banner" class="city-income-banner" onclick="App.collectCityIncome()">
+    <div class="city-income-glow"></div>
+    <div class="city-income-inner">
+      <div class="city-income-left">
+        <div class="city-income-label">离线收益</div>
+        <div class="city-income-amounts">
+          <span class="city-income-gold" id="city-pending-gold">+0 金币</span>
+          <span class="city-income-exp" id="city-pending-exp">+0 经验</span>
+        </div>
+        <div class="city-income-time" id="city-income-time">0分钟前收取</div>
+      </div>
+      <button class="city-collect-btn" id="city-collect-btn">
+        <span class="city-collect-icon">💰</span>
+        <span>收取</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Daily Event -->
+  <div id="city-event" class="city-event-card" style="display:none"></div>
+
+  <!-- Combat Bonuses Summary -->
+  <div id="city-bonuses" class="city-bonuses-bar"></div>
+
+  <!-- Buildings Grid -->
+  <div id="city-buildings" class="city-grid"></div>
+</div>
+
 <!-- ===== TOAST ===== -->
 <div id="toast" class="toast hidden"></div>
 
 <!-- ===== BOTTOM NAV ===== -->
 <nav class="bottom-nav">
   <div class="nav-item active" onclick="App.switchPage('home')"><span class="nav-svg"><svg viewBox="0 0 24 24"><path d="M3 12l9-9 9 9M5 10v10h5v-6h4v6h5V10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>主城</div>
-  <div class="nav-item" onclick="App.switchPage('campaign')"><span class="nav-svg"><svg viewBox="0 0 24 24"><path d="M6 2l6 6 6-6M5 8v12l7-4 7 4V8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>战役</div>
+  <div class="nav-item" onclick="App.switchPage('city')"><span class="nav-svg"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="9" y="13" width="6" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M9 9h1m5 0h1M9 11h1m5 0h1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>城池</div>
+  <div class="nav-item" onclick="App.switchPage('map')"><span class="nav-svg"><svg viewBox="0 0 24 24"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 2v16M16 6v16" stroke="currentColor" stroke-width="1.5"/></svg></span>天下</div>
   <div class="nav-item" onclick="App.switchPage('dungeon')"><span class="nav-svg"><svg viewBox="0 0 24 24"><path d="M2 20l5-8 4 4 4-6 5 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="17" cy="6" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span>副本</div>
   <div class="nav-item" onclick="App.switchPage('arena')"><span class="nav-svg"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3v4m0 10v4M3 12h4m10 0h4" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="3" fill="currentColor" opacity=".6"/></svg></span>竞技</div>
   <div class="nav-item" onclick="App.switchPage('roster')"><span class="nav-svg"><svg viewBox="0 0 24 24"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>英雄</div>
@@ -418,10 +484,12 @@
 <script src="js/storage.js"></script>
 <script src="js/battle.js"></script>
 <script src="js/campaign.js"></script>
+<script src="js/kingdom-map.js"></script>
 <script src="js/gacha.js"></script>
 <script src="js/idle.js"></script>
 <script src="js/equipment.js"></script>
 <script src="js/dungeon.js"></script>
+<script src="js/city.js"></script>
 <script src="js/arena.js"></script>
 <script src="js/seasonal.js"></script>
 <script src="js/skilltree.js"></script>
