@@ -1,21 +1,65 @@
-/* Kingdom Map Styles */
+/* ═══════════════════════════════════════════════════════════════════
+   三国·天命 — Kingdom Map (天下)
+   Ancient Chinese cartography meets premium mobile game UI
+   Quality Target: miHoYo / Total War: Three Kingdoms
+   ═══════════════════════════════════════════════════════════════════ */
 
-/* Map container */
+/* ─── §1  MAP CONTAINER — Aged Parchment ─────────────────────────── */
 #kingdom-map-container {
   position: relative;
   width: 100%;
   aspect-ratio: 4/3;
-  background: linear-gradient(135deg, #1a1510 0%, #0f0d0a 50%, #1a1510 100%);
-  border-radius: 16px;
+  border-radius: var(--r-lg, 16px);
   overflow: hidden;
-  border: 1px solid rgba(212,168,67,.15);
-  box-shadow: 0 4px 24px rgba(0,0,0,.5), inset 0 0 60px rgba(212,168,67,.03);
+  border: 1px solid rgba(212,168,67,.18);
+  box-shadow:
+    0 4px 32px rgba(0,0,0,.6),
+    0 0 60px rgba(212,168,67,.04),
+    inset 0 0 80px rgba(0,0,0,.5),
+    inset 0 1px 0 rgba(212,168,67,.08);
+  /* Multi-layer ancient map background */
+  background:
+    /* Parchment grain */
+    radial-gradient(ellipse 120% 80% at 30% 20%, rgba(212,168,67,.06), transparent),
+    radial-gradient(ellipse 100% 60% at 70% 80%, rgba(212,168,67,.04), transparent),
+    /* Vignette */
+    radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, rgba(0,0,0,.4) 100%),
+    /* Base aged parchment color */
+    linear-gradient(165deg, #1a1510 0%, #15120d 30%, #1a1510 60%, #12100c 100%);
+}
+
+/* Noise texture overlay for parchment feel */
+#kingdom-map-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: .035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  mix-blend-mode: overlay;
+}
+
+/* Top light edge */
+#kingdom-map-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 1px;
+  z-index: 3;
+  background: linear-gradient(90deg, transparent, rgba(212,168,67,.15), transparent);
+  pointer-events: none;
 }
 
 #kingdom-map-svg {
   width: 100%;
   height: 100%;
   touch-action: manipulation;
+  position: relative;
+  z-index: 1;
 }
 
 #kingdom-map-svg text {
@@ -25,178 +69,449 @@
 }
 
 #kingdom-map-svg g[data-territory] {
-  transition: opacity 0.2s;
+  cursor: pointer;
+  transition: opacity .2s var(--ease-out, ease);
 }
 
 #kingdom-map-svg g[data-territory]:active {
-  opacity: 0.7;
+  opacity: .75;
 }
 
-/* Territory info panel */
+#kingdom-map-svg g[data-territory].locked {
+  cursor: default;
+}
+
+/* ─── §2  TERRITORY INFO PANEL — Scroll Drawer ──────────────────── */
 #map-territory-info {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 16px;
-  background: linear-gradient(transparent, rgba(0,0,0,0.95));
-  color: #f0e6d3;
-  transform: translateY(100%);
-  transition: transform 0.3s cubic-bezier(.25,.46,.45,.94);
   z-index: 10;
+  padding: 20px 16px 16px;
+  color: var(--text, #f0e6d3);
+  transform: translateY(100%);
+  transition: transform .35s cubic-bezier(.25,.46,.45,.94);
+  /* Layered dark scroll background */
+  background:
+    linear-gradient(180deg,
+      transparent 0%,
+      rgba(10,12,18,.75) 15%,
+      rgba(10,12,18,.95) 40%,
+      rgba(10,12,18,.98) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 #map-territory-info.visible {
   transform: translateY(0);
 }
 
+/* Pull handle indicator */
+#map-territory-info::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(212,168,67,.2);
+}
+
+/* ─── Info Panel Internal Layout ─── */
 .map-info-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
+  align-items: flex-start;
+  margin-bottom: 6px;
 }
 
 .map-info-name {
-  font-size: 18px;
-  font-weight: 700;
+  font-family: var(--font-serif, "Noto Serif SC", serif);
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  color: var(--text, #f0e6d3);
+  text-shadow: 0 0 16px rgba(212,168,67,.15);
 }
 
-.map-info-level {
-  font-size: 12px;
-  color: var(--dim);
-  padding: 2px 8px;
+.map-info-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
   border-radius: 6px;
-  background: rgba(138,126,109,0.15);
+  letter-spacing: .03em;
+  flex-shrink: 0;
 }
 
 .map-info-desc {
-  font-size: 13px;
-  color: var(--dim);
-  margin-bottom: 8px;
+  font-family: var(--font-serif, "Noto Serif SC", serif);
+  font-size: .82rem;
+  color: var(--dim, #8a7e6d);
+  margin-bottom: 10px;
   font-style: italic;
+  line-height: 1.6;
+  letter-spacing: .03em;
 }
 
-.map-info-faction {
-  display: inline-block;
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 4px;
-  margin-right: 6px;
+/* Stage progress indicator */
+.map-stage-pips {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
 }
 
-.map-info-stage {
+.map-stage-pip {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(138,126,109,.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.map-stage-pip.cleared {
+  background: linear-gradient(90deg, var(--gold-dark, #b8922e), var(--gold, #d4a843));
+  box-shadow: 0 0 8px rgba(212,168,67,.2);
+}
+
+.map-stage-pip.cleared::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent);
+  animation: progressShine 3s ease-in-out infinite;
+}
+
+.map-stage-pip.active {
+  background: rgba(212,168,67,.15);
+  border: 1px solid rgba(212,168,67,.3);
+  animation: pipPulse 2s ease-in-out infinite;
+}
+
+@keyframes pipPulse {
+  0%, 100% { border-color: rgba(212,168,67,.2); }
+  50%      { border-color: rgba(212,168,67,.5); }
+}
+
+/* Current stage card */
+.map-stage-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background:
+    linear-gradient(135deg, rgba(26,30,46,.85), rgba(17,24,39,.8));
+  border: 1px solid rgba(212,168,67,.1);
+  border-radius: var(--r-md, 12px);
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,.4));
+  margin-bottom: 4px;
+}
+
+.map-stage-icon {
+  font-size: 28px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: rgba(212,168,67,.08);
+  border: 1px solid rgba(212,168,67,.12);
+  flex-shrink: 0;
+}
+
+.map-stage-name {
+  font-family: var(--font-serif, "Noto Serif SC", serif);
+  font-size: .9rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+.map-stage-sub {
+  font-size: .72rem;
+  color: var(--dim, #8a7e6d);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.map-stage-reward {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 8px 0;
-  padding: 8px;
-  background: rgba(26,30,46,0.6);
-  border-radius: 8px;
-  font-size: 13px;
-}
-
-.map-info-stage-icon {
-  font-size: 20px;
-}
-
-.map-info-reward {
-  font-size: 12px;
-  color: var(--gold);
   margin-top: 4px;
+  font-size: .72rem;
 }
 
-.map-stage-dots {
+.map-stage-reward span {
   display: flex;
-  gap: 4px;
-  margin: 6px 0;
+  align-items: center;
+  gap: 2px;
 }
 
-.map-stage-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(138,126,109,0.3);
+/* Conquered badge */
+.map-conquered-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, rgba(212,168,67,.1), rgba(184,146,46,.05));
+  border: 1px solid rgba(212,168,67,.2);
+  border-radius: var(--r-md, 12px);
+  font-size: .82rem;
+  font-weight: 600;
+  letter-spacing: .03em;
+  box-shadow: 0 0 16px rgba(212,168,67,.06);
 }
 
-.map-stage-dot.cleared {
-  background: var(--gold);
+.map-conquered-badge .flag-icon {
+  font-size: 16px;
 }
 
-/* Conquest stats bar */
+.map-conquered-badge .income-text {
+  font-family: var(--font-mono, "SF Mono", monospace);
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(175deg, #fce8b0 0%, #d4a843 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Attack button */
+.btn-attack {
+  background: linear-gradient(135deg, #c04040 0%, #a03030 40%, #882020 100%) !important;
+  color: #fff !important;
+  font-family: var(--font-serif, "Noto Serif SC", serif);
+  font-weight: 800 !important;
+  letter-spacing: .12em;
+  padding: 10px 20px !important;
+  box-shadow:
+    0 2px 12px rgba(192,64,64,.3),
+    inset 0 1px 0 rgba(255,255,255,.15),
+    inset 0 -1px 0 rgba(0,0,0,.2);
+  text-shadow: 0 1px 3px rgba(0,0,0,.4);
+  border: none !important;
+  flex-shrink: 0;
+}
+
+.btn-attack:active {
+  transform: scale(.94) !important;
+  box-shadow:
+    0 1px 4px rgba(192,64,64,.2),
+    inset 0 2px 6px rgba(0,0,0,.25) !important;
+}
+
+/* ─── §3  CONQUEST STATS BAR ─────────────────────────────────────── */
 .map-stats-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 14px;
-  background: var(--card);
-  border-radius: 12px;
+  padding: 12px 16px;
+  background:
+    linear-gradient(145deg, rgba(17,24,39,.9), rgba(26,30,46,.85));
+  border-radius: var(--r-lg, 16px);
   margin-bottom: 12px;
-  border: 1px solid var(--border);
-  font-size: 12px;
+  border: 1px solid rgba(212,168,67,.06);
+  box-shadow:
+    var(--shadow-md, 0 4px 12px rgba(0,0,0,.45)),
+    inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+.map-stats-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212,168,67,.1), transparent);
+  pointer-events: none;
 }
 
 .map-stats-bar .stat {
   text-align: center;
+  flex: 1;
+  position: relative;
+}
+
+/* Dividers between stats */
+.map-stats-bar .stat + .stat::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 15%;
+  bottom: 15%;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(212,168,67,.12), transparent);
 }
 
 .map-stats-bar .stat-num {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--gold);
+  font-family: var(--font-mono, "SF Mono", monospace);
+  font-size: 1.1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(175deg, #fce8b0 0%, #f5d98a 25%, #d4a843 55%, #b8922e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,.5));
 }
 
 .map-stats-bar .stat-label {
-  font-size: 10px;
-  color: var(--dim);
+  font-size: .65rem;
+  color: var(--dim, #8a7e6d);
   margin-top: 2px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
 }
 
-/* Income card */
+/* ─── §4  INCOME CARD ────────────────────────────────────────────── */
 .map-income-card {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 14px;
-  background: linear-gradient(135deg, rgba(212,168,67,.08), rgba(184,146,46,.04));
-  border-radius: 12px;
+  padding: 12px 16px;
+  background:
+    linear-gradient(135deg,
+      rgba(212,168,67,.06) 0%,
+      rgba(184,146,46,.03) 50%,
+      rgba(212,168,67,.05) 100%);
+  border-radius: var(--r-md, 12px);
   margin-bottom: 12px;
-  border: 1px solid rgba(212,168,67,.15);
+  border: 1px solid rgba(212,168,67,.12);
   cursor: pointer;
-  transition: transform 0.2s;
+  transition:
+    transform var(--dur-fast, .15s) var(--ease-out, ease),
+    box-shadow var(--dur-normal, .25s);
+  position: relative;
+  overflow: hidden;
 }
 
 .map-income-card:active {
-  transform: scale(0.97);
+  transform: scale(.97);
 }
 
-/* Event panel */
+/* Shimmer sweep */
+.map-income-card::after {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: linear-gradient(45deg,
+    transparent 38%,
+    rgba(212,168,67,.04) 50%,
+    transparent 62%);
+  animation: shimmer 5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.map-income-title {
+  font-family: var(--font-serif, "Noto Serif SC", serif);
+  font-size: .875rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+.map-income-detail {
+  font-size: .72rem;
+  color: var(--dim, #8a7e6d);
+  margin-top: 2px;
+}
+
+.map-income-collect {
+  font-family: var(--font-mono, "SF Mono", monospace);
+  font-size: .82rem;
+  font-weight: 700;
+  background: linear-gradient(175deg, #fce8b0 0%, #d4a843 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── §5  EVENT PANEL — Ancient Scroll Style ─────────────────────── */
 #map-event-panel {
-  animation: fadeIn 0.3s ease-out;
+  animation: modalSlideIn .4s var(--ease-out, ease);
+  border-color: rgba(212,168,67,.15) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative corner brackets */
+#map-event-panel::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 16px;
+  height: 16px;
+  border-top: 2px solid rgba(212,168,67,.2);
+  border-left: 2px solid rgba(212,168,67,.2);
+  pointer-events: none;
+}
+
+#map-event-panel::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 16px;
+  height: 16px;
+  border-bottom: 2px solid rgba(212,168,67,.2);
+  border-right: 2px solid rgba(212,168,67,.2);
+  pointer-events: none;
 }
 
 .map-event-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .map-event-icon {
-  font-size: 32px;
+  font-size: 36px;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(212,168,67,.06);
+  border: 1px solid rgba(212,168,67,.1);
+  border-radius: 14px;
+  flex-shrink: 0;
 }
 
 .map-event-title {
-  font-size: 16px;
-  font-weight: 700;
+  font-family: var(--font-serif, "Noto Serif SC", serif);
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-shadow: 0 0 12px rgba(212,168,67,.1);
+}
+
+.map-event-subtitle {
+  font-size: .72rem;
+  color: var(--dim, #8a7e6d);
+  letter-spacing: .03em;
 }
 
 .map-event-desc {
-  font-size: 13px;
-  color: var(--dim);
-  margin-bottom: 12px;
-  line-height: 1.6;
+  font-family: var(--font-serif, "Noto Serif SC", serif);
+  font-size: .875rem;
+  color: var(--text-soft, #d4c8b4);
+  margin-bottom: 14px;
+  line-height: 1.8;
   font-style: italic;
+  letter-spacing: .02em;
+  padding: 0 4px;
+  border-left: 2px solid rgba(212,168,67,.15);
+  padding-left: 12px;
 }
 
 .map-event-options {
@@ -206,43 +521,138 @@
 }
 
 .map-event-option {
-  padding: 10px 14px;
-  background: var(--card2);
-  border-radius: 10px;
-  border: 1px solid var(--border);
+  padding: 12px 16px;
+  background:
+    linear-gradient(135deg, rgba(26,30,46,.9), rgba(17,24,39,.82));
+  border-radius: var(--r-md, 12px);
+  border: 1px solid rgba(212,168,67,.08);
   cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s;
+  font-size: .875rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  transition:
+    transform var(--dur-fast, .15s) var(--ease-out, ease),
+    border-color var(--dur-normal, .25s),
+    box-shadow var(--dur-normal, .25s);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
 }
 
 .map-event-option:active {
-  transform: scale(0.97);
-  border-color: var(--gold);
+  transform: scale(.97);
+  border-color: rgba(212,168,67,.3);
+  box-shadow: 0 0 12px rgba(212,168,67,.1);
 }
 
-/* Attack button */
-.btn-attack {
-  background: linear-gradient(135deg, #c04040, #e05050) !important;
-  color: #fff !important;
-  font-weight: 700;
-  letter-spacing: 2px;
+/* Hover shine */
+.map-event-option::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(212,168,67,.04) 50%, transparent 60%);
+  opacity: 0;
+  transition: opacity .3s;
+  pointer-events: none;
 }
 
-.btn-attack:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.map-event-option:hover::after {
+  opacity: 1;
 }
 
-/* Conquered badge */
-.map-conquered-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  background: rgba(212,168,67,.15);
-  border: 1px solid rgba(212,168,67,.3);
-  border-radius: 6px;
-  color: var(--gold);
-  font-size: 12px;
+/* Event result text */
+.map-event-result {
+  font-family: var(--font-serif, "Noto Serif SC", serif);
+  font-size: .875rem;
+  color: var(--text, #f0e6d3);
+  margin-bottom: 14px;
+  line-height: 1.7;
+  padding: 12px;
+  background: rgba(212,168,67,.04);
+  border-radius: var(--r-sm, 8px);
+  border: 1px solid rgba(212,168,67,.08);
+}
+
+.map-event-result .reward-line {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-mono, "SF Mono", monospace);
+  font-size: .75rem;
   font-weight: 600;
+  background: linear-gradient(175deg, #fce8b0, #d4a843);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
+
+/* ─── §6  MAP SVG ANIMATIONS ─────────────────────────────────────── */
+
+/* Territory pulse for available */
+@keyframes territoryPulse {
+  0%, 100% { r: 4; opacity: .3; }
+  50%      { r: 5.5; opacity: .08; }
+}
+
+/* Breathing glow for player marker */
+@keyframes markerBreathe {
+  0%, 100% { opacity: .8; }
+  50%      { opacity: 1; }
+}
+
+/* Smoke effect for contested territories */
+@keyframes smokeRise {
+  0%   { opacity: .25; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-8px) scale(1.5); }
+}
+
+/* Flag wave for conquered */
+@keyframes flagWave {
+  0%, 100% { transform: rotate(-2deg); }
+  50%      { transform: rotate(2deg); }
+}
+
+/* Connection path dash animation */
+@keyframes dashFlow {
+  to { stroke-dashoffset: -12; }
+}
+
+/* ─── §7  RESPONSIVE ─────────────────────────────────────────────── */
+@media (max-width: 360px) {
+  .map-info-name {
+    font-size: 1.05rem;
+  }
+
+  .map-stage-card {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .map-stage-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 22px;
+  }
+
+  .map-stats-bar {
+    padding: 10px 12px;
+  }
+
+  .map-stats-bar .stat-num {
+    font-size: 1rem;
+  }
+}
+
+/* ─── §8  REDUCED MOTION ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  #kingdom-map-svg * {
+    animation: none !important;
+  }
+
+  #map-territory-info {
+    transition-duration: .01ms !important;
+  }
+}
+
+/* ─── FIN ────────────────────────────────────────────────────────── */

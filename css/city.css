@@ -1,0 +1,554 @@
+/* ===== City Builder — Premium Kingdom Management ===== */
+
+/* ─── Prosperity Badge ─── */
+.city-prosperity-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, rgba(212,168,67,.15), rgba(212,168,67,.05));
+  border: 1px solid rgba(212,168,67,.3);
+  border-radius: 20px;
+  padding: 4px 12px 4px 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold);
+}
+.city-prosperity-badge .res-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* ─── Income Collection Banner ─── */
+.city-income-banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: transform .2s, box-shadow .3s;
+  background: linear-gradient(135deg, #1a1e2e, #111827);
+  border: 1px solid rgba(212,168,67,.25);
+  box-shadow: 0 4px 20px rgba(0,0,0,.3), 0 0 30px rgba(212,168,67,.06);
+}
+.city-income-banner:active {
+  transform: scale(.97);
+}
+.city-income-glow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(212,168,67,.08), transparent 60%, rgba(99,102,241,.05));
+  pointer-events: none;
+}
+.city-income-inner {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+}
+.city-income-left {
+  flex: 1;
+}
+.city-income-label {
+  font-size: 12px;
+  color: var(--dim);
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.city-income-amounts {
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+}
+.city-income-gold {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold);
+  text-shadow: 0 0 12px rgba(212,168,67,.3);
+}
+.city-income-exp {
+  font-size: 15px;
+  font-weight: 600;
+  color: #818cf8;
+}
+.city-income-time {
+  font-size: 11px;
+  color: var(--dim);
+  margin-top: 4px;
+}
+.city-collect-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border: none;
+  border-radius: 12px;
+  color: #000;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .2s;
+  box-shadow: 0 2px 12px rgba(245,158,11,.3);
+}
+.city-collect-btn:active {
+  transform: scale(.92);
+}
+.city-collect-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+.city-income-empty .city-income-gold {
+  font-size: 13px;
+  color: var(--dim);
+  text-shadow: none;
+}
+.city-income-empty .city-collect-btn {
+  background: var(--card2);
+  color: var(--dim);
+  box-shadow: none;
+  pointer-events: none;
+}
+.city-income-collected {
+  animation: cityCollectPulse .6s ease-out;
+}
+@keyframes cityCollectPulse {
+  0% { box-shadow: 0 0 0 0 rgba(212,168,67,.4); }
+  50% { box-shadow: 0 0 30px 10px rgba(212,168,67,.25); }
+  100% { box-shadow: 0 4px 20px rgba(0,0,0,.3); }
+}
+
+/* Floating number animation */
+.city-floater {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 22px;
+  font-weight: 800;
+  pointer-events: none;
+  z-index: 10;
+  animation: cityFloatUp 1.4s ease-out forwards;
+  text-shadow: 0 2px 8px rgba(0,0,0,.6);
+  white-space: nowrap;
+}
+@keyframes cityFloatUp {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
+  30% { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -200%) scale(.8); }
+}
+
+/* ─── Daily Event Card ─── */
+.city-event-card {
+  background: var(--card);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 0;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.city-event-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+.city-event-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.city-event-info {
+  flex: 1;
+  min-width: 0;
+}
+.city-event-name {
+  font-size: 14px;
+  font-weight: 700;
+}
+.city-event-desc {
+  font-size: 12px;
+  color: var(--dim);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+.city-event-btn {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border: 1.5px solid;
+  border-radius: 10px;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .2s;
+}
+.city-event-btn:active {
+  transform: scale(.92);
+  opacity: .8;
+}
+
+/* ─── Combat Bonuses Bar ─── */
+.city-bonuses-bar {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(99,102,241,.06), rgba(212,168,67,.04));
+  border: 1px solid rgba(99,102,241,.15);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.city-bonus-label {
+  font-size: 11px;
+  color: var(--dim);
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-right: 4px;
+}
+.city-bonus-list {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.city-bonus-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.city-bonus-atk {
+  background: rgba(239,68,68,.12);
+  color: #f87171;
+}
+.city-bonus-def {
+  background: rgba(59,130,246,.12);
+  color: #60a5fa;
+}
+.city-bonus-equip {
+  background: rgba(168,85,247,.12);
+  color: #c084fc;
+}
+.city-bonus-scout {
+  background: rgba(34,197,94,.12);
+  color: #4ade80;
+}
+
+/* ─── Buildings Grid ─── */
+.city-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+/* ─── Building Card ─── */
+.city-building-card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 16px 14px 14px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: transform .2s, border-color .3s, box-shadow .3s;
+  position: relative;
+  overflow: hidden;
+}
+.city-building-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  transition: background .3s;
+}
+
+/* Tier styling — escalating visual quality */
+.city-tier-common::before {
+  background: linear-gradient(90deg, transparent, #6b7280, transparent);
+}
+.city-tier-uncommon {
+  border-color: rgba(34,197,94,.2);
+}
+.city-tier-uncommon::before {
+  background: linear-gradient(90deg, transparent, #22c55e, transparent);
+}
+.city-tier-rare {
+  border-color: rgba(59,130,246,.25);
+  box-shadow: 0 0 16px rgba(59,130,246,.08);
+}
+.city-tier-rare::before {
+  background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+}
+.city-tier-epic {
+  border-color: rgba(168,85,247,.3);
+  box-shadow: 0 0 20px rgba(168,85,247,.1);
+}
+.city-tier-epic::before {
+  background: linear-gradient(90deg, transparent, #a855f7, transparent);
+}
+.city-tier-legendary {
+  border-color: rgba(212,168,67,.35);
+  box-shadow: 0 0 24px rgba(212,168,67,.12), inset 0 0 30px rgba(212,168,67,.03);
+}
+.city-tier-legendary::before {
+  background: linear-gradient(90deg, transparent, #d4a843, transparent);
+  height: 4px;
+}
+
+/* Maxed building crown effect */
+.city-building-maxed {
+  border-color: rgba(212,168,67,.4);
+  background: linear-gradient(135deg, var(--card), rgba(212,168,67,.04));
+}
+.city-building-maxed::after {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 4px;
+  background: var(--gold);
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 0 12px rgba(212,168,67,.4);
+}
+
+/* Building icon */
+.city-building-top {
+  position: relative;
+  margin-bottom: 8px;
+}
+.city-building-icon {
+  font-size: 36px;
+  line-height: 1;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.04);
+  border-radius: 14px;
+  transition: transform .3s;
+}
+.city-building-card:active .city-building-icon {
+  transform: scale(.92);
+}
+.city-building-level {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  background: var(--card2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+.city-building-new {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  border-color: rgba(34,197,94,.5);
+  color: #fff;
+}
+
+/* Building text */
+.city-building-name {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 2px;
+  color: var(--text);
+}
+.city-building-desc {
+  font-size: 11px;
+  color: var(--dim);
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+.city-building-stars {
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: 1px;
+  min-height: 14px;
+  margin-bottom: 6px;
+}
+
+/* Bonus comparison */
+.city-building-bonus {
+  font-size: 11px;
+  margin-bottom: 10px;
+  min-height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+.city-bonus-now {
+  color: var(--dim);
+}
+.city-bonus-arrow {
+  color: var(--dim);
+  font-size: 10px;
+}
+.city-bonus-next {
+  color: #22c55e;
+  font-weight: 600;
+}
+.city-bonus-max {
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+/* Upgrade button */
+.city-upgrade-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #000;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s, opacity .2s;
+  box-shadow: 0 2px 8px rgba(245,158,11,.2);
+}
+.city-upgrade-btn:active {
+  transform: scale(.93);
+}
+.city-upgrade-cost {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.city-gold-icon {
+  width: 14px;
+  height: 14px;
+}
+.city-upgrade-disabled {
+  background: var(--card2);
+  color: var(--dim);
+  box-shadow: none;
+  opacity: .6;
+  pointer-events: none;
+}
+.city-upgrade-maxed {
+  font-size: 12px;
+  color: var(--gold);
+  font-weight: 600;
+  padding: 8px;
+  opacity: .8;
+}
+
+/* Locked building */
+.city-building-locked {
+  background: rgba(17,24,39,.6);
+  border-color: rgba(42,42,58,.5);
+  padding: 24px 14px;
+  opacity: .7;
+}
+.city-building-lock {
+  font-size: 32px;
+  margin-bottom: 8px;
+  opacity: .5;
+}
+.city-building-locked .city-building-name {
+  color: var(--dim);
+}
+.city-building-unlock {
+  font-size: 11px;
+  color: var(--dim);
+  margin-top: 4px;
+  padding: 3px 10px;
+  background: rgba(255,255,255,.04);
+  border-radius: 8px;
+}
+
+/* ─── Upgrade Animation ─── */
+.city-building-upgrading {
+  animation: cityBuildShake .5s ease-out;
+}
+@keyframes cityBuildShake {
+  0%, 100% { transform: translateX(0); }
+  10% { transform: translateX(-4px) rotate(-1deg); }
+  20% { transform: translateX(4px) rotate(1deg); }
+  30% { transform: translateX(-3px) rotate(-0.5deg); }
+  40% { transform: translateX(3px) rotate(0.5deg); }
+  50% { transform: translateX(-2px); }
+  60% { transform: translateX(2px); }
+  70% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+/* Sparkle particles */
+.city-sparkle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--gold);
+  border-radius: 50%;
+  pointer-events: none;
+  top: 50%;
+  left: 50%;
+  animation: citySparkle .8s ease-out forwards;
+  animation-delay: var(--delay, 0ms);
+  box-shadow: 0 0 6px rgba(212,168,67,.8);
+}
+@keyframes citySparkle {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--angle, 0deg)) translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--angle, 0deg)) translateY(-50px) scale(0);
+  }
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 360px) {
+  .city-grid {
+    gap: 8px;
+  }
+  .city-building-card {
+    padding: 12px 10px 10px;
+  }
+  .city-building-icon {
+    font-size: 28px;
+    width: 44px;
+    height: 44px;
+  }
+  .city-building-name {
+    font-size: 13px;
+  }
+}
+
+/* ─── Bottom nav adjustment for 7 items ─── */
+.bottom-nav .nav-item {
+  font-size: 9px;
+  padding: 4px 2px;
+  gap: 1px;
+}
+.bottom-nav .nav-svg {
+  width: 20px;
+  height: 20px;
+}
