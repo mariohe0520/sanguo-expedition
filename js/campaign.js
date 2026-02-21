@@ -298,16 +298,16 @@ const Campaign = {
 
   // Difficulty curve: enemy stat multiplier per chapter
   CHAPTER_SCALING: {
-    1: { enemyScale: 0.4, desc: '教程难度' },
-    2: { enemyScale: 0.75, desc: '需要阵容搭配' },
-    3: { enemyScale: 1.2, desc: '需要装备强化' },
-    4: { enemyScale: 1.7, desc: '需要天赋投入' },
-    5: { enemyScale: 2.2, desc: '需要元素反应策略' },
-    6: { enemyScale: 2.8, desc: '终局·需要极限Build' },
-    7: { enemyScale: 3.2, desc: '以少胜多·智斗' },
-    8: { enemyScale: 3.6, desc: '城防攻坚战' },
-    9: { enemyScale: 4.0, desc: '山地极限战' },
-    10: { enemyScale: 5.0, desc: '天下归一·最终决战' },
+    1: { enemyScale: 0.3, desc: '教程难度' },
+    2: { enemyScale: 0.5, desc: '需要阵容搭配' },
+    3: { enemyScale: 0.8, desc: '需要装备强化' },
+    4: { enemyScale: 1.0, desc: '需要天赋投入' },
+    5: { enemyScale: 1.3, desc: '需要元素反应策略' },
+    6: { enemyScale: 1.6, desc: '终局·需要极限Build' },
+    7: { enemyScale: 1.8, desc: '以少胜多·智斗' },
+    8: { enemyScale: 2.0, desc: '城防攻坚战' },
+    9: { enemyScale: 2.3, desc: '山地极限战' },
+    10: { enemyScale: 2.6, desc: '天下归一·最终决战' },
   },
 
   getEnemyScale(chapterId, difficulty) {

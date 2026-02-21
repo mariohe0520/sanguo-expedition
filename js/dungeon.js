@@ -308,7 +308,7 @@ const Dungeon = {
 
   generateDailyEnemies(type) {
     const powerLevel = Leaderboard.getPlayerPower();
-    const scale = Math.max(1, powerLevel / 2000);
+    const scale = Math.max(0.5, Math.min(2.5, powerLevel / 5000)); // Gentler: /5000, cap at 2.5x
     const enemyCount = 4 + Math.floor(Math.random() * 2);
     const enemies = [];
     const pool = type === 'gold'
