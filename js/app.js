@@ -888,7 +888,15 @@ const App = {
       if (typeof HeroPersonality !== 'undefined') HeroPersonality.clearAllBubbles();
     } catch(e) {}
 
-    // Initialize canvas renderer
+    // Initialize premium BattleUI renderer (HTML/CSS with large portraits)
+    try {
+      if (typeof BattleUI !== 'undefined') {
+        BattleUI.destroy(); // Clean up previous
+        BattleUI.init(Battle.state);
+      }
+    } catch(e) { console.error('[BattleUI init]', e); }
+
+    // Initialize canvas renderer (background layer for particles)
     try {
       const canvasEl = document.getElementById('battle-canvas');
       if (canvasEl && typeof BattleCanvas !== 'undefined') {
@@ -989,6 +997,16 @@ const App = {
         }
       } catch(e) {}
     }
+
+    // Sync BattleUI state and process VFX through HTML/CSS renderer
+    try {
+      if (typeof BattleUI !== 'undefined' && BattleUI._active) {
+        BattleUI.renderFighters(state);
+        if (Battle.vfx && Battle.vfx.length > 0) {
+          BattleUI.processVFX(Battle.vfx);
+        }
+      }
+    } catch(e) { /* BattleUI errors should never break gameplay */ }
 
     // Sync canvas fighter state (HP/rage/alive) and process VFX
     try {
@@ -2891,16 +2909,29 @@ App.startBattle = async function() {
       logEl.innerHTML = recentLogs.map(l => '<div class="log-entry ' + App._logClass(l.msg) + '">' + l.msg + '</div>').join('');
       logEl.scrollTop = logEl.scrollHeight;
       // Render hero dialogue bubbles
-      if (typeof HeroPersonality !== 'undefined' && typeof BattleCanvas !== 'undefined') {
+      if (typeof HeroPersonality !== 'undefined') {
         const dialogues = Battle.popDialogues();
-        const container = document.getElementById('battle-canvas')?.parentElement;
-        if (container && dialogues.length > 0) {
-          container.style.position = 'relative';
-          for (const d of dialogues) {
-            const key = d.side + '-' + d.pos;
-            const sprite = BattleCanvas.fighters[key];
-            if (sprite) {
-              HeroPersonality.showDialogueBubble(d.heroId, d.text, d.side, sprite.x, sprite.y, container);
+        if (dialogues.length > 0) {
+          // Try BattleUI container first, fall back to canvas
+          const buiContainer = document.getElementById('battle-ui-container');
+          const canvasContainer = document.getElementById('battle-canvas')?.parentElement;
+          const container = buiContainer || canvasContainer;
+          if (container) {
+            container.style.position = 'relative';
+            for (const d of dialogues) {
+              const key = d.side + '-' + d.pos;
+              // Get position from BattleUI fighter elements
+              if (typeof BattleUI !== 'undefined' && BattleUI._active && BattleUI._fighterEls[key]) {
+                const fEl = BattleUI._fighterEls[key].el;
+                const fRect = fEl.getBoundingClientRect();
+                const cRect = container.getBoundingClientRect();
+                const x = fRect.left - cRect.left + fRect.width / 2;
+                const y = fRect.top - cRect.top;
+                HeroPersonality.showDialogueBubble(d.heroId, d.text, d.side, x, y, container);
+              } else if (typeof BattleCanvas !== 'undefined' && BattleCanvas.fighters[key]) {
+                const sprite = BattleCanvas.fighters[key];
+                HeroPersonality.showDialogueBubble(d.heroId, d.text, d.side, sprite.x, sprite.y, canvasContainer || container);
+              }
             }
           }
         }
@@ -3111,6 +3142,7 @@ App.startBattle = async function() {
           nextBtn.style.display = 'block';
           nextBtn.onclick = () => {
             document.getElementById('result-modal').classList.add('hidden');
+            try { if (typeof BattleUI !== 'undefined') BattleUI.destroy(); } catch(e) {}
             try { if (typeof BattleCanvas !== 'undefined') BattleCanvas.stop(); } catch(e) {}
             App._startMapBattle(stage._territoryId, stageType);
           };
@@ -3120,6 +3152,7 @@ App.startBattle = async function() {
           nextBtn.style.display = 'block';
           nextBtn.onclick = () => {
             document.getElementById('result-modal').classList.add('hidden');
+            try { if (typeof BattleUI !== 'undefined') BattleUI.destroy(); } catch(e) {}
             try { if (typeof BattleCanvas !== 'undefined') BattleCanvas.stop(); } catch(e) {}
             if (stage._pendingDestiny && typeof Destiny !== 'undefined') {
               try {
@@ -3143,6 +3176,13 @@ App.startBattle = async function() {
     }
   } catch(e) {}
 
+  // BattleUI victory/defeat effects (HTML/CSS layer)
+  try {
+    if (typeof BattleUI !== 'undefined' && BattleUI._active) {
+      if (result === 'victory') await BattleUI.playVictory();
+      else await BattleUI.playDefeat();
+    }
+  } catch(e) {}
   // Canvas victory/defeat effects
   try {
     if (typeof BattleCanvas !== 'undefined' && BattleCanvas.running) {
@@ -3174,6 +3214,7 @@ App.startBattle = async function() {
 const _originalCloseResult = App.closeResult;
 App.closeResult = function() {
   document.getElementById('result-modal').classList.add('hidden');
+  try { if (typeof BattleUI !== 'undefined') BattleUI.destroy(); } catch(e) {}
   try { if (typeof BattleCanvas !== 'undefined') BattleCanvas.stop(); } catch(e) {}
   const stage = this.currentStage;
 
@@ -3235,6 +3276,7 @@ App.init = function() {
 // Emergency return — if battle gets stuck, player can always go back
 App.emergencyReturn = function() {
   document.getElementById('result-modal').classList.add('hidden');
+  try { if (typeof BattleUI !== 'undefined') BattleUI.destroy(); } catch(e) {}
   try { if (typeof BattleCanvas !== 'undefined') BattleCanvas.stop(); } catch(e) {}
   const stage = this.currentStage;
   if (stage && stage._isMapBattle) {

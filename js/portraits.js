@@ -17,6 +17,17 @@ const Portraits = {
     return svg;
   },
 
+  // Render portrait as rounded rectangle (for BattleUI cards)
+  getRect(heroId, size = 120) {
+    const key = heroId + '-rect-' + size;
+    if (this._cache[key]) return this._cache[key];
+    const data = this.DATA[heroId];
+    if (!data) return this._fallbackRect(heroId, size);
+    const svg = this._renderRect(data, size);
+    this._cache[key] = svg;
+    return svg;
+  },
+
   _render(d, size) {
     const s = size;
     const h = s; // square
@@ -69,6 +80,72 @@ const Portraits = {
       <!-- Frame border -->
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${d.frameBorder}" stroke-width="${s*0.03}"/>
       ${d.frameGlow || ''}
+    </svg>`;
+  },
+
+  // Render portrait as rounded rectangle — full-body view, not clipped to circle
+  // Uses viewBox="0 0 80 80" to match portrait DATA coordinates, scales via SVG width/height
+  _renderRect(d, size) {
+    const s = 80; // keep original coordinate space
+    const cx = s / 2;
+    const r = 6; // corner radius in viewBox coords
+
+    return `<svg viewBox="0 0 ${s} ${s}" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="rbg-${d.id}" x1="0" y1="0" x2="0.4" y2="1">
+          <stop offset="0%" stop-color="${d.bg1}"/>
+          <stop offset="100%" stop-color="${d.bg2}"/>
+        </linearGradient>
+        <radialGradient id="rface-${d.id}" cx="0.4" cy="0.35">
+          <stop offset="0%" stop-color="${d.skin1}"/>
+          <stop offset="100%" stop-color="${d.skin2}"/>
+        </radialGradient>
+        <clipPath id="rclip-${d.id}"><rect width="${s}" height="${s}" rx="${r}"/></clipPath>
+      </defs>
+      <!-- Background fills entire rect -->
+      <rect width="${s}" height="${s}" rx="${r}" fill="url(#rbg-${d.id})"/>
+      <!-- Character (clipped to rounded rect) -->
+      <g clip-path="url(#rclip-${d.id})">
+        <!-- Body/Armor -->
+        <ellipse cx="${cx}" cy="${s*0.85}" rx="${s*0.35}" ry="${s*0.3}" fill="${d.armor}"/>
+        ${d.armorDetail || ''}
+        <!-- Neck -->
+        <rect x="${cx-s*0.06}" y="${s*0.48}" width="${s*0.12}" height="${s*0.12}" fill="${d.skin1}" rx="2"/>
+        <!-- Face -->
+        <ellipse cx="${cx}" cy="${s*0.38}" rx="${s*0.16}" ry="${s*0.19}" fill="url(#rface-${d.id})"/>
+        <!-- Eyes -->
+        <ellipse cx="${cx-s*0.06}" cy="${s*0.36}" rx="${s*0.028}" ry="${s*0.018}" fill="${d.eyeColor || '#1a1a1a'}"/>
+        <ellipse cx="${cx+s*0.06}" cy="${s*0.36}" rx="${s*0.028}" ry="${s*0.018}" fill="${d.eyeColor || '#1a1a1a'}"/>
+        <!-- Eye highlights -->
+        <circle cx="${cx-s*0.05}" cy="${s*0.355}" r="${s*0.007}" fill="rgba(255,255,255,0.6)"/>
+        <circle cx="${cx+s*0.07}" cy="${s*0.355}" r="${s*0.007}" fill="rgba(255,255,255,0.6)"/>
+        <!-- Eyebrows -->
+        <line x1="${cx-s*0.09}" y1="${s*0.32}" x2="${cx-s*0.03}" y2="${s*0.31}" stroke="${d.hairColor || '#1a1a1a'}" stroke-width="${s*0.018}" stroke-linecap="round"/>
+        <line x1="${cx+s*0.03}" y1="${s*0.31}" x2="${cx+s*0.09}" y2="${s*0.32}" stroke="${d.hairColor || '#1a1a1a'}" stroke-width="${s*0.018}" stroke-linecap="round"/>
+        <!-- Nose -->
+        <line x1="${cx}" y1="${s*0.37}" x2="${cx}" y2="${s*0.41}" stroke="${d.skin2}" stroke-width="${s*0.012}" stroke-linecap="round"/>
+        <!-- Mouth -->
+        <path d="M${cx-s*0.04} ${s*0.44} Q${cx} ${s*0.46} ${cx+s*0.04} ${s*0.44}" stroke="${d.lipColor || '#8b4040'}" stroke-width="${s*0.01}" fill="none"/>
+        <!-- Hair -->
+        ${d.hair || ''}
+        <!-- Beard -->
+        ${d.beard || ''}
+        <!-- Headpiece / Accessories -->
+        ${d.headpiece || ''}
+        <!-- Weapon hint -->
+        ${d.weapon || ''}
+      </g>
+    </svg>`;
+  },
+
+  _fallbackRect(heroId, size) {
+    const vd = (typeof Visuals !== 'undefined' && Visuals.HERO_DATA[heroId]) || { ch: '?', c1: '#3a3f47', c2: '#6c757d' };
+    const r = size * 0.08;
+    return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="rfb-${heroId}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${vd.c1}"/><stop offset="100%" stop-color="${vd.c2}"/></linearGradient></defs>
+      <rect width="${size}" height="${size}" rx="${r}" fill="url(#rfb-${heroId})"/>
+      <text x="${size/2}" y="${size/2+size*0.12}" text-anchor="middle" font-size="${size*0.4}" font-weight="900" fill="rgba(255,255,255,0.9)" font-family="'Noto Serif SC',serif">${vd.ch}</text>
+      <rect width="${size}" height="${size}" rx="${r}" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="${size*0.02}"/>
     </svg>`;
   },
 
