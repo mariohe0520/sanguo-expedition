@@ -120,6 +120,12 @@ const Battle = {
   },
 
   async executeTurn(speed) {
+    // Strategy: turn-start hooks
+    let vanguardExtra = null;
+    if (typeof Strategy !== 'undefined') {
+      vanguardExtra = Strategy.onTurnStart(this.state.turn, this.state);
+    }
+
     // Tick buffs/debuffs
     [...this.state.player, ...this.state.enemy].filter(f => f?.alive).forEach(f => {
       this.tickEffects(f);
@@ -135,6 +141,17 @@ const Battle = {
     const order = [...this.state.player, ...this.state.enemy]
       .filter(f => f?.alive)
       .sort((a, b) => this.getEffStat(b, 'spd') - this.getEffStat(a, 'spd'));
+
+    // Strategy: Vanguard extra action at start of turn 1
+    if (vanguardExtra && vanguardExtra.alive) {
+      const enemies = (vanguardExtra.side === 'player' ? this.state.enemy : this.state.player).filter(f => f?.alive);
+      if (enemies.length > 0) {
+        const target = enemies.sort((a, b) => a.pos - b.pos)[0];
+        this.doAttack(vanguardExtra, target);
+        if (this.onUpdate) this.onUpdate(this.state);
+        await this.wait(Math.floor(400 / speed));
+      }
+    }
 
     for (const fighter of order) {
       if (!fighter.alive) continue;
@@ -160,13 +177,25 @@ const Battle = {
         // Normal attack
         const enemies = (fighter.side === 'player' ? this.state.enemy : this.state.player).filter(f => f?.alive);
         if (enemies.length === 0) continue;
-        // Target: front row first, then back
-        const target = enemies.sort((a, b) => a.pos - b.pos)[0];
+        // Strategy: Chain Stratagem target locking
+        let target = null;
+        if (typeof Strategy !== 'undefined') {
+          target = Strategy.getChainTarget(fighter, this.state);
+        }
+        if (!target) {
+          // Target: front row first, then back
+          target = enemies.sort((a, b) => a.pos - b.pos)[0];
+        }
         this.doAttack(fighter, target);
       }
 
       if (this.onUpdate) this.onUpdate(this.state);
       await this.wait(Math.floor(400 / speed));
+    }
+
+    // Strategy: turn-end hooks
+    if (typeof Strategy !== 'undefined') {
+      Strategy.onTurnEnd(this.state.turn, this.state);
     }
   },
 
@@ -213,6 +242,11 @@ const Battle = {
     // Weather effect
     dmg = Math.floor(dmg * this.getWeatherMult(attacker, this.state.weather));
 
+    // Strategy: damage modification hook
+    if (typeof Strategy !== 'undefined') {
+      dmg = Strategy.onAttack(attacker, defender, dmg, this.state);
+    }
+
     // Apply damage
     defender.hp = Math.max(0, defender.hp - dmg);
     if (defender.hp <= 0) {
@@ -237,6 +271,10 @@ const Battle = {
           cheated = true;
           this.addLog(`${Visuals.heroTag(defender.id)} ${defender.name} 隐忍！以1HP存活！`);
         }
+      }
+      // Strategy: revival hook (七星灯)
+      if (!cheated && typeof Strategy !== 'undefined') {
+        cheated = Strategy.onDeath(defender, this.state);
       }
       if (!cheated) {
         defender.alive = false;

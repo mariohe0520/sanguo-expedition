@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="css/map.css">
 <link rel="stylesheet" href="css/battle-vfx.css">
 <link rel="stylesheet" href="css/city.css">
+<link rel="stylesheet" href="css/strategy.css">
 </head>
 <body>
 
@@ -465,6 +466,24 @@
   <div id="city-buildings" class="city-grid"></div>
 </div>
 
+<!-- ===== STRATEGY CARD SELECTION OVERLAY ===== -->
+<div id="strategy-select-overlay">
+  <div class="strat-overlay-inner">
+    <div class="strat-title">⚔️ 谋略布阵</div>
+    <div class="strat-header-line"></div>
+    <div class="strat-subtitle">选择两张谋略卡（可跳过）</div>
+    <div id="strategy-hand"></div>
+    <div id="strategy-selected-preview">
+      <div class="strat-preview-slot"></div>
+      <div class="strat-preview-slot"></div>
+    </div>
+    <div class="strat-btn-row" style="margin-top:16px">
+      <button class="strat-btn-skip" onclick="Strategy.skip()">跳过</button>
+      <button class="strat-btn-confirm" id="strategy-confirm-btn" disabled>确认出战</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== TOAST ===== -->
 <div id="toast" class="toast hidden"></div>
 
@@ -496,6 +515,7 @@
 <script src="js/skilltree.js"></script>
 <script src="js/portraits.js"></script>
 <script src="js/skill-cutin.js"></script>
+<script src="js/strategy.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.3.2/dist/pixi.min.js"></script>
 <script src="js/battle-canvas.js"></script>
 <script src="js/battle-pixi.js"></script>

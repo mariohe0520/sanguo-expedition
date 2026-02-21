@@ -199,6 +199,10 @@ const Storage = {
   getCityState() { return this._get('cityState', null); },
   saveCityState(s) { this._set('cityState', s); },
 
+  // === Strategy Cards ===
+  getStrategyState() { return this._get('strategyState', { ownedCards: [] }); },
+  saveStrategyState(s) { this._set('strategyState', s); },
+
   // === v4: Seasonal Content ===
   getSeasonalState() {
     return this._get('seasonalState', {

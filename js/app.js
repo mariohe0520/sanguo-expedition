@@ -363,6 +363,8 @@ const App = {
   },
 
   _logClass(msg) {
+    if (msg.startsWith('📜') || msg.startsWith('⚡ 【') || msg.startsWith('⭐ 【') || msg.startsWith('🚢 【')) return 'log-strategy';
+    if (msg.startsWith('🔥') && msg.includes('灼烧')) return 'log-burn';
     if (msg.includes('释放【')) return 'log-skill';
     if (msg.includes('暴击') || msg.includes('CRIT')) return 'log-crit';
     if (msg.includes('阵亡') || msg.includes('击杀') || msg.includes('倒下')) return 'log-kill';
@@ -945,6 +947,21 @@ const App = {
   async startBattle() {
     document.getElementById('btn-battle-start').classList.add('hidden');
 
+    // Show strategy card selection overlay before battle
+    if (typeof Strategy !== 'undefined') {
+      const selectedCards = await new Promise(resolve => {
+        Strategy.showSelection(resolve);
+      });
+      // Apply strategy effects
+      if (selectedCards && selectedCards.length > 0) {
+        Strategy.applyPreBattle(Battle.state, selectedCards);
+      } else {
+        Strategy.applyPreBattle(Battle.state, []);
+      }
+      // Re-render after strategy effects applied
+      this.renderBattleField();
+    }
+
     Battle.onUpdate = (state) => {
       this.renderBattleField();
       const logEl = document.getElementById('battle-log');
@@ -954,18 +971,24 @@ const App = {
     };
 
     const result = await Battle.run(1.5);
+    // Reset strategy state
+    if (typeof Strategy !== 'undefined') Strategy.reset();
     const modal = document.getElementById('result-modal');
     const stage = this.currentStage;
 
     if (result === 'victory') {
       document.getElementById('result-icon').innerHTML = '<span style="font-size:48px;color:var(--gold)">胜</span>';
       document.getElementById('result-title').textContent = '胜利！';
-      Storage.addGold(stage.reward.gold);
-      Storage.addExp(stage.reward.exp);
-      if (stage.reward.hero_shard) Storage.addShards(stage.reward.hero_shard, 3);
+      // Strategy: Empty Fort reduced loot
+      const stratReducedLoot = typeof Strategy !== 'undefined' && Strategy.isReducedLoot();
+      const goldReward = stratReducedLoot ? Math.floor(stage.reward.gold * 0.5) : stage.reward.gold;
+      const expReward = stratReducedLoot ? Math.floor(stage.reward.exp * 0.5) : stage.reward.exp;
+      Storage.addGold(goldReward);
+      Storage.addExp(expReward);
+      if (stage.reward.hero_shard) Storage.addShards(stage.reward.hero_shard, stratReducedLoot ? 1 : 3);
       Campaign.completeStage(stage.id, (stage._chapter || Campaign.getCurrentChapter()).id);
 
-      let resultText = '+' + stage.reward.gold + '金 +' + stage.reward.exp + '经验' + (stage.reward.hero_shard ? ' +3碎片' : '');
+      let resultText = '+' + goldReward + '金 +' + expReward + '经验' + (stage.reward.hero_shard ? (stratReducedLoot ? ' +1碎片' : ' +3碎片') : '') + (stratReducedLoot ? ' (空城计减半)' : '');
 
       // v3: Equipment drop
       if (typeof Equipment !== 'undefined') {
