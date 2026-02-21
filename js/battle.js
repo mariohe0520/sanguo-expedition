@@ -7,7 +7,7 @@ const Battle = {
   onUpdate: null, // UI callback
 
   // Create battle state
-  init(playerTeam, enemyTeam, terrain='plains', weather='clear', enemyScale=1) {
+  init(playerTeam, enemyTeam, terrain='plains', weather='clear', enemyScale=1, territoryId=null) {
     this.log = [];
     this.vfx = []; // Visual effects queue for UI layer
     this.state = {
@@ -17,6 +17,15 @@ const Battle = {
       player: playerTeam.map((h,i) => this.createFighter(h, 'player', i)),
       enemy: enemyTeam.map((h,i) => this.createFighter(h, 'enemy', i, enemyScale)),
     };
+    // Initialize Dynamic Battlefield system
+    if (typeof DynamicBattlefield !== 'undefined') {
+      DynamicBattlefield.init(territoryId, terrain, weather);
+      // Update terrain/weather from battlefield system
+      if (DynamicBattlefield.state) {
+        this.state.terrain = DynamicBattlefield.state.terrain;
+        this.state.weather = DynamicBattlefield.state.weather;
+      }
+    }
     // Apply passives
     this.applyBattleStartPassives();
     // Apply hero personality effects (mood, bonds, loyalty)
@@ -140,6 +149,28 @@ const Battle = {
   },
 
   async executeTurn(speed) {
+    // Dynamic Battlefield: turn-start (weather changes, hazards, day/night)
+    if (typeof DynamicBattlefield !== 'undefined') {
+      const bfEvents = DynamicBattlefield.onTurnStart(this.state.turn, this.state);
+      if (bfEvents) {
+        for (const ev of bfEvents) {
+          if (ev.text) this.addLog('<span class="bf-hazard-log">' + ev.text + '</span>');
+          // Queue VFX for hazards
+          if (ev.type === 'hazard' && ev.target) {
+            this.vfx.push({ type: 'hazard', target: ev.target.side + '-' + ev.target.pos, hazardType: ev.hazard.dmgType, dmg: ev.dmg });
+          }
+          if (ev.type === 'weather_change') {
+            this.vfx.push({ type: 'weather_change', weather: ev.weather });
+          }
+        }
+      }
+      // Sync terrain/weather from DynamicBattlefield to Battle.state
+      if (DynamicBattlefield.state) {
+        this.state.terrain = DynamicBattlefield.state.terrain;
+        this.state.weather = DynamicBattlefield.state.weather;
+      }
+    }
+
     // Strategy: turn-start hooks
     let vanguardExtra = null;
     if (typeof Strategy !== 'undefined') {
@@ -286,6 +317,21 @@ const Battle = {
 
     // Weather effect
     dmg = Math.floor(dmg * this.getWeatherMult(attacker, this.state.weather));
+
+    // Dynamic Battlefield damage modifier (weather + terrain + time of day)
+    if (typeof DynamicBattlefield !== 'undefined') {
+      const bfMod = DynamicBattlefield.getDamageModifier(attacker, defender, dmg, false);
+      if (bfMod === 0) {
+        this.addLog(Visuals.heroTag(attacker.id) + ' ' + attacker.name + ' 的攻击落空了！');
+        attacker.rage = Math.min(attacker.maxRage, attacker.rage + 10);
+        return;
+      }
+      dmg = Math.floor(dmg * bfMod);
+      // Track fire hits on forest terrain
+      if (attacker.element === 'fire' || (attacker.skill && attacker.skill.type === 'magic')) {
+        DynamicBattlefield.onFireHit();
+      }
+    }
 
     // Strategy: damage modification hook
     if (typeof Strategy !== 'undefined') {

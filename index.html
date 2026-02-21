@@ -20,6 +20,7 @@
 <link rel="stylesheet" href="css/strategy.css">
 <link rel="stylesheet" href="css/personality.css">
 <link rel="stylesheet" href="css/destiny.css">
+<link rel="stylesheet" href="css/battlefield.css">
 </head>
 <body>
 
@@ -158,6 +159,8 @@
     <div class="page-title" id="battle-title">战斗</div>
     <div id="battle-turn" class="text-dim" style="font-size:13px">回合 0</div>
   </div>
+  <!-- Dynamic Battlefield Status Bar -->
+  <div class="bf-status-bar" id="bf-status-bar" style="display:none"></div>
   <!-- Canvas battle scene -->
   <div id="battle-canvas-wrap" style="position:relative;border-radius:16px;overflow:hidden;border:1px solid rgba(212,168,67,.15);margin-bottom:12px;box-shadow:0 4px 24px rgba(0,0,0,.5),0 0 40px rgba(212,168,67,.06);background:#060810">
     <canvas id="battle-canvas" style="display:block;width:100%;background:#0a0e1a"></canvas>
@@ -525,6 +528,7 @@
 <script src="js/strategy.js"></script>
 <script src="js/hero-personality.js"></script>
 <script src="js/destiny.js"></script>
+<script src="js/dynamic-battlefield.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.3.2/dist/pixi.min.js"></script>
 <script src="js/battle-canvas.js"></script>
 <script src="js/battle-pixi.js"></script>

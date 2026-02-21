@@ -1219,14 +1219,58 @@ const BattleCanvas = {
           this.triggerFlash('#c04040', 0.25);
         }
       }
+
+      // ── DynamicBattlefield: environmental hazard ──
+      if (fx.type === 'hazard') {
+        if (target) {
+          target.hitFlash = 1;
+          target.shakeX = (Math.random() - 0.5) * 12;
+          target.shakeY = (Math.random() - 0.5) * 8;
+          // Hazard-specific colors
+          const hazardColors = {
+            water: '#4682B4', physical: '#8B7355', poison: '#228B22', lightning: '#FFD700'
+          };
+          const hColor = hazardColors[fx.hazardType] || '#ff6b6b';
+          this.spawnParticles(target.x, target.y, hColor, 15, { spread: 6, type: 'spark', size: 3 });
+          this.spawnImpactWave(target.x, target.y, hColor, 50);
+          this.addFloatingText(target.x, target.y - 25, '-' + fx.dmg + ' 天灾', hColor, { size: 16, bold: true, outline: true });
+          this.triggerShake(5);
+          // Lightning gets a flash
+          if (fx.hazardType === 'lightning') {
+            this.triggerFlash('#FFD700', 0.25);
+          }
+        }
+      }
+
+      // ── DynamicBattlefield: weather change announcement ──
+      if (fx.type === 'weather_change') {
+        // Clear old weather particles
+        if (typeof BattlefieldParticles !== 'undefined') {
+          BattlefieldParticles.clearAll();
+        }
+        // Screen-wide announcement effect
+        this.triggerFlash('#87CEEB', 0.1);
+        this.triggerShake(2);
+        // Show weather name as floating text
+        const wData = (typeof DynamicBattlefield !== 'undefined') ? DynamicBattlefield.WEATHER[fx.weather] : null;
+        if (wData) {
+          this.addFloatingText(this.width / 2, this.height / 2 - 20,
+            wData.icon + ' ' + wData.name,
+            '#87CEEB', { size: 24, bold: true, outline: true, decay: 0.008, vy: -0.5 });
+        }
+      }
     }
   },
 
-  // ═══ BACKGROUND (unchanged) ═══
+  // ═══ BACKGROUND (enhanced with DynamicBattlefield) ═══
   drawBackground(terrain, weather) {
     const ctx = this.ctx;
     const w = this.width;
     const h = this.height;
+
+    // Get visual state from DynamicBattlefield if available
+    const bfVisual = (typeof DynamicBattlefield !== 'undefined' && DynamicBattlefield.state)
+      ? DynamicBattlefield.getVisualState() : null;
 
     const terrainGrads = {
       plains:   ['#0a1628', '#142840'],
@@ -1235,20 +1279,44 @@ const BattleCanvas = {
       water:    ['#081828', '#0f2840'],
       forest:   ['#081a10', '#102818'],
       castle:   ['#100c18', '#1a1428'],
+      desert:   ['#1a1408', '#2a2010'],
+      swamp:    ['#080f08', '#0a1a0a'],
+      charred:  ['#0a0808', '#1a1210'],
     };
-    const colors = terrainGrads[terrain] || terrainGrads.plains;
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
-    bgGrad.addColorStop(0, colors[0]);
-    bgGrad.addColorStop(1, colors[1]);
-    ctx.fillStyle = bgGrad;
+    // Use DynamicBattlefield terrain if available
+    const effectiveTerrain = bfVisual ? bfVisual.terrainKey : terrain;
+    const colors = terrainGrads[effectiveTerrain] || terrainGrads.plains;
+
+    // Sky color from time of day
+    if (bfVisual && bfVisual.skyColor) {
+      const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+      bgGrad.addColorStop(0, bfVisual.skyColor);
+      bgGrad.addColorStop(1, colors[1]);
+      ctx.fillStyle = bgGrad;
+    } else {
+      const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+      bgGrad.addColorStop(0, colors[0]);
+      bgGrad.addColorStop(1, colors[1]);
+      ctx.fillStyle = bgGrad;
+    }
     ctx.fillRect(0, 0, w, h);
 
+    // Ground with terrain-specific color
     const groundY = h - 30;
-    const groundGrad = ctx.createLinearGradient(0, groundY, 0, h);
-    groundGrad.addColorStop(0, 'rgba(255,255,255,0.03)');
-    groundGrad.addColorStop(1, 'rgba(0,0,0,0.2)');
-    ctx.fillStyle = groundGrad;
-    ctx.fillRect(0, groundY, w, 30);
+    const groundColor = bfVisual ? bfVisual.groundColor : null;
+    if (groundColor) {
+      const groundGrad = ctx.createLinearGradient(0, groundY, 0, h);
+      groundGrad.addColorStop(0, groundColor + '33');
+      groundGrad.addColorStop(1, groundColor + '11');
+      ctx.fillStyle = groundGrad;
+      ctx.fillRect(0, groundY, w, 30);
+    } else {
+      const groundGrad = ctx.createLinearGradient(0, groundY, 0, h);
+      groundGrad.addColorStop(0, 'rgba(255,255,255,0.03)');
+      groundGrad.addColorStop(1, 'rgba(0,0,0,0.2)');
+      ctx.fillStyle = groundGrad;
+      ctx.fillRect(0, groundY, w, 30);
+    }
 
     ctx.strokeStyle = 'rgba(255,255,255,0.08)';
     ctx.lineWidth = 1;
@@ -1257,7 +1325,8 @@ const BattleCanvas = {
     ctx.lineTo(w, groundY);
     ctx.stroke();
 
-    if (terrain === 'mountain' || terrain === 'castle') {
+    // Terrain-specific decorations
+    if (effectiveTerrain === 'mountain' || effectiveTerrain === 'castle') {
       ctx.fillStyle = 'rgba(255,255,255,0.02)';
       for (let i = 0; i < 8; i++) {
         const mx = (i * w / 7) + Math.sin(i * 2.1) * 15;
@@ -1269,7 +1338,7 @@ const BattleCanvas = {
         ctx.fill();
       }
     }
-    if (terrain === 'forest') {
+    if (effectiveTerrain === 'forest') {
       ctx.fillStyle = 'rgba(34,100,34,0.06)';
       for (let i = 0; i < 6; i++) {
         const tx = 15 + i * (w / 5);
@@ -1277,6 +1346,59 @@ const BattleCanvas = {
         ctx.moveTo(tx - 8, groundY);
         ctx.lineTo(tx, groundY - 12 - Math.sin(i) * 4);
         ctx.lineTo(tx + 8, groundY);
+        ctx.fill();
+      }
+    }
+    if (effectiveTerrain === 'desert') {
+      // Sand dunes
+      ctx.fillStyle = 'rgba(210,180,100,0.04)';
+      for (let i = 0; i < 5; i++) {
+        const dx = (i * w / 4) + Math.sin(i * 1.5) * 20;
+        const dh = 5 + Math.sin(i * 2.3) * 3;
+        ctx.beginPath();
+        ctx.ellipse(dx, groundY, 30, dh, 0, Math.PI, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    if (effectiveTerrain === 'swamp') {
+      // Swamp bubbles
+      ctx.fillStyle = 'rgba(50,100,50,0.05)';
+      const t = Date.now() * 0.001;
+      for (let i = 0; i < 4; i++) {
+        const bx = w * (0.1 + i * 0.25);
+        const by = groundY + Math.sin(t + i * 2) * 3;
+        ctx.beginPath();
+        ctx.arc(bx, by, 3 + Math.sin(t * 2 + i) * 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    if (effectiveTerrain === 'river') {
+      // Water ripples
+      ctx.save();
+      ctx.globalAlpha = 0.04;
+      ctx.strokeStyle = '#4682B4';
+      ctx.lineWidth = 1;
+      const t = Date.now() * 0.001;
+      for (let i = 0; i < 5; i++) {
+        const ry = groundY + 5 + i * 5;
+        ctx.beginPath();
+        for (let x = 0; x <= w; x += 8) {
+          const y = ry + Math.sin(x * 0.03 + t + i * 0.8) * 2;
+          x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    if (effectiveTerrain === 'charred') {
+      // Smoke wisps
+      ctx.fillStyle = 'rgba(80,60,40,0.03)';
+      const t = Date.now() * 0.0005;
+      for (let i = 0; i < 4; i++) {
+        const sx = w * (0.15 + i * 0.25);
+        const sy = groundY - 5 - Math.sin(t + i * 1.3) * 8;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 6 + Math.sin(t * 2 + i) * 3, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -1303,32 +1425,61 @@ const BattleCanvas = {
     ctx.fillText('VS', w / 2, h / 2);
     ctx.restore();
 
-    // Weather effects
-    if (weather === 'fog') {
-      ctx.fillStyle = 'rgba(200,200,220,' + (0.03 + Math.sin(Date.now() * 0.001) * 0.02) + ')';
-      ctx.fillRect(0, 0, w, h);
-    }
-    if (weather === 'wind') {
-      const t = Date.now() * 0.002;
-      ctx.save();
-      ctx.globalAlpha = 0.06;
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 1;
-      for (let i = 0; i < 5; i++) {
-        const y = 30 + i * 55 + Math.sin(t + i) * 10;
-        ctx.beginPath();
-        ctx.moveTo((t * 50 + i * 100) % (w + 100) - 50, y);
-        ctx.lineTo((t * 50 + i * 100) % (w + 100) + 40, y - 3);
-        ctx.stroke();
+    // Weather effects (legacy)
+    if (!bfVisual) {
+      if (weather === 'fog') {
+        ctx.fillStyle = 'rgba(200,200,220,' + (0.03 + Math.sin(Date.now() * 0.001) * 0.02) + ')';
+        ctx.fillRect(0, 0, w, h);
       }
-      ctx.restore();
+      if (weather === 'wind') {
+        const t = Date.now() * 0.002;
+        ctx.save();
+        ctx.globalAlpha = 0.06;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 5; i++) {
+          const y = 30 + i * 55 + Math.sin(t + i) * 10;
+          ctx.beginPath();
+          ctx.moveTo((t * 50 + i * 100) % (w + 100) - 50, y);
+          ctx.lineTo((t * 50 + i * 100) % (w + 100) + 40, y - 3);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+      if (weather === 'fire') {
+        const fireGrad = ctx.createLinearGradient(0, h, 0, h - 50);
+        fireGrad.addColorStop(0, 'rgba(200,50,20,' + (0.08 + Math.sin(Date.now() * 0.003) * 0.04) + ')');
+        fireGrad.addColorStop(1, 'rgba(200,50,20,0)');
+        ctx.fillStyle = fireGrad;
+        ctx.fillRect(0, h - 50, w, 50);
+      }
     }
-    if (weather === 'fire') {
-      const fireGrad = ctx.createLinearGradient(0, h, 0, h - 50);
-      fireGrad.addColorStop(0, 'rgba(200,50,20,' + (0.08 + Math.sin(Date.now() * 0.003) * 0.04) + ')');
-      fireGrad.addColorStop(1, 'rgba(200,50,20,0)');
-      ctx.fillStyle = fireGrad;
-      ctx.fillRect(0, h - 50, w, 50);
+
+    // ═══ DynamicBattlefield weather particles ═══
+    if (bfVisual && typeof BattlefieldParticles !== 'undefined') {
+      const particleType = bfVisual.particles;
+      if (particleType) {
+        BattlefieldParticles.update(particleType, w, h, 1);
+        BattlefieldParticles.draw(ctx, particleType);
+      }
+      // Fog overlay
+      if (bfVisual.overlay === 'fog') {
+        BattlefieldParticles.update('fog', w, h, 1);
+        BattlefieldParticles.draw(ctx, 'fog');
+      }
+      // Storm lightning flash
+      if (bfVisual.flash && Math.random() < 0.02) {
+        this.triggerFlash('#fff', 0.15);
+      }
+    }
+
+    // ═══ Day/night brightness overlay ═══
+    if (bfVisual && bfVisual.brightness < 1.0) {
+      const darkAlpha = 1.0 - bfVisual.brightness;
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,10,' + (darkAlpha * 0.6) + ')';
+      ctx.fillRect(0, 0, w, h);
+      ctx.restore();
     }
 
     // Ambient floating particles
@@ -1361,12 +1512,25 @@ const BattleCanvas = {
     }
     ctx.restore();
 
-    // Turn counter
+    // Turn counter + battlefield conditions
     if (Battle.state) {
-      ctx.font = '600 11px -apple-system, system-ui, sans-serif';
-      ctx.fillStyle = 'rgba(212,168,67,0.4)';
       ctx.textAlign = 'center';
-      ctx.fillText('回合 ' + Battle.state.turn, w / 2, h - 8);
+      if (bfVisual) {
+        // Show weather + terrain + time + turn
+        const wData = (typeof DynamicBattlefield !== 'undefined') ? DynamicBattlefield.WEATHER[bfVisual.weatherKey] : null;
+        const tData = (typeof DynamicBattlefield !== 'undefined') ? DynamicBattlefield.TERRAIN[bfVisual.terrainKey] : null;
+        const todData = (typeof DynamicBattlefield !== 'undefined') ? DynamicBattlefield.TIME_OF_DAY[bfVisual.timeKey] : null;
+        if (wData && tData && todData) {
+          ctx.font = '600 10px -apple-system, system-ui, sans-serif';
+          ctx.fillStyle = 'rgba(212,168,67,0.5)';
+          const statusText = wData.icon + wData.name + ' | ' + tData.icon + tData.name + ' | ' + todData.icon + todData.name + ' | 回合' + Battle.state.turn;
+          ctx.fillText(statusText, w / 2, h - 8);
+        }
+      } else {
+        ctx.font = '600 11px -apple-system, system-ui, sans-serif';
+        ctx.fillStyle = 'rgba(212,168,67,0.4)';
+        ctx.fillText('回合 ' + Battle.state.turn, w / 2, h - 8);
+      }
     }
   },
 

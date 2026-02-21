@@ -877,7 +877,9 @@ const App = {
     const terrain = stage.terrain || stage._terrain || chapter.terrain || 'plains';
     const weather = stage.weather || stage._weather || chapter.weather || 'clear';
     const enemyScale = stage._scaleMult || 1;
-    Battle.init(team, stage.enemies, terrain, weather, enemyScale);
+    // Pass territory ID for DynamicBattlefield terrain mapping
+    const territoryId = stage._territoryId || null;
+    Battle.init(team, stage.enemies, terrain, weather, enemyScale, territoryId);
 
     // Reset bond display for new battle
     try {
@@ -935,6 +937,46 @@ const App = {
     renderTeam(state.player, 'team-player');
     renderTeam(state.enemy, 'team-enemy');
     document.getElementById('battle-turn').textContent = '回合 ' + state.turn;
+
+    // Update Dynamic Battlefield status bar
+    if (typeof DynamicBattlefield !== 'undefined' && DynamicBattlefield.state) {
+      const statusBar = document.getElementById('bf-status-bar');
+      if (statusBar) {
+        statusBar.style.display = 'flex';
+        statusBar.innerHTML = DynamicBattlefield.getStatusBarHTML();
+        // Pulse animation on changes
+        if (DynamicBattlefield.state.weatherChanged || DynamicBattlefield.state.terrainChanged) {
+          statusBar.classList.remove('bf-pulse');
+          void statusBar.offsetWidth; // Force reflow
+          statusBar.classList.add('bf-pulse');
+        }
+      }
+      // Show announcements as overlays on canvas
+      if (DynamicBattlefield.state.announcements && DynamicBattlefield.state.announcements.length > 0) {
+        const canvasWrap = document.getElementById('battle-canvas-wrap');
+        if (canvasWrap) {
+          for (const ann of DynamicBattlefield.state.announcements) {
+            const overlay = document.createElement('div');
+            overlay.className = 'bf-announcement-overlay bf-announcement-' + (ann.type || 'weather');
+            overlay.innerHTML = '<div class="bf-announcement-text">' + ann.text + '</div>';
+            canvasWrap.appendChild(overlay);
+            // Auto-remove after animation
+            setTimeout(() => overlay.remove(), 2600);
+            // Flash for hazards
+            if (ann.type === 'hazard') {
+              canvasWrap.classList.add('bf-hazard-flash');
+              setTimeout(() => canvasWrap.classList.remove('bf-hazard-flash'), 500);
+            }
+            if (ann.type === 'weather' && DynamicBattlefield.state.weather === 'storm') {
+              const flash = document.createElement('div');
+              flash.className = 'bf-lightning-flash';
+              canvasWrap.appendChild(flash);
+              setTimeout(() => flash.remove(), 200);
+            }
+          }
+        }
+      }
+    }
 
     // Render active bond banner (only once, on turn 1)
     if (state.turn <= 1 && typeof HeroPersonality !== 'undefined') {
