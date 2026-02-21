@@ -96,28 +96,24 @@
 
 /* ─── §2  TERRITORY INFO PANEL — Scroll Drawer ──────────────────── */
 #map-territory-info {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  position: relative;
   z-index: 10;
-  padding: 20px 16px 16px;
+  padding: 16px;
   color: var(--text, #f0e6d3);
-  transform: translateY(100%);
-  transition: transform .35s cubic-bezier(.25,.46,.45,.94);
-  /* Layered dark scroll background */
-  background:
-    linear-gradient(180deg,
-      transparent 0%,
-      rgba(10,12,18,.75) 15%,
-      rgba(10,12,18,.95) 40%,
-      rgba(10,12,18,.98) 100%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height .35s ease, opacity .25s ease, padding .35s ease;
+  background: rgba(10,12,18,.95);
+  border-radius: 12px;
+  margin-top: 8px;
+  border: 1px solid rgba(212,168,67,.12);
 }
 
 #map-territory-info.visible {
-  transform: translateY(0);
+  max-height: 300px;
+  opacity: 1;
+  padding: 16px;
 }
 
 /* Pull handle indicator */
