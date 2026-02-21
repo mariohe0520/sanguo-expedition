@@ -427,7 +427,7 @@ const KingdomMap = {
         line.setAttribute('y1', t.y);
         line.setAttribute('x2', other.x);
         line.setAttribute('y2', other.y);
-        line.setAttribute('stroke', bothConquered ? 'rgba(212,168,67,0.3)' : anyAvailable ? 'rgba(212,168,67,0.15)' : 'rgba(138,126,109,0.08)');
+        line.setAttribute('stroke', bothConquered ? 'rgba(212,168,67,0.3)' : anyAvailable ? 'rgba(212,168,67,0.15)' : 'rgba(138,126,109,0.2)');
         line.setAttribute('stroke-width', bothConquered ? '0.4' : '0.25');
         if (!anyAvailable) {
           line.setAttribute('stroke-dasharray', '1,1');
@@ -492,9 +492,9 @@ const KingdomMap = {
       circle.setAttribute('cx', t.x);
       circle.setAttribute('cy', t.y);
       circle.setAttribute('r', '5');
-      circle.setAttribute('fill', isLocked ? 'rgba(26,21,16,0.8)' : faction.fill);
-      circle.setAttribute('stroke', isLocked ? 'rgba(138,126,109,0.15)' : isConquered ? '#d4a843' : faction.color);
-      circle.setAttribute('stroke-width', isCurrent ? '0.6' : '0.35');
+      circle.setAttribute('fill', isLocked ? 'rgba(50,45,38,0.9)' : faction.fill);
+      circle.setAttribute('stroke', isLocked ? 'rgba(138,126,109,0.4)' : isConquered ? '#d4a843' : faction.color);
+      circle.setAttribute('stroke-width', isCurrent ? '0.6' : isLocked ? '0.3' : '0.35');
       if (!isLocked) circle.setAttribute('filter', 'url(#map-shadow)');
       g.appendChild(circle);
 
@@ -505,7 +505,7 @@ const KingdomMap = {
       iconText.setAttribute('text-anchor', 'middle');
       iconText.setAttribute('dominant-baseline', 'middle');
       iconText.setAttribute('font-size', '4.2');
-      iconText.setAttribute('opacity', isLocked ? '0.2' : '1');
+      iconText.setAttribute('opacity', isLocked ? '0.4' : '1');
       iconText.textContent = isConquered ? '🚩' : t.icon;
       g.appendChild(iconText);
 
@@ -514,7 +514,7 @@ const KingdomMap = {
       nameText.setAttribute('x', t.x);
       nameText.setAttribute('y', t.y + 7.5);
       nameText.setAttribute('text-anchor', 'middle');
-      nameText.setAttribute('fill', isLocked ? 'rgba(138,126,109,0.2)' : isConquered ? '#d4a843' : '#f0e6d3');
+      nameText.setAttribute('fill', isLocked ? 'rgba(138,126,109,0.45)' : isConquered ? '#d4a843' : '#f0e6d3');
       nameText.setAttribute('font-size', '2.5');
       nameText.setAttribute('font-weight', '600');
       nameText.textContent = t.name;
