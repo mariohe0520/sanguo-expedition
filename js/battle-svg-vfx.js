@@ -317,6 +317,14 @@ const BattleSVGVFX = {
 
   // ═══ SKILL CINEMATIC ═══
   skillCinematic(casterKey, skillName, element) {
+    // Try hero-specific cut-in animation first
+    const heroId = this._getHeroId(casterKey);
+    if (heroId && typeof SkillCutIn !== 'undefined' && SkillCutIn.has(heroId)) {
+      SkillCutIn.play(heroId, skillName);
+      return;
+    }
+
+    // Fallback: original dim+text approach for heroes without cut-in
     const r = this._rect();
     const pos = this._fighterPos(casterKey);
     const colors = {

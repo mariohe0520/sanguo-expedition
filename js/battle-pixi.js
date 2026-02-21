@@ -182,10 +182,8 @@
       this.width = Math.round(rect.width) || 800;
       this.height = Math.round(rect.height) || 450;
 
-      // Hide original
-      canvas.style.display = 'none';
-
-      // Create PIXI app
+      // Create PIXI app (don't hide original canvas until PIXI is confirmed working)
+      try {
       this.app = new PIXI.Application({
         width: this.width,
         height: this.height,
@@ -197,11 +195,15 @@
 
       // Style the PIXI view
       var view = this.app.view;
+      if (!view) throw new Error('PIXI view not created');
       view.style.display = 'block';
       view.style.width = '100%';
       view.style.height = '100%';
       view.style.borderRadius = getComputedStyle(canvas).borderRadius || '12px';
       this.parentEl.appendChild(view);
+      // Only hide original canvas AFTER pixi successfully created
+      canvas.style.display = 'none';
+      this._originalCanvas = canvas;
 
       this.stage = this.app.stage;
       this.stage.sortableChildren = true;
@@ -248,6 +250,18 @@
       var self = this;
       this._tickerFn = function (delta) { self.update(delta); };
       this.app.ticker.add(this._tickerFn);
+
+      } catch(pixiErr) {
+        console.error('[battle-pixi] PIXI init failed, falling back to Canvas2D:', pixiErr);
+        // Restore original canvas
+        if (canvas) canvas.style.display = '';
+        // Restore old BattleCanvas
+        if (window._BattleCanvasFallback) {
+          window.BattleCanvas = window._BattleCanvasFallback;
+          window.BattleCanvas.init(canvas);
+        }
+        return;
+      }
     },
 
     /* ── setupFighters / initFighters ─────────────────────── */
