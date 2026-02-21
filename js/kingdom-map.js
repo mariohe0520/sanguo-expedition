@@ -454,7 +454,7 @@ const KingdomMap = {
         const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         pulse.setAttribute('cx', t.x);
         pulse.setAttribute('cy', t.y);
-        pulse.setAttribute('r', '4');
+        pulse.setAttribute('r', '6.5');
         pulse.setAttribute('fill', 'url(#territory-pulse)');
         g.appendChild(pulse);
       }
@@ -464,38 +464,47 @@ const KingdomMap = {
         const glow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         glow.setAttribute('cx', t.x);
         glow.setAttribute('cy', t.y);
-        glow.setAttribute('r', '4.5');
+        glow.setAttribute('r', '7');
         glow.setAttribute('fill', 'none');
         glow.setAttribute('stroke', '#d4a843');
-        glow.setAttribute('stroke-width', '0.3');
-        glow.setAttribute('opacity', '0.6');
+        glow.setAttribute('stroke-width', '0.4');
+        glow.setAttribute('opacity', '0.7');
         const animR = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
         animR.setAttribute('attributeName', 'r');
-        animR.setAttribute('values', '4.5;5.5;4.5');
+        animR.setAttribute('values', '7;8.5;7');
         animR.setAttribute('dur', '2s');
         animR.setAttribute('repeatCount', 'indefinite');
         glow.appendChild(animR);
         g.appendChild(glow);
       }
 
+      // Invisible larger hit area for mobile tap (minimum 44px equivalent)
+      const hitArea = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      hitArea.setAttribute('cx', t.x);
+      hitArea.setAttribute('cy', t.y);
+      hitArea.setAttribute('r', '7');
+      hitArea.setAttribute('fill', 'transparent');
+      hitArea.setAttribute('stroke', 'none');
+      g.appendChild(hitArea);
+
       // Territory circle background
       const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       circle.setAttribute('cx', t.x);
       circle.setAttribute('cy', t.y);
-      circle.setAttribute('r', '3.2');
+      circle.setAttribute('r', '5');
       circle.setAttribute('fill', isLocked ? 'rgba(26,21,16,0.8)' : faction.fill);
       circle.setAttribute('stroke', isLocked ? 'rgba(138,126,109,0.15)' : isConquered ? '#d4a843' : faction.color);
-      circle.setAttribute('stroke-width', isCurrent ? '0.5' : '0.3');
+      circle.setAttribute('stroke-width', isCurrent ? '0.6' : '0.35');
       if (!isLocked) circle.setAttribute('filter', 'url(#map-shadow)');
       g.appendChild(circle);
 
       // Territory icon
       const iconText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       iconText.setAttribute('x', t.x);
-      iconText.setAttribute('y', t.y + 0.3);
+      iconText.setAttribute('y', t.y + 0.5);
       iconText.setAttribute('text-anchor', 'middle');
       iconText.setAttribute('dominant-baseline', 'middle');
-      iconText.setAttribute('font-size', '2.8');
+      iconText.setAttribute('font-size', '4.2');
       iconText.setAttribute('opacity', isLocked ? '0.2' : '1');
       iconText.textContent = isConquered ? '🚩' : t.icon;
       g.appendChild(iconText);
@@ -503,10 +512,10 @@ const KingdomMap = {
       // Territory name label
       const nameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       nameText.setAttribute('x', t.x);
-      nameText.setAttribute('y', t.y + 5.5);
+      nameText.setAttribute('y', t.y + 7.5);
       nameText.setAttribute('text-anchor', 'middle');
       nameText.setAttribute('fill', isLocked ? 'rgba(138,126,109,0.2)' : isConquered ? '#d4a843' : '#f0e6d3');
-      nameText.setAttribute('font-size', '1.8');
+      nameText.setAttribute('font-size', '2.5');
       nameText.setAttribute('font-weight', '600');
       nameText.textContent = t.name;
       g.appendChild(nameText);
@@ -515,10 +524,10 @@ const KingdomMap = {
       if (!isLocked) {
         const lvlText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         lvlText.setAttribute('x', t.x);
-        lvlText.setAttribute('y', t.y + 7.2);
+        lvlText.setAttribute('y', t.y + 9.5);
         lvlText.setAttribute('text-anchor', 'middle');
         lvlText.setAttribute('fill', 'rgba(138,126,109,0.5)');
-        lvlText.setAttribute('font-size', '1.3');
+        lvlText.setAttribute('font-size', '1.6');
         lvlText.textContent = isConquered ? '已占领' : 'Lv.' + t.level;
         g.appendChild(lvlText);
       }
@@ -528,9 +537,9 @@ const KingdomMap = {
         const cleared = tState.stagesCleared || 0;
         for (let i = 0; i < 3; i++) {
           const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-          dot.setAttribute('cx', t.x - 1.5 + i * 1.5);
-          dot.setAttribute('cy', t.y - 4.5);
-          dot.setAttribute('r', '0.5');
+          dot.setAttribute('cx', t.x - 2 + i * 2);
+          dot.setAttribute('cy', t.y - 6.5);
+          dot.setAttribute('r', '0.7');
           dot.setAttribute('fill', i < cleared ? '#d4a843' : 'rgba(138,126,109,0.3)');
           g.appendChild(dot);
         }
