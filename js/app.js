@@ -397,6 +397,7 @@ const App = {
       this.updateHeader();
       this.renderDailyMissions();
       this.renderKingdomCard();
+      this._renderDestinyHomeCard();
       // Check achievements in background
       if (typeof Achievements !== 'undefined') {
         const newAch = Achievements.checkAll();
@@ -1724,6 +1725,43 @@ const App = {
     // Kingdom card is shown on the home page — no-op if no kingdom selected yet
   },
 
+  _renderDestinyHomeCard() {
+    try {
+      if (typeof Destiny === 'undefined') return;
+      const state = Destiny.initState();
+      const choices = state.choices || {};
+      const madeCount = Object.keys(choices).length;
+      if (madeCount === 0) return; // Don't show if no choices made yet
+
+      const totalChoices = Destiny.CHOICES.length;
+      const title = Destiny.getCurrentTitle();
+
+      // Find or create the destiny card container
+      let container = document.getElementById('destiny-home-card-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'destiny-home-card-container';
+        // Insert after idle card
+        const idleCard = document.getElementById('idle-card');
+        if (idleCard && idleCard.parentElement) {
+          idleCard.parentElement.insertBefore(container, idleCard.nextSibling);
+        } else {
+          document.getElementById('page-home').appendChild(container);
+        }
+      }
+
+      container.innerHTML =
+        '<div class="destiny-home-card" onclick="App.switchPage(\'profile\')">' +
+          '<div class="destiny-home-title">⭐ 天命录</div>' +
+          '<div class="destiny-home-subtitle">' + (title ? '称号：' + title : '每一个选择，都塑造了不同的三国') + '</div>' +
+          '<div class="destiny-home-stats">' +
+            '<div class="destiny-home-stat">抉择 <b>' + madeCount + '/' + totalChoices + '</b></div>' +
+            '<div class="destiny-home-stat">声望 <b>' + (state.reputation || 0) + '</b></div>' +
+          '</div>' +
+        '</div>';
+    } catch(e) { console.error('[DestinyHomeCard]', e); }
+  },
+
   // ===== DUNGEON =====
   renderDungeon() {
     try {
@@ -2316,6 +2354,19 @@ const App = {
         }).join('') +
       '</div>' +
 
+      // Destiny Record (天命录)
+      (function() {
+        try {
+          if (typeof Destiny !== 'undefined') {
+            return '<div class="card destiny-record-section">' +
+              '<div style="font-size:15px;font-weight:600;margin-bottom:12px">⭐ 天命录</div>' +
+              Destiny.renderRecord() +
+            '</div>';
+          }
+        } catch(e) { console.error('[Destiny record]', e); }
+        return '';
+      })() +
+
       // Navigation shortcuts
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px">' +
         '<button class="btn btn-primary" onclick="App.switchPage(\'team\')">编队</button>' +
@@ -2849,6 +2900,16 @@ App.startBattle = async function() {
             const stageType = KingdomMap.getCurrentStageType(tId);
             if (!stageType) {
               detailText += '\n🚩 占领了 ' + (KingdomMap.TERRITORIES[tId]?.name || '') + '！';
+              // Check for Destiny Choice trigger after territory fully conquered
+              if (typeof Destiny !== 'undefined') {
+                try {
+                  const destinyChoice = Destiny.checkTrigger(tId);
+                  if (destinyChoice) {
+                    stage._pendingDestiny = destinyChoice;
+                    detailText += '\n⭐ 天命抉择即将来临...';
+                  }
+                } catch(e) { console.error('[Destiny trigger check]', e); }
+              }
             } else {
               detailText += '\n下一阶段: ' + (KingdomMap.STAGE_TEMPLATES[stageType]?.name || '');
             }
@@ -3012,11 +3073,23 @@ App.startBattle = async function() {
             App._startMapBattle(stage._territoryId, stageType);
           };
         } else {
-          nextBtn.textContent = '返回天下 ▶';
+          // Territory fully conquered — check for destiny
+          nextBtn.textContent = stage._pendingDestiny ? '⭐ 天命抉择 ▶' : '返回天下 ▶';
           nextBtn.style.display = 'block';
           nextBtn.onclick = () => {
             document.getElementById('result-modal').classList.add('hidden');
             try { if (typeof BattleCanvas !== 'undefined') BattleCanvas.stop(); } catch(e) {}
+            if (stage._pendingDestiny && typeof Destiny !== 'undefined') {
+              try {
+                const dc = stage._pendingDestiny;
+                stage._pendingDestiny = null;
+                Destiny.showChoice(dc, () => {
+                  App.switchPage('map');
+                  App.toast('天命已定！', 3000);
+                });
+                return;
+              } catch(e2) { console.error('[Destiny next btn]', e2); }
+            }
             App.switchPage('map');
           };
         }
@@ -3061,6 +3134,24 @@ App.closeResult = function() {
   document.getElementById('result-modal').classList.add('hidden');
   try { if (typeof BattleCanvas !== 'undefined') BattleCanvas.stop(); } catch(e) {}
   const stage = this.currentStage;
+
+  // Check for pending destiny choice before returning to map
+  if (stage && stage._pendingDestiny && typeof Destiny !== 'undefined') {
+    try {
+      const destinyChoice = stage._pendingDestiny;
+      stage._pendingDestiny = null; // Clear so it doesn't fire again
+      Destiny.showChoice(destinyChoice, () => {
+        // After destiny choice, return to map
+        App.switchPage('map');
+        App.toast('天命已定！查看天命录了解详情', 3000);
+      });
+      return; // Don't navigate yet — destiny overlay is showing
+    } catch(e) {
+      console.error('[Destiny showChoice]', e);
+      // Fall through to normal navigation
+    }
+  }
+
   if (stage._isMapBattle) {
     this.switchPage('map');
   } else if (stage._dungeonFloor) {

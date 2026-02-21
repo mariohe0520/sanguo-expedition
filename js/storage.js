@@ -215,6 +215,10 @@ const Storage = {
   },
   getAllHeroPersonality() { return this._get('heroPersonality', {}); },
 
+  // === Destiny Choice System ===
+  getDestinyState() { return this._get('destinyState', null); },
+  saveDestinyState(s) { this._set('destinyState', s); },
+
   // === v4: Seasonal Content ===
   getSeasonalState() {
     return this._get('seasonalState', {
