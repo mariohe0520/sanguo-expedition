@@ -448,6 +448,7 @@ const KingdomMap = {
       const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
       g.setAttribute('data-territory', id);
       g.style.cursor = isLocked ? 'default' : 'pointer';
+      g.setAttribute('pointer-events', isLocked ? 'none' : 'all');
 
       // Pulse for available territories
       if (isAvailable) {
@@ -483,8 +484,9 @@ const KingdomMap = {
       hitArea.setAttribute('cx', t.x);
       hitArea.setAttribute('cy', t.y);
       hitArea.setAttribute('r', '7');
-      hitArea.setAttribute('fill', 'transparent');
+      hitArea.setAttribute('fill', 'rgba(0,0,0,0.001)');
       hitArea.setAttribute('stroke', 'none');
+      hitArea.setAttribute('pointer-events', 'all');
       g.appendChild(hitArea);
 
       // Territory circle background

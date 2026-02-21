@@ -98,7 +98,7 @@
 #map-territory-info {
   position: relative;
   z-index: 10;
-  padding: 16px;
+  padding: 0 16px;
   color: var(--text, #f0e6d3);
   max-height: 0;
   overflow: hidden;
@@ -106,14 +106,16 @@
   transition: max-height .35s ease, opacity .25s ease, padding .35s ease;
   background: rgba(10,12,18,.95);
   border-radius: 12px;
-  margin-top: 8px;
-  border: 1px solid rgba(212,168,67,.12);
+  margin-top: 0;
+  border: 1px solid transparent;
 }
 
 #map-territory-info.visible {
   max-height: 300px;
   opacity: 1;
   padding: 16px;
+  margin-top: 8px;
+  border-color: rgba(212,168,67,.12);
 }
 
 /* Pull handle indicator */
