@@ -628,6 +628,8 @@ const App = {
         BattleCanvas.init(canvasEl);
         BattleCanvas.setupFighters(Battle.state);
         BattleCanvas.start();
+        // Init SVG VFX overlay
+        if (typeof BattleSVGVFX !== 'undefined') try { BattleSVGVFX.init(); } catch(e2) {}
         // Safety re-resize after layout settles (mobile Safari can be slow)
         setTimeout(() => {
           BattleCanvas.resize();
@@ -675,6 +677,10 @@ const App = {
         BattleCanvas.syncState(state);
         if (Battle.vfx && Battle.vfx.length > 0) {
           BattleCanvas.processVFX(Battle.vfx);
+          // SVG overlay VFX — premium effects on top
+          if (typeof BattleSVGVFX !== 'undefined') {
+            try { BattleSVGVFX.processVFX(Battle.vfx); } catch(e2) {}
+          }
         }
       }
     } catch(e) { /* VFX errors should never break gameplay */ }
@@ -2634,6 +2640,13 @@ App.startBattle = async function() {
     if (typeof BattleCanvas !== 'undefined' && BattleCanvas.running) {
       if (result === 'victory') BattleCanvas.showVictory();
       else BattleCanvas.showDefeat();
+    }
+  } catch(e) {}
+  // SVG victory/defeat overlay
+  try {
+    if (typeof BattleSVGVFX !== 'undefined') {
+      if (result === 'victory') BattleSVGVFX.victoryEffect();
+      else BattleSVGVFX.defeatEffect();
     }
   } catch(e) {}
 
