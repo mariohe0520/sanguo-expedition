@@ -157,12 +157,20 @@ const BattleCanvas = {
     const factionColor = factionColors[hero?.faction] || '#6c757d';
 
     if (!this._portraitImages) this._portraitImages = {};
-    if (typeof Portraits !== 'undefined' && Portraits.DATA[f.id] && !this._portraitImages[f.id]) {
+    if (typeof Portraits !== 'undefined' && !this._portraitImages[f.id]) {
       try {
-        const svgStr = Portraits.get(f.id, 80);
-        const img = new Image();
-        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
-        this._portraitImages[f.id] = img;
+        if (Portraits.hasPng(f.id)) {
+          // Use PNG portrait directly
+          const img = new Image();
+          img.src = Portraits.getPngUrl(f.id);
+          this._portraitImages[f.id] = img;
+        } else if (Portraits.DATA[f.id]) {
+          // Fallback to SVG
+          const svgStr = Portraits._render(Portraits.DATA[f.id], 80);
+          const img = new Image();
+          img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+          this._portraitImages[f.id] = img;
+        }
       } catch(e) {}
     }
     const portraitImg = this._portraitImages[f.id];

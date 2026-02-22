@@ -80,11 +80,11 @@ const Visuals = {
     const sizes = { xs: 24, sm: 36, md: 50, lg: 72, xl: 100 };
     const px = sizes[size] || 50;
 
-    // Use SVG portrait if available
-    if (typeof Portraits !== 'undefined' && Portraits.DATA[heroId]) {
-      const svg = Portraits.get(heroId, px);
+    // Use portrait (PNG or SVG) if available
+    if (typeof Portraits !== 'undefined' && (Portraits.hasPng(heroId) || Portraits.DATA[heroId])) {
+      const portrait = Portraits.get(heroId, px);
       return '<div class="hp hp-' + size + ' hp-r' + r + ' hp-f-' + faction + '" style="--hc1:' + vd.c1 + ';--hc2:' + vd.c2 + ';overflow:hidden">' +
-        svg +
+        portrait +
       '</div>';
     }
 
