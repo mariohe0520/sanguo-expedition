@@ -283,6 +283,7 @@ const App = {
   currentDetailHero: null,
 
   init() {
+    Portraits.init(); // Load PNG portrait registry
     this._showSplash();
     this.updateHeader();
     this.renderHome();

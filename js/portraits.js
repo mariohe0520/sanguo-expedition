@@ -1,15 +1,57 @@
-// 三国·天命 — Stylized SVG Character Portraits
-// Replaces plain circles with detailed character artwork
+// 三国·天命 — AI-Generated Character Portraits (Flux/SDXL)
+// Uses PNG portraits with SVG fallback for unknown heroes
 
 const Portraits = {
-  // Each portrait is a hand-crafted SVG with character-specific features
-  // Faction colors: Shu=#2d6a4f, Wei=#1a3a6a, Wu=#8b1a1a, Qun=#5a2090
-
+  // PNG portrait path prefix
+  PNG_PATH: 'img/heroes/',
+  
+  // Track which PNGs exist (populated on init)
+  _pngAvailable: new Set(),
   _cache: {},
+  _initialized: false,
+
+  // Initialize: check which PNG portraits exist
+  async init() {
+    if (this._initialized) return;
+    const heroIds = ['liubei','guanyu','zhangfei','zhugeliang','zhaoyun','huangzhong','machao','weiyan',
+      'jiangwei','pangtong','huangyueying','guanping','zhangbao','fazheng','mayunlu','yanyan','masu','liushan',
+      'caocao','simayi','xiahouyuan','xuchu','zhangliao','dianwei','xiahoudun','caoren','guojia','xunyu',
+      'zhanghe','yujin','caopi','zhenji','pangde','jiachu','xuhuang','caozhang',
+      'sunquan','zhouyu','lumeng','ganning','huanggai','sunce','taishici','luxun',
+      'daqiao','xiaoqiao','sunshangxiang','zhoutai','lvsuzong','zhugejin',
+      'lvbu','diaochan','dongzhuo','yuanshao','gongsunzan','yangliang','wenchou','huatuo','zuoci','yuji'];
+    heroIds.forEach(id => this._pngAvailable.add(id));
+    this._initialized = true;
+  },
+
+  // Check if PNG exists for hero
+  hasPng(heroId) {
+    // Normalize heroId (handle case variations)
+    const normalized = heroId.toLowerCase().replace(/[^a-z]/g, '');
+    return this._pngAvailable.has(normalized);
+  },
+
+  // Get PNG URL
+  getPngUrl(heroId) {
+    const normalized = heroId.toLowerCase().replace(/[^a-z]/g, '');
+    return `${this.PNG_PATH}${normalized}.png`;
+  },
 
   get(heroId, size = 80) {
     const key = heroId + '-' + size;
     if (this._cache[key]) return this._cache[key];
+    
+    // Try PNG first
+    const normalized = heroId.toLowerCase().replace(/[^a-z]/g, '');
+    if (this._pngAvailable.has(normalized)) {
+      const html = `<div style="width:${size}px;height:${size}px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,215,0,0.6);box-shadow:0 0 8px rgba(255,215,0,0.3)">
+        <img src="${this.PNG_PATH}${normalized}.png" width="${size}" height="${size}" style="object-fit:cover;display:block" loading="lazy" alt="${heroId}">
+      </div>`;
+      this._cache[key] = html;
+      return html;
+    }
+    
+    // Fallback to SVG
     const data = this.DATA[heroId];
     if (!data) return this._fallback(heroId, size);
     const svg = this._render(data, size);
@@ -21,6 +63,20 @@ const Portraits = {
   getRect(heroId, size = 120) {
     const key = heroId + '-rect-' + size;
     if (this._cache[key]) return this._cache[key];
+    
+    // Try PNG first
+    const normalized = heroId.toLowerCase().replace(/[^a-z]/g, '');
+    if (this._pngAvailable.has(normalized)) {
+      const w = size;
+      const h = Math.round(size * 1.3);
+      const html = `<div style="width:${w}px;height:${h}px;border-radius:8px;overflow:hidden;border:2px solid rgba(255,215,0,0.6);box-shadow:0 2px 12px rgba(0,0,0,0.4)">
+        <img src="${this.PNG_PATH}${normalized}.png" width="${w}" height="${h}" style="object-fit:cover;display:block" loading="lazy" alt="${heroId}">
+      </div>`;
+      this._cache[key] = html;
+      return html;
+    }
+    
+    // Fallback to SVG
     const data = this.DATA[heroId];
     if (!data) return this._fallbackRect(heroId, size);
     const svg = this._renderRect(data, size);
