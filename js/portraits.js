@@ -10,7 +10,15 @@ const Portraits = {
   _cache: {},
   _initialized: false,
 
-  // Initialize: check which PNG portraits exist
+  // Hero ID aliases: game heroId → portrait filename
+  ID_MAP: {
+    'ganningwu': 'ganning',
+    'luXun': 'luxun',
+    'zhugeLiang': 'zhugeliang',
+    'lusu': 'lvsuzong',
+  },
+
+  // Initialize: register available PNG portraits
   async init() {
     if (this._initialized) return;
     const heroIds = ['liubei','guanyu','zhangfei','zhugeliang','zhaoyun','huangzhong','machao','weiyan',
@@ -19,22 +27,26 @@ const Portraits = {
       'zhanghe','yujin','caopi','zhenji','pangde','jiachu','xuhuang','caozhang',
       'sunquan','zhouyu','lumeng','ganning','huanggai','sunce','taishici','luxun',
       'daqiao','xiaoqiao','sunshangxiang','zhoutai','lvsuzong','zhugejin',
-      'lvbu','diaochan','dongzhuo','yuanshao','gongsunzan','yangliang','wenchou','huatuo','zuoci','yuji'];
+      'lvbu','diaochan','dongzhuo','yuanshao','gongsunzan','yangliang','wenchou','huatuo','zuoci','yuji',
+      'simazhao','zhangjiao','zhangzhao','zhurong','menghuo'];
     heroIds.forEach(id => this._pngAvailable.add(id));
     this._initialized = true;
   },
 
+  // Resolve heroId to portrait filename
+  _resolve(heroId) {
+    if (this.ID_MAP[heroId]) return this.ID_MAP[heroId];
+    return heroId.toLowerCase().replace(/[^a-z]/g, '');
+  },
+
   // Check if PNG exists for hero
   hasPng(heroId) {
-    // Normalize heroId (handle case variations)
-    const normalized = heroId.toLowerCase().replace(/[^a-z]/g, '');
-    return this._pngAvailable.has(normalized);
+    return this._pngAvailable.has(this._resolve(heroId));
   },
 
   // Get PNG URL
   getPngUrl(heroId) {
-    const normalized = heroId.toLowerCase().replace(/[^a-z]/g, '');
-    return `${this.PNG_PATH}${normalized}.png`;
+    return `${this.PNG_PATH}${this._resolve(heroId)}.png`;
   },
 
   get(heroId, size = 80) {
@@ -42,10 +54,10 @@ const Portraits = {
     if (this._cache[key]) return this._cache[key];
     
     // Try PNG first
-    const normalized = heroId.toLowerCase().replace(/[^a-z]/g, '');
-    if (this._pngAvailable.has(normalized)) {
+    const resolved = this._resolve(heroId);
+    if (this._pngAvailable.has(resolved)) {
       const html = `<div style="width:${size}px;height:${size}px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,215,0,0.6);box-shadow:0 0 8px rgba(255,215,0,0.3)">
-        <img src="${this.PNG_PATH}${normalized}.png" width="${size}" height="${size}" style="object-fit:cover;display:block" loading="lazy" alt="${heroId}">
+        <img src="${this.PNG_PATH}${resolved}.png" width="${size}" height="${size}" style="object-fit:cover;display:block" loading="lazy" alt="${heroId}">
       </div>`;
       this._cache[key] = html;
       return html;
@@ -65,12 +77,12 @@ const Portraits = {
     if (this._cache[key]) return this._cache[key];
     
     // Try PNG first
-    const normalized = heroId.toLowerCase().replace(/[^a-z]/g, '');
-    if (this._pngAvailable.has(normalized)) {
+    const resolved = this._resolve(heroId);
+    if (this._pngAvailable.has(resolved)) {
       const w = size;
       const h = Math.round(size * 1.3);
       const html = `<div style="width:${w}px;height:${h}px;border-radius:8px;overflow:hidden;border:2px solid rgba(255,215,0,0.6);box-shadow:0 2px 12px rgba(0,0,0,0.4)">
-        <img src="${this.PNG_PATH}${normalized}.png" width="${w}" height="${h}" style="object-fit:cover;display:block" loading="lazy" alt="${heroId}">
+        <img src="${this.PNG_PATH}${resolved}.png" width="${w}" height="${h}" style="object-fit:cover;display:block" loading="lazy" alt="${heroId}">
       </div>`;
       this._cache[key] = html;
       return html;
