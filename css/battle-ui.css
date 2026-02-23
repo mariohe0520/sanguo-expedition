@@ -65,14 +65,15 @@
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  gap: 6px;
-  padding: 14px 6px 8px;
+  gap: 8px;
+  padding: 14px 20px 8px;
   position: relative;
   z-index: 2;
+  flex-wrap: wrap;
 }
 .bui-row.enemy-row {
   align-items: flex-start;
-  padding: 8px 6px 10px;
+  padding: 8px 20px 10px;
 }
 
 /* ── Center Divider ── */
@@ -100,7 +101,7 @@
 
 /* ── Fighter Card ── */
 .bui-fighter {
-  width: 100px;
+  width: 85px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -115,7 +116,7 @@
 
 /* ── Portrait Container ── */
 .bui-portrait {
-  width: 100px;
+  width: 85px;
   height: 100px;
   border-radius: 12px;
   border: 2px solid rgba(255,255,255,.08);
