@@ -342,6 +342,14 @@ const App = {
       n.classList.toggle('active', navPages[i] === page);
     });
     this.currentPage = page;
+    
+    // Clean up battle when leaving battle page
+    if (this.currentPage === 'battle' && page !== 'battle') {
+      try { if (typeof BattleUI !== 'undefined') BattleUI.destroy(); } catch(e) {}
+      try { if (typeof BattleCanvas !== 'undefined') BattleCanvas.stop(); } catch(e) {}
+      try { if (typeof BattleSVGVFX !== 'undefined') BattleSVGVFX.clear(); } catch(e) {}
+    }
+    
     if (page === 'home') this.renderHome();
     if (page === 'city') this.renderCity();
     if (page === 'campaign') this.renderCampaign();
