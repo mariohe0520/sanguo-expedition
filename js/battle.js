@@ -308,6 +308,11 @@ const Battle = {
 
     let dmg = this.calcDamage(attacker, defender);
     
+    // Play attack sound
+    if (typeof BattleSound !== 'undefined') {
+      BattleSound.playAttack(attacker.faction);
+    }
+    
     // Unit type advantage
     const advMult = this.getUnitAdvantage(attacker.unit, defender.unit);
     dmg = Math.floor(dmg * advMult);
@@ -474,6 +479,10 @@ const Battle = {
     const bondCrit = atk._bondCrit || 0;
     const critChance = 10 + (atk.buffs.find(b => b.stat === 'crit')?.pct || 0) + equipCrit + bondCrit;
     const isCrit = Math.random() * 100 < critChance;
+    // Play crit sound
+    if (isCrit && typeof BattleSound !== 'undefined') {
+      BattleSound.playCrit();
+    }
     // Crit damage bonus from skill tree
     let critMult = 1.5;
     if (isCrit && atk.equipEffects?.crit_dmg_pct) critMult += atk.equipEffects.crit_dmg_pct / 100;
@@ -543,6 +552,11 @@ const Battle = {
 
     this.addLog(`${Visuals.heroTag(fighter.id)} ${fighter.name} 释放【${s.name}】！`);
     this.vfx.push({ type: 'skill', caster: `${fighter.side}-${fighter.pos}`, skillName: s.name });
+    
+    // Play skill sound
+    if (typeof BattleSound !== 'undefined') {
+      BattleSound.playSkill();
+    }
 
     // Equipment set: 凤翼 skill damage bonus
     let skillDmgBonus = fighter.equipEffects?.skill_dmg_pct || 0;
