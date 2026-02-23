@@ -1027,6 +1027,9 @@ const App = {
 
   async startBattle() {
     document.getElementById('btn-battle-start').classList.add('hidden');
+    // Hide pre-battle team preview when battle starts
+    const previewEl = document.getElementById('battle-team-preview');
+    if (previewEl) previewEl.style.display = 'none';
 
     // Show strategy card selection overlay before battle
     if (typeof Strategy !== 'undefined') {
@@ -2873,8 +2876,9 @@ const App = {
           '<div style="font-size:12px;color:var(--gold)">' + Visuals.secIcon('lock') + '</div>' +
         '</div>';
       } else if (hero.comingSoon) {
+        const csPortrait = (typeof Portraits !== 'undefined' && Portraits.hasPng(id)) ? Portraits.get(id, 50) : '<span>' + hero.emoji + '</span>';
         comingSoonHtml += '<div class="hero-card rarity-' + hero.rarity + '" style="opacity:.65">' +
-          '<div class="hero-emoji">' + hero.emoji + '</div>' +
+          '<div class="hero-emoji">' + csPortrait + '</div>' +
           '<div class="hero-info">' +
             '<div class="hero-name">' + hero.name + ' · ' + hero.title + ' <span style="font-size:10px;color:var(--gold)">即将推出</span></div>' +
             '<div class="hero-sub">' + (UNIT_TYPES[hero.unit]?.emoji || '') + ' ' + (UNIT_TYPES[hero.unit]?.name || '') +
