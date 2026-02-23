@@ -512,6 +512,16 @@
 </nav>
 
 <!-- Scripts -->
+<!-- Three.js Import Map for 3D Battle -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+
 <script src="js/heroes.js"></script>
 <script src="js/visuals.js"></script>
 <script src="js/storage.js"></script>
@@ -532,6 +542,10 @@
 <script src="js/hero-personality.js"></script>
 <script src="js/destiny.js"></script>
 <script src="js/dynamic-battlefield.js"></script>
+
+<!-- 3D Battle System -->
+<script type="module" src="js/battle3d/battle-scene.js"></script>
+<script src="js/battle3d/launcher.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.3.2/dist/pixi.min.js"></script>
 <script src="js/battle-ui.js?v=1"></script>
 <script src="js/battle-canvas.js"></script>
