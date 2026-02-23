@@ -1,4 +1,4 @@
-/* ═══ Battle SVG VFX Overlay ═══ */
+/* ═══ Battle SVG VFX Overlay — ENHANCED FOR VISIBILITY ═══ */
 #battle-svg-overlay {
   position: absolute;
   inset: 0;
@@ -8,25 +8,40 @@
   border-radius: 16px;
 }
 
-/* ═══ SLASH ANIMATIONS ═══ */
+/* ═══ SLASH ANIMATIONS — BIGGER & MORE IMPACTFUL ═══ */
 @keyframes slash-draw {
-  0% { stroke-dashoffset: 800; opacity: 1; }
-  60% { stroke-dashoffset: 0; opacity: 1; }
-  100% { stroke-dashoffset: 0; opacity: 0; }
+  0% { stroke-dashoffset: 1200; opacity: 1; stroke-width: 12px; }
+  40% { stroke-dashoffset: 0; opacity: 1; stroke-width: 8px; }
+  100% { stroke-dashoffset: 0; opacity: 0; stroke-width: 2px; }
 }
 @keyframes slash-draw-fast {
-  0% { stroke-dashoffset: 600; opacity: 1; }
-  50% { stroke-dashoffset: 0; opacity: 1; }
-  100% { stroke-dashoffset: 0; opacity: 0; }
+  0% { stroke-dashoffset: 1000; opacity: 1; stroke-width: 10px; }
+  40% { stroke-dashoffset: 0; opacity: 1; stroke-width: 6px; }
+  100% { stroke-dashoffset: 0; opacity: 0; stroke-width: 1px; }
+}
+@keyframes slash-draw-crit {
+  0% { stroke-dashoffset: 1500; opacity: 1; stroke-width: 16px; }
+  30% { stroke-dashoffset: 0; opacity: 1; stroke-width: 12px; }
+  100% { stroke-dashoffset: 0; opacity: 0; stroke-width: 2px; }
 }
 .svg-slash path {
-  stroke-dasharray: 800;
-  stroke-dashoffset: 800;
-  animation: slash-draw 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  animation: slash-draw 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  stroke: #ff6b6b !important;
+  filter: drop-shadow(0 0 10px #ff0000);
 }
 .svg-slash.fast path {
-  stroke-dasharray: 600;
-  animation: slash-draw-fast 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  stroke-dasharray: 1000;
+  animation: slash-draw-fast 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  stroke: #ffd700 !important;
+  filter: drop-shadow(0 0 8px #ffa500);
+}
+.svg-slash.crit path {
+  stroke-dasharray: 1500;
+  animation: slash-draw-crit 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  stroke: #ff0000 !important;
+  filter: drop-shadow(0 0 15px #ff0000) drop-shadow(0 0 30px #ff6600);
 }
 
 /* ═══ KILL SCREEN SPLIT ═══ */
