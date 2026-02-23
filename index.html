@@ -36,11 +36,12 @@
   </div>
 
   <!-- Idle Reward Card -->
-  <div class="card card-glow" id="idle-card" onclick="App.collectIdle()">
-    <div class="idle-reward">
-      <div class="label">离线收益 (点击领取)</div>
-      <div class="big-num" id="idle-gold">+0</div>
-      <div class="label" id="idle-time">0分钟</div>
+  <div class="card card-glow" id="idle-card" onclick="App.collectIdle()" style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border:2px solid #f0b429;cursor:pointer">
+    <div class="idle-reward" style="text-align:center">
+      <div class="label" style="color:#f0b429;font-weight:700;font-size:14px">🎁 离线收益</div>
+      <div class="big-num" id="idle-gold" style="color:#ffd700;font-size:32px;font-weight:900;text-shadow:0 0 20px rgba(255,215,0,0.6)">+0</div>
+      <div class="label" id="idle-time" style="color:#94a3b8">0分钟离线收益</div>
+      <div style="margin-top:8px;font-size:11px;color:#64748b">👆 点击领取</div>
     </div>
   </div>
 

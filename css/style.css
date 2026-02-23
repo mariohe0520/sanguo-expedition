@@ -348,3 +348,9 @@ body { font-family:-apple-system,system-ui,sans-serif; background:var(--bg); col
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
+
+
+/* Idle card pulse when reward available */
+@keyframes idlePulse { 0%,100%{box-shadow:0 0 20px rgba(240,180,41,0.3)} 50%{box-shadow:0 0 35px rgba(240,180,41,0.6)} }
+#idle-card:not(.hidden){ animation: idlePulse 2s ease-in-out infinite }
+
