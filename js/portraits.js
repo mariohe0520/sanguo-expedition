@@ -65,12 +65,15 @@ const Portraits = {
     // Try JPG first (compressed for faster loading)
     const resolved = this._resolve(heroId);
     if (this._pngAvailable.has(resolved)) {
+      const imgPath = `${this.PNG_PATH}${resolved}.jpg`;
+      console.log(`[Portrait] Loading: ${heroId} -> ${imgPath}`);
       const html = `<div style="width:${size}px;height:${size}px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,215,0,0.6);box-shadow:0 0 8px rgba(255,215,0,0.3)">
-        <img src="${this.PNG_PATH}${resolved}.jpg" width="${size}" height="${size}" style="object-fit:cover;display:block" loading="lazy" alt="${heroId}">
+        <img src="${imgPath}" width="${size}" height="${size}" style="object-fit:cover;display:block" loading="lazy" alt="${heroId}" onerror="console.error('[Portrait] Failed to load: ${imgPath}')">
       </div>`;
       this._cache[key] = html;
       return html;
     }
+    console.warn(`[Portrait] No JPG found for: ${heroId}, using fallback`);
     
     // Fallback to SVG
     const data = this.DATA[heroId];
