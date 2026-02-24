@@ -282,16 +282,24 @@ const App = {
   currentVisitHero: null,
   currentDetailHero: null,
 
-  init() {
-    Portraits.init(); // Load PNG portrait registry
+  async init() {
+    // Initialize Portraits first (required for hero images)
+    if (typeof Portraits !== 'undefined') {
+      await Portraits.init();
+    }
+    
     this._showSplash();
     this.updateHeader();
-    this.renderHome();
-    this.renderCampaign();
-    this.renderRoster();
-    this.renderTeam();
-    this.renderGacha();
-    this.checkIdleReward();
+    
+    // Delay render slightly to ensure DOM is ready
+    setTimeout(() => {
+      this.renderHome();
+      this.renderCampaign();
+      this.renderRoster();
+      this.renderTeam();
+      this.renderGacha();
+      this.checkIdleReward();
+    }, 100);
   },
 
   _showSplash() {

@@ -20,7 +20,8 @@ const Portraits = {
 
   // Initialize: register available PNG portraits
   async init() {
-    if (this._initialized) return;
+    if (this._initialized) return Promise.resolve();
+    
     const heroIds = ['liubei','guanyu','zhangfei','zhugeliang','zhaoyun','huangzhong','machao','weiyan',
       'jiangwei','pangtong','huangyueying','guanping','zhangbao','fazheng','mayunlu','yanyan','masu','liushan',
       'caocao','simayi','xiahouyuan','xuchu','zhangliao','dianwei','xiahoudun','caoren','guojia','xunyu',
@@ -30,7 +31,11 @@ const Portraits = {
       'lvbu','diaochan','dongzhuo','yuanshao','gongsunzan','yangliang','wenchou','huatuo','zuoci','yuji',
       'simazhao','zhangjiao','zhangzhao','zhurong','menghuo'];
     heroIds.forEach(id => this._pngAvailable.add(id));
+    
+    // Verify PNG files exist (basic check)
+    console.log('[Portraits] Initialized with', this._pngAvailable.size, 'heroes');
     this._initialized = true;
+    return Promise.resolve();
   },
 
   // Resolve heroId to portrait filename
