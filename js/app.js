@@ -906,10 +906,12 @@ const App = {
     } catch(e) {}
 
     // Initialize premium BattleUI renderer (HTML/CSS with large portraits)
+    // ⚠️ TEMPORARILY DISABLED - using simpler DOM rendering to avoid visual bugs
     try {
       if (typeof BattleUI !== 'undefined') {
         BattleUI.destroy(); // Clean up previous
-        BattleUI.init(Battle.state);
+        // BattleUI.init(Battle.state); // Disabled for stability
+        console.log('[Battle] Using simple DOM renderer');
       }
     } catch(e) { console.error('[BattleUI init]', e); }
 
