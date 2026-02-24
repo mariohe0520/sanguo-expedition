@@ -1,8 +1,8 @@
 // 三国·天命 — AI-Generated Character Portraits (Flux/SDXL)
-// Uses PNG portraits with SVG fallback for unknown heroes
+// Uses JPG portraits (compressed) with SVG fallback for unknown heroes
 
 const Portraits = {
-  // PNG portrait path prefix
+  // JPG portrait path prefix (compressed for faster loading)
   PNG_PATH: 'img/heroes/',
   
   // Track which PNGs exist (populated on init)
@@ -32,7 +32,8 @@ const Portraits = {
       'simazhao','zhangjiao','zhangzhao','zhurong','menghuo',
       // 士兵/NPC头像
       'soldier','archer_recruit','cavalry_recruit','shield_militia','mage_acolyte',
-      'elite_spear','elite_archer','elite_cavalry','elite_shield','elite_mage'];
+      'elite_spear','elite_archer','elite_cavalry','elite_shield','elite_mage',
+      'fire_archer','fire_soldier','crossbow_corps','navy_soldier'];
     heroIds.forEach(id => this._pngAvailable.add(id));
     
     // Verify PNG files exist (basic check)
@@ -52,20 +53,20 @@ const Portraits = {
     return this._pngAvailable.has(this._resolve(heroId));
   },
 
-  // Get PNG URL
+  // Get JPG URL (compressed)
   getPngUrl(heroId) {
-    return `${this.PNG_PATH}${this._resolve(heroId)}.png`;
+    return `${this.PNG_PATH}${this._resolve(heroId)}.jpg`;
   },
 
   get(heroId, size = 80) {
     const key = heroId + '-' + size;
     if (this._cache[key]) return this._cache[key];
     
-    // Try PNG first
+    // Try JPG first (compressed for faster loading)
     const resolved = this._resolve(heroId);
     if (this._pngAvailable.has(resolved)) {
       const html = `<div style="width:${size}px;height:${size}px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,215,0,0.6);box-shadow:0 0 8px rgba(255,215,0,0.3)">
-        <img src="${this.PNG_PATH}${resolved}.png" width="${size}" height="${size}" style="object-fit:cover;display:block" loading="lazy" alt="${heroId}">
+        <img src="${this.PNG_PATH}${resolved}.jpg" width="${size}" height="${size}" style="object-fit:cover;display:block" loading="lazy" alt="${heroId}">
       </div>`;
       this._cache[key] = html;
       return html;
@@ -84,13 +85,13 @@ const Portraits = {
     const key = heroId + '-rect-' + size;
     if (this._cache[key]) return this._cache[key];
     
-    // Try PNG first
+    // Try JPG first (compressed for faster loading)
     const resolved = this._resolve(heroId);
     if (this._pngAvailable.has(resolved)) {
       const w = size;
       const h = Math.round(size * 1.3);
       const html = `<div style="width:${w}px;height:${h}px;border-radius:8px;overflow:hidden;border:2px solid rgba(255,215,0,0.6);box-shadow:0 2px 12px rgba(0,0,0,0.4)">
-        <img src="${this.PNG_PATH}${resolved}.png" width="${w}" height="${h}" style="object-fit:cover;display:block" loading="lazy" alt="${heroId}">
+        <img src="${this.PNG_PATH}${resolved}.jpg" width="${w}" height="${h}" style="object-fit:cover;display:block" loading="lazy" alt="${heroId}">
       </div>`;
       this._cache[key] = html;
       return html;
