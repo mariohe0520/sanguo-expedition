@@ -1,11 +1,11 @@
 // 三国·天命 — Hero Database
 // 兵种克制: 骑→弓→枪→盾→术→骑
 const UNIT_TYPES = {
-  cavalry: { name:'骑兵', icon:'骑', strong:'archer', weak:'spear' },
-  archer:  { name:'弓兵', icon:'弓', strong:'spear',  weak:'cavalry' },
-  spear:   { name:'枪兵', icon:'枪', strong:'shield', weak:'archer' },
-  shield:  { name:'盾兵', icon:'盾', strong:'mage',   weak:'spear' },
-  mage:    { name:'术士', icon:'术', strong:'cavalry', weak:'shield' }
+  cavalry: { name:'骑兵', icon:'骑', img:'img/heroes/cavalry_recruit.jpg', strong:'archer', weak:'spear' },
+  archer:  { name:'弓兵', icon:'弓', img:'img/heroes/archer_recruit.jpg', strong:'spear',  weak:'cavalry' },
+  spear:   { name:'枪兵', icon:'枪', img:'img/heroes/soldier.jpg', strong:'shield', weak:'archer' },
+  shield:  { name:'盾兵', icon:'盾', img:'img/heroes/shield_militia.jpg', strong:'mage',   weak:'spear' },
+  mage:    { name:'术士', icon:'术', img:'img/heroes/mage_acolyte.jpg', strong:'cavalry', weak:'shield' }
 };
 
 const FACTIONS = {

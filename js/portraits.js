@@ -641,6 +641,95 @@ const Portraits = {
       eyeColor: '#1a1a3a',
       lipColor: '#c04060',
     },
+
+    // ═══ ARCHER UNITS ═══
+    archer_recruit: {
+      id: 'archer_recruit',
+      bg1: '#2a1a0a', bg2: '#1a0a00',
+      skin1: '#d8c898', skin2: '#b8a878',
+      armor: '#5a4a2a',
+      hairColor: '#1a1a1a',
+      hair: `<ellipse cx="40" cy="24" rx="14" ry="10" fill="#1a1a1a"/>`,
+      headpiece: `<rect x="30" y="16" width="20" height="4" fill="#8a6a4a" rx="1"/>`,
+      weapon: `<line x1="65" y1="15" x2="55" y2="65" stroke="#6a5a4a" stroke-width="2"/>
+               <polygon points="52,10 58,15 52,20" fill="#8a7a6a"/>`,
+      frameBorder: 'rgba(200,150,50,0.4)',
+      eyeColor: '#2a2a2a',
+    },
+
+    elite_archer: {
+      id: 'elite_archer',
+      bg1: '#3a2a1a', bg2: '#2a1a0a',
+      skin1: '#e8d8b8', skin2: '#c8b898',
+      armor: '#8a6a3a',
+      hairColor: '#2a1a0a',
+      hair: `<ellipse cx="40" cy="22" rx="15" ry="11" fill="#2a1a0a"/>
+             <path d="M28 28 Q25 40 30 50" stroke="#2a1a0a" stroke-width="2" fill="none"/>`,
+      headpiece: `<path d="M32 14 L40 6 L48 14" fill="#c0a030"/>
+                  <circle cx="40" cy="10" r="2" fill="#ffd700"/>`,
+      weapon: `<line x1="62" y1="12" x2="52" y2="68" stroke="#a0a090" stroke-width="2.5"/>
+               <polygon points="48,8 56,12 52,22" fill="#d0c0a0"/>`,
+      frameBorder: 'rgba(255,180,0,0.5)',
+      eyeColor: '#2a1a0a',
+    },
+
+    fire_archer: {
+      id: 'fire_archer',
+      bg1: '#3a0a0a', bg2: '#2a0505',
+      skin1: '#d8b898', skin2: '#b89878',
+      armor: '#8a2a1a',
+      hairColor: '#1a0a0a',
+      hair: `<ellipse cx="40" cy="23" rx="14" ry="10" fill="#1a0a0a"/>
+             <path d="M26 30 Q22 42 28 52" stroke="#ff6a00" stroke-width="2" fill="none"/>`,
+      headpiece: `<path d="M28 12 L40 4 L52 12" fill="#ff4400"/>
+                  <circle cx="40" cy="8" r="3" fill="#ffaa00"/>`,
+      weapon: `<line x1="64" y1="10" x2="54" y2="66" stroke="#ff6600" stroke-width="2"/>
+               <polygon points="50,6 58,10 54,18" fill="#ffaa00"/>`,
+      frameBorder: 'rgba(255,68,0,0.6)',
+      eyeColor: '#ff4400',
+    },
+
+    crossbow_corps: {
+      id: 'crossbow_corps',
+      bg1: '#1a2a3a', bg2: '#0a1a28',
+      skin1: '#c8b8a8', skin2: '#a89888',
+      armor: '#3a4a5a',
+      hairColor: '#1a1a1a',
+      hair: `<ellipse cx="40" cy="24" rx="13" ry="9" fill="#1a1a1a"/>`,
+      headpiece: `<rect x="32" y="15" width="16" height="5" fill="#4a5a6a" rx="1"/>`,
+      weapon: `<rect x="55" y="15" width="15" height="6" fill="#6a7a8a" rx="1"/>
+               <line x1="55" y1="18" x2="45" y2="55" stroke="#8a9aaa" stroke-width="1.5"/>`,
+      frameBorder: 'rgba(100,150,200,0.4)',
+      eyeColor: '#2a2a3a',
+    },
+
+    fire_soldier: {
+      id: 'fire_soldier',
+      bg1: '#2a150a', bg2: '#1a0a05',
+      skin1: '#c8a888', skin2: '#a88868',
+      armor: '#6a3a1a',
+      hairColor: '#0a0a0a',
+      hair: `<ellipse cx="40" cy="25" rx="12" ry="8" fill="#0a0a0a"/>`,
+      headpiece: `<rect x="34" y="18" width="12" height="4" fill="#8a4a2a" rx="1"/>`,
+      weapon: `<line x1="15" y1="20" x2="20" y2="60" stroke="#7a5a4a" stroke-width="2.5"/>
+               <rect x="12" y="12" width="8" height="12" fill="#8a5a4a" rx="1"/>`,
+      frameBorder: 'rgba(200,80,0,0.4)',
+      eyeColor: '#3a1a0a',
+    },
+
+    navy_soldier: {
+      id: 'navy_soldier',
+      bg1: '#0a1a2a', bg2: '#050a18',
+      skin1: '#c8b8a8', skin2: '#a89888',
+      armor: '#2a3a4a',
+      hairColor: '#1a1a2a',
+      hair: `<ellipse cx="40" cy="24" rx="13" ry="9" fill="#1a1a2a"/>`,
+      headpiece: `<rect x="32" y="16" width="16" height="4" fill="#3a4a5a" rx="1"/>`,
+      weapon: `<line x1="18" y1="15" x2="15" y2="55" stroke="#6a7a8a" stroke-width="2"/>
+               <rect x="10" y="10" width="10" height="10" fill="#4a5a6a" rx="1"/>`,
+      frameBorder: 'rgba(50,100,200,0.4)',
+      eyeColor: '#2a2a3a',
+    },
   },
 };
 
