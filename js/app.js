@@ -3618,4 +3618,37 @@ App.init = function() {
 };
 
 // Boot
-document.addEventListener('DOMContentLoaded', () => App.init());
+document.addEventListener('DOMContentLoaded', () => {
+  App.init();
+  
+  // UI Sound Integration
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('button, .btn, .hero-card, .card, .page-tab, .dialogue-option');
+    if (!target) return;
+    
+    // Different sounds for different actions
+    if (target.classList.contains('btn-primary') || target.classList.contains('btn-gold')) {
+      if (typeof UISound !== 'undefined') UISound.playSuccess();
+    } else if (target.classList.contains('upgrade-btn')) {
+      if (typeof UISound !== 'undefined') UISound.playCoin();
+    } else if (target.classList.contains('hero-card')) {
+      if (typeof UISound !== 'undefined') UISound.playHover();
+    } else {
+      if (typeof UISound !== 'undefined') UISound.playClick();
+    }
+  });
+  
+  // Initialize BGM
+  if (typeof BGM !== 'undefined') {
+    BGM.init();
+    BGM.playPeaceBgm();
+  }
+  
+  // Play opening cinematic for new players
+  setTimeout(() => {
+    if (typeof OpeningCinematic !== 'undefined') {
+      OpeningCinematic.init();
+      OpeningCinematic.play();
+    }
+  }, 500);
+});
