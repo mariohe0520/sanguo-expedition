@@ -29,7 +29,10 @@ const Portraits = {
       'sunquan','zhouyu','lumeng','ganning','huanggai','sunce','taishici','luxun',
       'daqiao','xiaoqiao','sunshangxiang','zhoutai','lvsuzong','zhugejin',
       'lvbu','diaochan','dongzhuo','yuanshao','gongsunzan','yangliang','wenchou','huatuo','zuoci','yuji',
-      'simazhao','zhangjiao','zhangzhao','zhurong','menghuo'];
+      'simazhao','zhangjiao','zhangzhao','zhurong','menghuo',
+      // 士兵/NPC头像
+      'soldier','archer_recruit','cavalry_recruit','shield_militia','mage_acolyte',
+      'elite_spear','elite_archer','elite_cavalry','elite_shield','elite_mage'];
     heroIds.forEach(id => this._pngAvailable.add(id));
     
     // Verify PNG files exist (basic check)
