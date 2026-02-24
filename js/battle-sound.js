@@ -1,17 +1,50 @@
 // 三国·天命 — Battle Sound Effects Engine
-// Web Audio API based sound synthesis
+// Real Audio Samples + Web Audio API
 
 const BattleSound = {
   ctx: null,
   _initialized: false,
+  _buffers: {},
+  _loading: false,
+  
+  SOUND_PATH: 'assets/sounds/',
+  
+  SOUNDS: {
+    sword_slash: 'sword_slash.wav',
+    spear_thrust: 'spear_thrust.wav',
+    arrow_shot: 'arrow_shot.wav',
+    magic_cast: 'magic_cast.wav',
+    cavalry_charge: 'cavalry_charge.wav',
+    shield_block: 'shield_block.wav',
+    victory_fanfare: 'victory_fanfare.wav',
+    battle_start: 'battle_start.wav'
+  },
 
-  init() {
-    if (this._initialized) return;
+  async init() {
+    if (this._initialized || this._loading) return;
+    this._loading = true;
+    
     try {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      // Load all sound files
+      const loadPromises = Object.entries(this.SOUNDS).map(async ([key, filename]) => {
+        try {
+          const response = await fetch(this.SOUND_PATH + filename);
+          const arrayBuffer = await response.arrayBuffer();
+          this._buffers[key] = await this.ctx.decodeAudioData(arrayBuffer);
+        } catch (e) {
+          console.warn(`Failed to load sound: ${filename}`, e);
+        }
+      });
+      
+      await Promise.all(loadPromises);
       this._initialized = true;
+      console.log('🎵 Battle sounds loaded');
     } catch(e) {
       console.warn('BattleSound: Web Audio not supported');
+    } finally {
+      this._loading = false;
     }
   },
 
@@ -20,18 +53,36 @@ const BattleSound = {
     if (this.ctx?.state === 'suspended') this.ctx.resume();
     return this.ctx;
   },
+  
+  _playBuffer(name, volume = 1.0) {
+    const c = this._getCtx();
+    if (!c || !this._buffers[name]) {
+      // Fallback to synthesis if buffer not loaded
+      return false;
+    }
+    
+    const source = c.createBufferSource();
+    source.buffer = this._buffers[name];
+    
+    const gain = c.createGain();
+    gain.gain.value = volume;
+    
+    source.connect(gain);
+    gain.connect(c.destination);
+    source.start(0);
+    return true;
+  },
 
-  // 攻击音效 - 刀剑碰撞
+  // 剑兵攻击 - 剑气斩击
   playAttack(faction = 'shu') {
+    // Try real sound first
+    if (this._playBuffer('sword_slash', 0.7)) return;
+    
+    // Fallback synthesis
     const c = this._getCtx();
     if (!c) return;
     
-    const frequencies = {
-      shu: [320, 280, 240],
-      wei: [290, 250, 210],
-      wu: [340, 300, 260],
-      qun: [360, 320, 280]
-    };
+    const frequencies = { shu: [320, 280, 240], wei: [290, 250, 210], wu: [340, 300, 260], qun: [360, 320, 280] };
     const freqs = frequencies[faction] || frequencies.shu;
     
     freqs.forEach((f, i) => {
@@ -47,6 +98,50 @@ const BattleSound = {
       osc.start(c.currentTime + i * 0.02);
       osc.stop(c.currentTime + 0.12);
     });
+  },
+
+  // 枪兵攻击
+  playSpear() {
+    if (this._playBuffer('spear_thrust', 0.7)) return;
+    this.playAttack('shu');
+  },
+  
+  // 弓兵攻击
+  playArrow() {
+    if (this._playBuffer('arrow_shot', 0.6)) return;
+    
+    const c = this._getCtx();
+    if (!c) return;
+    
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(800, c.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(200, c.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.12, c.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.12);
+    osc.connect(gain);
+    gain.connect(c.destination);
+    osc.start(c.currentTime);
+    osc.stop(c.currentTime + 0.12);
+  },
+  
+  // 骑兵攻击
+  playCavalry() {
+    if (this._playBuffer('cavalry_charge', 0.8)) return;
+    this.playAttack('wei');
+  },
+  
+  // 盾兵格挡
+  playShield() {
+    if (this._playBuffer('shield_block', 0.8)) return;
+    this.playHit();
+  },
+  
+  // 法师技能
+  playMagic() {
+    if (this._playBuffer('magic_cast', 0.7)) return;
+    this.playSkill();
   },
 
   // 受到伤害
@@ -120,8 +215,11 @@ const BattleSound = {
     osc2.stop(c.currentTime + 0.35);
   },
 
-  // 胜利
+  // 胜利 - 使用真实音效
   playVictory() {
+    if (this._playBuffer('victory_fanfare', 0.8)) return;
+    
+    // Fallback synthesis
     const c = this._getCtx();
     if (!c) return;
     
@@ -139,6 +237,12 @@ const BattleSound = {
       osc.start(c.currentTime + i * 0.15);
       osc.stop(c.currentTime + i * 0.15 + 0.5);
     });
+  },
+  
+  // 战斗开始
+  playBattleStart() {
+    if (this._playBuffer('battle_start', 0.8)) return;
+    this.playVictory();
   },
 
   // 失败
