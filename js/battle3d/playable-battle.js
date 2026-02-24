@@ -2,34 +2,10 @@
  * 可玩的3D战斗 - 直接整合到游戏
  */
 
-// 创建战斗入口页面
+// 创建战斗入口页面 - 3D战斗已禁用
 function create3DBattleUI() {
-  const container = document.getElementById('page-battle');
-  if (!container) return;
-  
-  // 添加3D战斗按钮
-  const btn3D = document.createElement('button');
-  btn3D.id = 'btn-3d-battle-playable';
-  btn3D.className = 'btn btn-3d-play';
-  btn3D.innerHTML = '🎮 3D战斗模式';
-  btn3D.style.cssText = `
-    position: fixed;
-    bottom: 80px;
-    right: 20px;
-    padding: 15px 30px;
-    font-size: 18px;
-    font-weight: bold;
-    background: linear-gradient(135deg, #ff6b6b, #feca57);
-    color: white;
-    border: none;
-    border-radius: 30px;
-    cursor: pointer;
-    z-index: 1000;
-    box-shadow: 0 4px 15px rgba(255,107,107,0.4);
-  `;
-  
-  btn3D.onclick = startPlayable3DBattle;
-  document.body.appendChild(btn3D);
+  // 3D战斗功能已移除 - 用户反馈效果不佳
+  return;
 }
 
 // 开始可玩的3D战斗
