@@ -896,7 +896,8 @@ const App = {
     const enemyScale = stage._scaleMult || 1;
     // Pass territory ID for DynamicBattlefield terrain mapping
     const territoryId = stage._territoryId || null;
-    Battle.init(team, stage.enemies, terrain, weather, enemyScale, territoryId);
+    const bossEnhanced = stage.boss_enhanced || null;
+    Battle.init(team, stage.enemies, terrain, weather, enemyScale, territoryId, bossEnhanced);
 
     // Reset bond display for new battle
     try {
@@ -1072,7 +1073,19 @@ const App = {
       logEl.scrollTop = logEl.scrollHeight;
     };
 
-    const result = await Battle.run(1.5);
+    // Show speed controls during battle
+    this._battleSpeed = this._battleSpeed || 1;
+    const spdBar = document.getElementById('battle-speed-bar');
+    if (spdBar) spdBar.style.display = 'flex';
+    const startBtn = document.getElementById('btn-battle-start');
+    if (startBtn) startBtn.style.display = 'none';
+
+    const result = await Battle.run(this._battleSpeed);
+    // Hide speed controls, show start button again for next battle
+    const spdBar2 = document.getElementById('battle-speed-bar');
+    if (spdBar2) spdBar2.style.display = 'none';
+    const startBtn2 = document.getElementById('btn-battle-start');
+    if (startBtn2) startBtn2.style.display = '';
     // Reset strategy state
     if (typeof Strategy !== 'undefined') Strategy.reset();
     const modal = document.getElementById('result-modal');
@@ -3297,6 +3310,19 @@ App.init = function() {
 };
 
 // Emergency return — if battle gets stuck, player can always go back
+App.setBattleSpeed = function(spd) {
+  this._battleSpeed = spd;
+  // Update button styles
+  [1,2,3].forEach(s => {
+    const btn = document.getElementById('spd-' + s + 'x');
+    if (btn) btn.style.background = s === spd ? 'var(--gold)' : 'var(--card2)';
+  });
+  // Dynamically adjust Battle's delay if it's running
+  if (Battle && Battle.state && Battle.state.phase === 'fighting') {
+    Battle._speedOverride = spd;
+  }
+};
+
 App.emergencyReturn = function() {
   document.getElementById('result-modal').classList.add('hidden');
   try { if (typeof BattleUI !== 'undefined') BattleUI.destroy(); } catch(e) {}

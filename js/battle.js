@@ -7,9 +7,10 @@ const Battle = {
   onUpdate: null, // UI callback
 
   // Create battle state
-  init(playerTeam, enemyTeam, terrain='plains', weather='clear', enemyScale=1, territoryId=null) {
+  init(playerTeam, enemyTeam, terrain='plains', weather='clear', enemyScale=1, territoryId=null, bossEnhanced=null) {
     this.log = [];
     this.vfx = []; // Visual effects queue for UI layer
+    this.bossEnhanced = bossEnhanced || null;
     this.state = {
       turn: 0,
       phase: 'ready', // ready, fighting, victory, defeat
@@ -116,10 +117,12 @@ const Battle = {
 
   // ===== CORE BATTLE LOOP =====
   async run(speed = 1) {
+    this._speedOverride = null; // reset dynamic speed
     this.state.phase = 'fighting';
     while (this.state.phase === 'fighting') {
       this.state.turn++;
-      await this.executeTurn(speed);
+      const currentSpeed = this._speedOverride || speed;
+      await this.executeTurn(currentSpeed);
       // Check win/lose
       const playerAlive = this.state.player.filter(f => f?.alive).length;
       const enemyAlive = this.state.enemy.filter(f => f?.alive).length;
@@ -143,7 +146,14 @@ const Battle = {
         }
         break;
       }
-      if (this.state.turn > 30) { this.state.phase = 'defeat'; break; } // timeout
+      if (this.state.turn > 60) {
+        // Stalemate: whoever has more HP% wins
+        const playerHpPct = this.state.player.filter(f=>f?.alive).reduce((s,f)=>s+f.hp/f.maxHp,0);
+        const enemyHpPct  = this.state.enemy.filter(f=>f?.alive).reduce((s,f)=>s+f.hp/f.maxHp,0);
+        this.state.phase = playerHpPct >= enemyHpPct ? 'victory' : 'defeat';
+        this.addLog(`⏱ 战斗超时！${this.state.phase === 'victory' ? '我方血量更多，判定胜利！' : '敌方血量更多，判定失败...'}`);
+        break;
+      }
     }
     return this.state.phase;
   },
@@ -168,6 +178,44 @@ const Battle = {
       if (DynamicBattlefield.state) {
         this.state.terrain = DynamicBattlefield.state.terrain;
         this.state.weather = DynamicBattlefield.state.weather;
+      }
+    }
+
+    // Boss Enhanced Mechanics
+    if (this.bossEnhanced) {
+      const bossUnit = this.state.enemy.find(f => f?.alive);
+      if (bossUnit) {
+        const hpPct = bossUnit.hp / bossUnit.maxHp;
+        // enrage: below 40% HP, ATK/INT +60% (triggers once)
+        if (this.bossEnhanced.enrage && hpPct < 0.4 && !bossUnit._enraged) {
+          bossUnit._enraged = true;
+          bossUnit.atk = Math.floor(bossUnit.atk * 1.6);
+          bossUnit.int = Math.floor(bossUnit.int * 1.6);
+          this.addLog(`⚠️ Boss 暴怒！攻击力大幅提升！`);
+          this.vfx.push({ type: 'boss_enrage', target: `enemy-${bossUnit.pos}` });
+        }
+        // teleport: every 5 turns, boss swaps to lowest-HP player target
+        if (this.bossEnhanced.teleport && this.state.turn % 5 === 0 && this.state.turn > 0) {
+          const playerAlive = this.state.player.filter(f => f?.alive);
+          if (playerAlive.length > 1) {
+            const weakest = playerAlive.sort((a,b) => a.hp/a.maxHp - b.hp/b.maxHp)[0];
+            const hit = Math.floor(this.getEffStat(bossUnit, 'atk') * 1.5);
+            weakest.hp = Math.max(0, weakest.hp - hit);
+            if (weakest.hp <= 0) weakest.alive = false;
+            this.addLog(`⚡ Boss 瞬移至 ${weakest.name} 身后，偷袭 ${hit} 伤害！`);
+          }
+        }
+        // mirror: on even turns, boss copies the highest-ATK player skill
+        if (this.bossEnhanced.mirror && this.state.turn % 4 === 2) {
+          const playerAlive = this.state.player.filter(f => f?.alive && f.skill);
+          if (playerAlive.length > 0) {
+            const strongest = playerAlive.sort((a,b) => (b.atk + b.int) - (a.atk + a.int))[0];
+            const mirrorDmg = Math.floor((this.getEffStat(bossUnit, 'int') || this.getEffStat(bossUnit, 'atk')) * 1.2);
+            strongest.hp = Math.max(0, strongest.hp - mirrorDmg);
+            if (strongest.hp <= 0) strongest.alive = false;
+            this.addLog(`🔮 Boss 镜像了【${strongest.skill?.name || '技能'}】！对 ${strongest.name} 造成 ${mirrorDmg} 伤害！`);
+          }
+        }
       }
     }
 
@@ -601,6 +649,23 @@ const Battle = {
           if (s.selfBuff.effect) fighter.effects.push({ type: s.selfBuff.effect, duration: s.selfBuff.duration });
           if (s.selfBuff.stat) fighter.buffs.push({ stat: s.selfBuff.stat, pct: s.selfBuff.pct, duration: s.selfBuff.duration });
         }
+        // 姜维继志北伐：若诸葛亮在队，额外释放卧龙遗计（全体法伤）
+        if (s.inherit) {
+          const inheritHero = s.inherit.hero;
+          const teamAlive = (fighter.side === 'player' ? this.state.player : this.state.enemy).filter(f => f?.alive);
+          const hasInherit = teamAlive.some(f => f.id === inheritHero);
+          if (hasInherit) {
+            const bonus = s.inherit.bonus_skill;
+            this.addLog(`✨ ${fighter.name} 感诸葛亮在侧，触发【卧龙遗计】！`);
+            const liveEnemies = (fighter.side === 'player' ? this.state.enemy : this.state.player).filter(f => f?.alive);
+            for (const t of liveEnemies) {
+              const inheritDmg = Math.floor(this.getEffStat(fighter, 'int') * (bonus.value || 1.5));
+              t.hp = Math.max(0, t.hp - inheritDmg);
+              this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} -${inheritDmg} 法伤（遗计）`);
+              if (t.hp <= 0) t.alive = false;
+            }
+          }
+        }
         break;
       }
       case 'magic': {
@@ -628,6 +693,18 @@ const Battle = {
           const heal = Math.floor(t.maxHp * s.value);
           t.hp = Math.min(t.maxHp, t.hp + heal);
           this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} +${heal} HP`);
+          // Cleanse: remove all debuffs and negative effects (华佗五禽戏)
+          if (s.cleanse) {
+            t.debuffs = [];
+            t.effects = t.effects.filter(e => e.type === 'invincible'); // keep invincible only
+            this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} 负面效果全部解除！`);
+          }
+        }
+        // Buff component of heal skill (e.g. 孙权坐断东南)
+        if (s.stat && s.pct && s.duration) {
+          for (const t of targets) {
+            t.buffs.push({ stat: s.stat, pct: s.pct, duration: s.duration });
+          }
         }
         break;
       }
@@ -644,6 +721,25 @@ const Battle = {
         let targets;
         if (s.target === 'all_enemy') targets = enemies;
         else if (s.target === 'highest_atk_enemy') targets = [enemies.sort((a,b) => b.atk - a.atk)[0]];
+        else if (s.target === 'random_2_enemy') {
+          // 庞统连环计：随机选2个敌人互相攻击
+          const shuffled = enemies.slice().sort(() => Math.random() - 0.5);
+          targets = shuffled.slice(0, Math.min(2, shuffled.length));
+          if (s.effect === 'confuse' && targets.length >= 2) {
+            // Make them deal damage to each other
+            this.addLog(`  ⚙ 庞统连环计：${targets.map(t=>t.name).join('、')} 互相攻击！`);
+            const [t1, t2] = targets;
+            const dmg1 = Math.floor(this.calcDamage(t1, t2) * 0.8);
+            const dmg2 = Math.floor(this.calcDamage(t2, t1) * 0.8);
+            t2.hp = Math.max(0, t2.hp - dmg1);
+            if (t2.hp <= 0) t2.alive = false;
+            this.addLog(`  → ${Visuals.heroTag(t1.id)} ${t1.name} 攻击 ${t2.name} ${dmg1}伤害`);
+            t1.hp = Math.max(0, t1.hp - dmg2);
+            if (t1.hp <= 0) t1.alive = false;
+            this.addLog(`  → ${Visuals.heroTag(t2.id)} ${t2.name} 攻击 ${t1.name} ${dmg2}伤害`);
+            break;
+          }
+        }
         else targets = [enemies[0]];
         targets = targets.filter(Boolean);
         for (const t of targets) {
@@ -651,7 +747,7 @@ const Battle = {
             this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} 无敌，免疫控制！`);
           } else {
             t.effects.push({ type: s.effect, duration: s.duration });
-            this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} 被${s.effect === 'stun' ? '眩晕' : '魅惑'}${s.duration}回合！`);
+            this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} 被${s.effect === 'stun' ? '眩晕' : s.effect === 'confuse' ? '混乱' : '魅惑'}${s.duration}回合！`);
           }
         }
         break;
