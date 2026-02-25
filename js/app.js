@@ -540,8 +540,9 @@ const App = {
 
       const div = document.createElement('div');
       div.className = 'stage-item ' + (stage.boss ? 'boss ' : '') + (isCurrent ? 'current ' : '') + (isLocked ? 'locked' : '');
+      const hasNarrative = typeof Narrative !== 'undefined' && Narrative.hasStory(chapter.id, stage.id, 'pre');
       div.innerHTML = '<div class="stage-num ' + (stage.boss ? 'stage-boss' : '') + '">' + (stage.boss ? Visuals.bossSkull() : stage.id) + '</div>' +
-        '<div class="stage-info"><div class="stage-name">' + stage.name + (isCompleted ? ' <span style="color:var(--shu)">通</span>' : '') + '</div>' +
+        '<div class="stage-info"><div class="stage-name">' + stage.name + (isCompleted ? ' <span style="color:var(--shu)">通</span>' : '') + (hasNarrative ? ' <span style="color:#f5c518;font-size:11px" title="有剧情">📜</span>' : '') + '</div>' +
         '<div class="stage-reward">' + Visuals.resIcon('gold') + stage.reward.gold + ' · ' + Visuals.resIcon('exp') + stage.reward.exp + (stage.reward.hero_shard ? ' · ' + Visuals.resIcon('shard') + '碎片' : '') + '</div></div>' +
         (stage.elite ? '<span class="text-gold">精英</span>' : '');
       if (!isLocked) {
@@ -825,6 +826,16 @@ const App = {
     this.currentStage._chapter = chapter;
     // Apply chapter difficulty scaling
     this.currentStage._scaleMult = Campaign.getEnemyScale(chapter.id);
+
+    // Show pre-battle narrative if available
+    if (typeof Narrative !== 'undefined' && Narrative.hasStory(chapter.id, stage.id, 'pre')) {
+      Narrative.show(chapter.id, stage.id, 'pre', () => {
+        this.switchPage('battle');
+        requestAnimationFrame(() => this.prepareBattle(stage));
+      });
+      return;
+    }
+
     this.switchPage('battle');
     // Delay prepareBattle so canvas parent has dimensions after page becomes visible
     requestAnimationFrame(() => this.prepareBattle(stage));
@@ -3236,6 +3247,15 @@ App.startBattle = async function() {
 
   // Delay modal slightly to let canvas effects play
   await new Promise(r => setTimeout(r, 800));
+
+  // Show post-battle narrative if available (campaign victories only)
+  if (result === 'victory' && typeof Narrative !== 'undefined' && stage._chapter &&
+      !stage._isMapBattle && !stage._dungeonFloor && !stage._dailyDungeon && !stage._arenaFight && !stage._raidBoss) {
+    const ch = stage._chapter;
+    if (Narrative.hasStory(ch.id, stage.id, 'post')) {
+      await new Promise(resolve => Narrative.show(ch.id, stage.id, 'post', resolve));
+    }
+  }
 
   // Apply victory/defeat animation class
   modal.classList.remove('result-victory', 'result-defeat');
