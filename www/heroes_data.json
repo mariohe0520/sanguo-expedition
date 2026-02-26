@@ -1,0 +1,42 @@
+[
+  {
+    "name": "GuanYu",
+    "cn": "关羽",
+    "hp": 150,
+    "attack": 30,
+    "skill": "Sword Mastery",
+    "desc": "Loyal general with legendary sword skills."
+  },
+  {
+    "name": "ZhangFei",
+    "cn": "张飞",
+    "hp": 180,
+    "attack": 25,
+    "skill": "Fierce Charge",
+    "desc": "Fearless warrior who charges into battle with unstoppable force."
+  },
+  {
+    "name": "ZhugeLiang",
+    "cn": "诸葛亮",
+    "hp": 120,
+    "attack": 15,
+    "skill": "Tactical Insight",
+    "desc": "Brilliant strategist who outwits enemies with foresight."
+  },
+  {
+    "name": "LiuBei",
+    "cn": "刘备",
+    "hp": 140,
+    "attack": 20,
+    "skill": "Healing Pulse",
+    "desc": "Compassionate leader who heals allies and inspires courage."
+  },
+  {
+    "name": "CaoCao",
+    "cn": "曹操",
+    "hp": 160,
+    "attack": 35,
+    "skill": "Conqueror's Might",
+    "desc": "Cunning warlord who commands armies with strategic brilliance."
+  }
+]

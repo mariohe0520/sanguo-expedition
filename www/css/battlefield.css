@@ -1,0 +1,224 @@
+/* 三国·天命 — Dynamic Battlefield CSS */
+/* Status bar, announcements, hazard warnings */
+
+/* ═══ Battlefield Status Bar ═══ */
+.bf-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: rgba(10, 14, 26, 0.85);
+  backdrop-filter: blur(8px);
+  border-radius: 10px;
+  border: 1px solid rgba(212, 168, 67, 0.15);
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  transition: all 0.4s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.bf-status-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 168, 67, 0.3), transparent);
+}
+
+.bf-status-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.bf-status-sep {
+  color: rgba(138, 126, 109, 0.3);
+  margin: 0 2px;
+  font-weight: 300;
+}
+
+.bf-weather { color: #87CEEB; }
+.bf-terrain { color: #8FBC8F; }
+.bf-time { color: #DDA0DD; }
+.bf-turn { color: var(--gold); }
+
+/* Status bar update pulse */
+.bf-status-bar.bf-pulse {
+  animation: bfStatusPulse 0.6s ease-out;
+}
+
+@keyframes bfStatusPulse {
+  0% { border-color: rgba(212, 168, 67, 0.6); box-shadow: 0 0 12px rgba(212, 168, 67, 0.3); }
+  100% { border-color: rgba(212, 168, 67, 0.15); box-shadow: none; }
+}
+
+/* ═══ Weather Change Announcement ═══ */
+.bf-announcement-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  pointer-events: none;
+  animation: bfAnnounceFade 2.5s ease-out forwards;
+}
+
+.bf-announcement-text {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow:
+    0 0 20px rgba(212, 168, 67, 0.8),
+    0 0 40px rgba(212, 168, 67, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.8);
+  letter-spacing: 4px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, rgba(10, 14, 26, 0.7), rgba(26, 21, 16, 0.7));
+  border: 1px solid rgba(212, 168, 67, 0.3);
+  border-radius: 12px;
+  backdrop-filter: blur(4px);
+  white-space: nowrap;
+  max-width: 90%;
+  text-align: center;
+}
+
+.bf-announcement-weather .bf-announcement-text {
+  color: #87CEEB;
+  text-shadow: 0 0 20px rgba(135, 206, 235, 0.6), 0 2px 4px rgba(0, 0, 0, 0.8);
+  border-color: rgba(135, 206, 235, 0.3);
+}
+
+.bf-announcement-hazard .bf-announcement-text {
+  color: #ff6b6b;
+  text-shadow: 0 0 20px rgba(255, 68, 68, 0.6), 0 2px 4px rgba(0, 0, 0, 0.8);
+  border-color: rgba(255, 68, 68, 0.3);
+  animation: bfHazardFlash 0.3s ease-out 3;
+}
+
+.bf-announcement-terrain .bf-announcement-text {
+  color: #ffa500;
+  text-shadow: 0 0 20px rgba(255, 165, 0, 0.6), 0 2px 4px rgba(0, 0, 0, 0.8);
+  border-color: rgba(255, 165, 0, 0.3);
+}
+
+.bf-announcement-time .bf-announcement-text {
+  color: #DDA0DD;
+  text-shadow: 0 0 20px rgba(221, 160, 221, 0.6), 0 2px 4px rgba(0, 0, 0, 0.8);
+  border-color: rgba(221, 160, 221, 0.3);
+}
+
+@keyframes bfAnnounceFade {
+  0% { opacity: 0; transform: scale(1.3); }
+  15% { opacity: 1; transform: scale(1); }
+  75% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.95) translateY(-10px); }
+}
+
+@keyframes bfHazardFlash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ═══ Hazard Warning Flash ═══ */
+.bf-hazard-flash {
+  animation: bfFlashScreen 0.5s ease-out;
+}
+
+@keyframes bfFlashScreen {
+  0% { box-shadow: inset 0 0 40px rgba(255, 68, 68, 0.4); }
+  100% { box-shadow: inset 0 0 0 transparent; }
+}
+
+/* ═══ Battle Log Hazard Styling ═══ */
+.bf-hazard-log {
+  color: #ff6b6b;
+  font-weight: 600;
+}
+
+.log-entry.log-weather {
+  color: #87CEEB;
+  font-weight: 600;
+}
+
+.log-entry.log-hazard {
+  color: #ff6b6b;
+  font-weight: 600;
+}
+
+.log-entry.log-terrain-change {
+  color: #ffa500;
+  font-weight: 600;
+}
+
+/* ═══ Terrain Visual Indicators (in status) ═══ */
+.bf-terrain-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.bf-terrain-plains   { background: rgba(45, 74, 30, 0.3); color: #8FBC8F; }
+.bf-terrain-forest   { background: rgba(26, 51, 18, 0.3); color: #228B22; }
+.bf-terrain-mountain  { background: rgba(61, 53, 37, 0.3); color: #BC8F8F; }
+.bf-terrain-river    { background: rgba(26, 45, 64, 0.3); color: #4682B4; }
+.bf-terrain-castle   { background: rgba(42, 37, 32, 0.3); color: #D2B48C; }
+.bf-terrain-desert   { background: rgba(74, 61, 32, 0.3); color: #DEB887; }
+.bf-terrain-swamp    { background: rgba(26, 42, 26, 0.3); color: #556B2F; }
+.bf-terrain-charred  { background: rgba(26, 21, 16, 0.3); color: #CD5C5C; }
+
+/* ═══ Lightning Flash Overlay ═══ */
+.bf-lightning-flash {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+  z-index: 15;
+  animation: bfLightning 0.15s ease-out forwards;
+}
+
+@keyframes bfLightning {
+  0% { opacity: 1; }
+  40% { opacity: 0.1; }
+  60% { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
+/* ═══ Day/Night Brightness Overlay ═══ */
+.bf-brightness-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  transition: background-color 1s ease;
+}
+
+/* ═══ Snow/Rain accumulation bar ═══ */
+.bf-weather-intensity {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 10;
+}
+
+.bf-weather-intensity-fill {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(135, 206, 235, 0.5), rgba(135, 206, 235, 0.2));
+  transition: width 0.5s ease;
+}

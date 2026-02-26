@@ -1,0 +1,601 @@
+/* ═══════════════════════════════════════════════════════════════════
+   三国·天命 — Visual Enhancements v2
+   Bug fixes + quality uplift for mobile game feel
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── §1 ENHANCED HERO CARDS — Rich visual treatment ─────────── */
+
+/* Hero card rarity backgrounds with gradient overlays */
+.hero-card.rarity-5 {
+  background:
+    linear-gradient(135deg, rgba(212,168,67,.08), rgba(184,146,46,.04)),
+    linear-gradient(145deg, rgba(26,30,46,.95), rgba(17,24,39,.88));
+  position: relative;
+  overflow: hidden;
+}
+.hero-card.rarity-5::after {
+  content: '';
+  position: absolute;
+  top: -50%; right: -30%;
+  width: 100px; height: 100px;
+  background: radial-gradient(circle, rgba(212,168,67,.08), transparent 70%);
+  pointer-events: none;
+}
+
+.hero-card.rarity-4 {
+  background:
+    linear-gradient(135deg, rgba(168,85,247,.06), rgba(138,90,192,.03)),
+    linear-gradient(145deg, rgba(26,30,46,.95), rgba(17,24,39,.88));
+}
+
+.hero-card.rarity-3 {
+  background:
+    linear-gradient(135deg, rgba(59,130,246,.05), rgba(74,110,184,.03)),
+    linear-gradient(145deg, rgba(26,30,46,.95), rgba(17,24,39,.88));
+}
+
+/* Hero portrait enhancement — add subtle inner patterns */
+.hp {
+  transition: transform .25s cubic-bezier(.34, 1.56, .64, 1), box-shadow .25s;
+}
+.hp:hover {
+  transform: scale(1.05);
+}
+
+/* Rarity-specific portrait enhancements */
+.hp-r5 {
+  box-shadow:
+    inset 0 0 20px rgba(0,0,0,.35),
+    0 2px 8px rgba(0,0,0,.3),
+    0 0 16px rgba(212,168,67,.2);
+}
+.hp-r5::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: conic-gradient(from 0deg, rgba(212,168,67,.3), rgba(245,217,138,.1), rgba(212,168,67,.3));
+  z-index: 0;
+  animation: r5rotate 6s linear infinite;
+  opacity: .5;
+}
+@keyframes r5rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.hp-r4 {
+  box-shadow:
+    inset 0 0 20px rgba(0,0,0,.35),
+    0 2px 8px rgba(0,0,0,.3),
+    0 0 12px rgba(168,85,247,.15);
+}
+
+/* Star display enhancement */
+.hero-stars, .hd-stars {
+  filter: drop-shadow(0 0 4px rgba(212,168,67,.5));
+}
+
+/* ─── §2 BUTTON TACTILE FEEDBACK — Ripple + Press ────────────── */
+
+/* Ripple effect on buttons */
+.btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn .ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,.25);
+  transform: scale(0);
+  animation: rippleAnim .6s ease-out;
+  pointer-events: none;
+}
+
+@keyframes rippleAnim {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Haptic-style press feedback */
+.btn:active {
+  transform: scale(.95);
+  transition: transform 80ms ease-out;
+}
+
+.btn-primary:active {
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.4),
+    inset 0 2px 6px rgba(0,0,0,.2);
+  filter: brightness(.95);
+}
+
+.btn-gold:active {
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.4),
+    inset 0 2px 6px rgba(0,0,0,.15);
+  filter: brightness(.95);
+}
+
+/* ─── §3 PAGE TRANSITIONS — Smooth & Contextual ──────────────── */
+
+/* Enhanced page transitions */
+.page {
+  transform-origin: center top;
+}
+
+.page.active {
+  animation: pageSlideIn .3s cubic-bezier(.2, .8, .2, 1);
+}
+
+@keyframes pageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ─── §4 BATTLE SCENE ENHANCEMENTS ──────────────────────────── */
+
+/* Fighter action highlighting */
+.fighter-row {
+  transition: all .3s cubic-bezier(.2, .8, .2, 1);
+}
+
+.fighter-row.hit-flash {
+  animation: hitFlash .4s ease-out;
+}
+
+@keyframes hitFlash {
+  0% { background: rgba(192,64,64,.3); }
+  100% { background: linear-gradient(135deg, rgba(26,30,46,.88), rgba(17,24,39,.82)); }
+}
+
+.fighter-row.heal-flash {
+  animation: healFlash .5s ease-out;
+}
+
+@keyframes healFlash {
+  0% { background: rgba(74,140,111,.25); box-shadow: 0 0 12px rgba(74,140,111,.3); }
+  100% { background: linear-gradient(135deg, rgba(26,30,46,.88), rgba(17,24,39,.82)); }
+}
+
+/* Damage number improvements */
+.dmg-number {
+  position: absolute;
+  top: -8px;
+  right: 8px;
+  font-family: var(--font-mono, "SF Mono", monospace);
+  font-weight: 900;
+  pointer-events: none;
+  z-index: 10;
+  animation: dmgFloat 1.2s cubic-bezier(.2, .8, .2, 1) forwards;
+  text-shadow:
+    0 1px 3px rgba(0,0,0,.8),
+    0 0 8px rgba(0,0,0,.4);
+}
+
+.dmg-number.dmg-normal {
+  font-size: 16px;
+  color: #e05555;
+}
+
+.dmg-number.dmg-crit {
+  font-size: 22px;
+  color: #f5d98a;
+  animation: dmgCritFloat 1.2s cubic-bezier(.2, .8, .2, 1) forwards;
+}
+
+.dmg-number.dmg-heal {
+  font-size: 16px;
+  color: #6bb895;
+}
+
+.dmg-number.dmg-counter {
+  font-size: 14px;
+  color: #a87ae0;
+}
+
+@keyframes dmgFloat {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  15% { transform: translateY(-8px) scale(1.2); }
+  100% { opacity: 0; transform: translateY(-36px) scale(.8); }
+}
+
+@keyframes dmgCritFloat {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  10% { transform: translateY(-6px) scale(1.5) rotate(-3deg); }
+  20% { transform: translateY(-10px) scale(1.4) rotate(3deg); }
+  100% { opacity: 0; transform: translateY(-44px) scale(.8) rotate(0); }
+}
+
+/* Skill activation effect */
+.fighter-row.skill-casting {
+  border-color: rgba(212,168,67,.5) !important;
+  box-shadow:
+    0 0 20px rgba(212,168,67,.4),
+    0 0 40px rgba(212,168,67,.15),
+    inset 0 0 10px rgba(212,168,67,.1) !important;
+  animation: skillCast .8s ease-out;
+}
+
+@keyframes skillCast {
+  0% {
+    box-shadow:
+      0 0 5px rgba(212,168,67,.2),
+      inset 0 0 5px rgba(212,168,67,.05);
+  }
+  30% {
+    box-shadow:
+      0 0 30px rgba(212,168,67,.6),
+      0 0 60px rgba(212,168,67,.2),
+      inset 0 0 15px rgba(212,168,67,.15);
+  }
+  100% {
+    box-shadow:
+      0 0 20px rgba(212,168,67,.4),
+      0 0 40px rgba(212,168,67,.15),
+      inset 0 0 10px rgba(212,168,67,.1);
+  }
+}
+
+/* Death effect */
+.fighter-row.dying {
+  animation: deathFade .6s ease-out forwards;
+}
+
+@keyframes deathFade {
+  0% { opacity: 1; transform: scale(1); }
+  30% { opacity: .8; transform: scale(1.02) translateX(-3px); }
+  100% { opacity: .25; transform: scale(.95); filter: grayscale(.6); }
+}
+
+/* Turn indicator */
+.fighter-row.current-turn {
+  border-color: rgba(212,168,67,.3);
+  box-shadow: 0 0 14px rgba(212,168,67,.25);
+}
+
+/* Battle log entry animation */
+.battle-log .log-entry {
+  animation: logSlideIn .2s ease-out;
+}
+
+@keyframes logSlideIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ─── §5 TYPOGRAPHY HIERARCHY — Better Font Scaling ──────────── */
+
+/* Primary title — large, serif */
+.page-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+}
+
+/* Section headers — medium weight */
+.card [style*="font-weight:600"] {
+  font-size: 0.9rem;
+  letter-spacing: .04em;
+}
+
+/* Body text */
+.stage-name, .hero-name, .dm-name, .lb-name {
+  font-size: 0.875rem;
+  font-weight: 650;
+}
+
+/* Small captions */
+.stage-reward, .hero-sub, .dm-desc, .lb-meta {
+  font-size: 0.72rem;
+}
+
+/* ─── §6 BOTTOM NAV — Enhanced Active State ──────────────────── */
+
+.nav-item.active {
+  color: var(--gold, #d4a843);
+  font-weight: 700;
+  position: relative;
+}
+
+/* Glow effect under active tab */
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 20%;
+  right: 20%;
+  height: 100%;
+  background: radial-gradient(ellipse at center top, rgba(212,168,67,.12), transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Scale up active icon */
+.nav-item.active .nav-svg svg {
+  transform: scale(1.15) translateY(-2px);
+  filter: drop-shadow(0 0 6px rgba(212,168,67,.4));
+}
+
+/* ─── §7 STAGE LIST ENHANCEMENTS ─────────────────────────────── */
+
+/* Stage unlock animation */
+.stage-item.current {
+  position: relative;
+}
+
+.stage-item.current::before {
+  content: '';
+  position: absolute;
+  left: -1px; top: -1px; right: -1px; bottom: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(212,168,67,.15), transparent, rgba(212,168,67,.08));
+  pointer-events: none;
+  animation: currentPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes currentPulse {
+  0%, 100% { opacity: .5; }
+  50% { opacity: 1; }
+}
+
+/* Boss stage special treatment */
+.stage-item.boss .stage-num {
+  animation: bossGlow 2s ease-in-out infinite;
+}
+
+@keyframes bossGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(212,168,67,.3); }
+  50% { box-shadow: 0 0 18px rgba(212,168,67,.5); }
+}
+
+/* ─── §8 HERO DETAIL ENHANCEMENTS ────────────────────────────── */
+
+/* Stat bar animated fill on page load */
+.stat-bar {
+  animation: statBarFill .8s ease-out;
+}
+
+@keyframes statBarFill {
+  from { width: 0 !important; }
+}
+
+/* Hero detail portrait background glow */
+.hd-hero-display {
+  position: relative;
+}
+
+.hd-hero-display::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212,168,67,.1), transparent 70%);
+  pointer-events: none;
+  animation: detailGlow 3s ease-in-out infinite;
+}
+
+@keyframes detailGlow {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: .6; }
+  50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+}
+
+/* ─── §9 CARD HOVER/TOUCH MICRO-INTERACTIONS ─────────────────── */
+
+/* Cards subtle lift on touch */
+.card {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.card:active {
+  transition: transform 80ms ease-out;
+}
+
+/* Hero card selection feel */
+.hero-card {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hero-card:active {
+  transition: transform 80ms ease-out, box-shadow 80ms ease-out;
+}
+
+/* ─── §10 DESTINY CHOICE IMPROVEMENTS ────────────────────────── */
+
+.destiny-option {
+  position: relative;
+  overflow: hidden;
+}
+
+.destiny-option::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(212,168,67,.05) 50%, transparent 60%);
+  opacity: 0;
+  transition: opacity .3s;
+  pointer-events: none;
+}
+
+.destiny-option:hover::after {
+  opacity: 1;
+}
+
+/* ─── §11 GACHA PULL ENHANCEMENTS ────────────────────────────── */
+
+/* SSR reveal special effect */
+.gacha-ssr-reveal {
+  animation: ssrReveal 1.5s ease-out forwards;
+}
+
+@keyframes ssrReveal {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+    filter: brightness(3);
+  }
+  40% {
+    transform: scale(1.2) rotate(0);
+    opacity: 1;
+    filter: brightness(2);
+  }
+  60% {
+    transform: scale(.95);
+    filter: brightness(1.2);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+/* ─── §12 ELEMENT REACTION VISUAL ────────────────────────────── */
+
+.element-reaction-flash {
+  animation: elemReaction .8s ease-out;
+}
+
+@keyframes elemReaction {
+  0% {
+    box-shadow: 0 0 0 0 rgba(212,168,67,0);
+  }
+  20% {
+    box-shadow: 0 0 30px 10px rgba(212,168,67,.4);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(212,168,67,0);
+  }
+}
+
+/* ─── §13 LOADING / SKELETON STATES ──────────────────────────── */
+
+.skeleton-pulse {
+  background: linear-gradient(90deg,
+    rgba(255,255,255,.04) 25%,
+    rgba(255,255,255,.08) 50%,
+    rgba(255,255,255,.04) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── §14 TOAST IMPROVEMENTS ─────────────────────────────────── */
+
+.toast {
+  max-width: 340px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* Ensure SVG icons in toast render properly */
+.toast svg {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* ─── §15 BATTLE RESULT MODAL ENHANCEMENT ────────────────────── */
+
+/* Victory celebration */
+#result-modal .destiny-content {
+  overflow: hidden;
+}
+
+/* Gold sparkle particles for victory */
+.victory-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.victory-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--gold, #d4a843);
+  border-radius: 50%;
+  animation: particleFall 2s ease-out infinite;
+}
+
+@keyframes particleFall {
+  0% { transform: translateY(-20px) scale(1); opacity: 1; }
+  100% { transform: translateY(200px) scale(0); opacity: 0; }
+}
+
+/* ─── §16 EQUIPMENT SECTION ──────────────────────────────────── */
+
+/* Equipment slot glow when item equipped */
+.equip-slot-filled {
+  border-left: 2px solid var(--gold, #d4a843);
+}
+
+/* Equipment enhance animation */
+.equip-enhance-success {
+  animation: enhanceGlow .6s ease-out;
+}
+
+@keyframes enhanceGlow {
+  0% { box-shadow: 0 0 0 rgba(212,168,67,0); }
+  50% { box-shadow: 0 0 20px rgba(212,168,67,.5); }
+  100% { box-shadow: 0 0 0 rgba(212,168,67,0); }
+}
+
+/* ─── §17 IDLE CARD ATTENTION GRABBER ────────────────────────── */
+
+#idle-card {
+  cursor: pointer;
+  position: relative;
+}
+
+#idle-card::before {
+  content: '点击领取';
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 10px;
+  color: var(--gold, #d4a843);
+  opacity: .7;
+  animation: idleBlink 2s ease-in-out infinite;
+}
+
+@keyframes idleBlink {
+  0%, 100% { opacity: .5; }
+  50% { opacity: 1; }
+}
+
+/* ─── §18 SCROLLABLE AREA INDICATORS ─────────────────────────── */
+
+/* Fade edges for horizontal scrollable */
+[style*="overflow-x:auto"]::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  background: linear-gradient(90deg, transparent, var(--card, #111827));
+  pointer-events: none;
+}
+
+/* ─── FIN ────────────────────────────────────────────────────── */

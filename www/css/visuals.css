@@ -1,0 +1,471 @@
+/* ═══════════════════════════════════════════════════════════════════
+   三国·天命 — Visual Rendering System CSS
+   Replaces ALL emoji with CSS-rendered portraits, SVG icons, shapes
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── §1 HERO PORTRAITS ────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&display=swap');
+
+.hp {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--hc1), var(--hc2));
+  box-shadow:
+    inset 0 0 20px rgba(0,0,0,.35),
+    0 2px 8px rgba(0,0,0,.3);
+  transition: transform .2s, box-shadow .2s;
+}
+
+/* Sizes */
+.hp-xs { width: 24px; height: 24px; border-radius: 6px; }
+.hp-sm { width: 36px; height: 36px; border-radius: 8px; }
+.hp-md { width: 50px; height: 50px; border-radius: 12px; }
+.hp-lg { width: 72px; height: 72px; border-radius: 16px; }
+.hp-xl { width: 100px; height: 100px; border-radius: 20px; }
+
+/* Background pattern */
+.hp-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 30% 70%, rgba(255,255,255,.06) 0%, transparent 50%),
+    radial-gradient(circle at 70% 30%, rgba(255,255,255,.04) 0%, transparent 50%);
+  z-index: 1;
+}
+
+/* Pattern overlays — decorative watermark per hero type */
+.hp-pat {
+  position: absolute; inset: 0; z-index: 2;
+  opacity: .12;
+  background-size: 60% 60%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.hp-pat-blade { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M8 32L32 8M28 8l4 4M8 28l4 4' stroke='white' stroke-width='2' fill='none'/%3E%3C/svg%3E"); }
+.hp-pat-lance { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 4v32M16 8l4-4 4 4' stroke='white' stroke-width='2' fill='none'/%3E%3C/svg%3E"); }
+.hp-pat-bow { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M30 6C20 12 14 20 10 34M30 6L8 32' stroke='white' stroke-width='2' fill='none'/%3E%3C/svg%3E"); }
+.hp-pat-shield { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 6L8 12v10c0 7 5 13 12 15 7-2 12-8 12-15V12z' stroke='white' stroke-width='2' fill='none'/%3E%3C/svg%3E"); }
+.hp-pat-spear { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 4l-4 8h8zM20 12v24' stroke='white' stroke-width='2' fill='white' fill-opacity='.3'/%3E%3C/svg%3E"); }
+.hp-pat-magic { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='10' stroke='white' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='20' cy='20' r='5' stroke='white' stroke-width='1' fill='none'/%3E%3C/svg%3E"); }
+.hp-pat-crown { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M8 28L12 16l8 6 8-6 4 12z' stroke='white' stroke-width='2' fill='none'/%3E%3C/svg%3E"); }
+.hp-pat-flame { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 4c0 8-8 12-8 20a8 8 0 0016 0c0-8-8-12-8-20z' stroke='white' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); }
+.hp-pat-moon { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M26 8A12 12 0 0014 32 12 12 0 0026 8z' stroke='white' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); }
+.hp-pat-scroll { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect x='10' y='6' width='20' height='28' rx='3' stroke='white' stroke-width='1.5' fill='none'/%3E%3Cpath d='M14 14h12M14 20h12M14 26h8' stroke='white' stroke-width='1'/%3E%3C/svg%3E"); }
+.hp-pat-wave { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M4 20q4-4 8 0t8 0 8 0 8 0M4 28q4-4 8 0t8 0 8 0 8 0' stroke='white' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); }
+.hp-pat-fan { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 34L6 14a16 16 0 0128 0z' stroke='white' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); }
+.hp-pat-eye { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cellipse cx='20' cy='20' rx='14' ry='8' stroke='white' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='20' cy='20' r='4' stroke='white' stroke-width='1' fill='none'/%3E%3C/svg%3E"); }
+.hp-pat-halberd { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 4v32M14 8l6 6 6-6M12 12h16' stroke='white' stroke-width='2' fill='none'/%3E%3C/svg%3E"); }
+.hp-pat-beast { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M12 12l-4-6M28 12l4-6M10 22a10 10 0 0020 0c0-6-4-10-10-10s-10 4-10 10z' stroke='white' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); }
+.hp-pat-herb { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 34V18M20 18c-6-4-12-2-14 4M20 18c6-4 12-2 14 4M20 24c-4-2-8-1-10 2M20 24c4-2 8-1 10 2' stroke='white' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); }
+.hp-pat-gear { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='6' stroke='white' stroke-width='1.5' fill='none'/%3E%3Cpath d='M20 8v4M20 28v4M8 20h4M28 20h4M12 12l3 3M25 25l3 3M12 28l3-3M25 15l3-3' stroke='white' stroke-width='1.5'/%3E%3C/svg%3E"); }
+.hp-pat-axe { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M10 30L30 10M22 6a10 10 0 01-8 16' stroke='white' stroke-width='2' fill='none'/%3E%3C/svg%3E"); }
+.hp-pat-none { }
+
+/* Chinese character */
+.hp-ch {
+  position: relative; z-index: 3;
+  font-family: 'Noto Serif SC', 'Songti SC', serif;
+  font-weight: 900;
+  color: rgba(255,255,255,.92);
+  text-shadow:
+    0 2px 4px rgba(0,0,0,.6),
+    0 0 12px rgba(0,0,0,.3);
+  line-height: 1;
+  user-select: none;
+}
+
+.hp-xs .hp-ch { font-size: 14px; }
+.hp-sm .hp-ch { font-size: 20px; }
+.hp-md .hp-ch { font-size: 28px; }
+.hp-lg .hp-ch { font-size: 40px; }
+.hp-xl .hp-ch { font-size: 54px; }
+
+/* Rarity frames */
+.hp-frame {
+  position: absolute; inset: 0; z-index: 4;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.hp-r1 .hp-frame { border: 2px solid rgba(140,140,150,.3); }
+.hp-r2 .hp-frame { border: 2px solid rgba(180,200,210,.4); }
+.hp-r3 .hp-frame {
+  border: 2px solid rgba(59,130,246,.5);
+  box-shadow: inset 0 0 10px rgba(59,130,246,.15);
+}
+.hp-r4 .hp-frame {
+  border: 2px solid rgba(168,85,247,.5);
+  box-shadow: inset 0 0 12px rgba(168,85,247,.15), 0 0 8px rgba(168,85,247,.12);
+}
+.hp-r5 .hp-frame {
+  border: 2px solid rgba(212,168,67,.6);
+  box-shadow: inset 0 0 14px rgba(212,168,67,.2), 0 0 12px rgba(212,168,67,.2);
+  animation: frameGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes frameGlow {
+  0%, 100% { box-shadow: inset 0 0 14px rgba(212,168,67,.15), 0 0 10px rgba(212,168,67,.15); }
+  50%      { box-shadow: inset 0 0 20px rgba(212,168,67,.25), 0 0 20px rgba(212,168,67,.3); }
+}
+
+/* Faction top-bar accent */
+.hp-f-shu::after { content:''; position:absolute; top:0; left:15%; right:15%; height:2px; background:var(--shu); z-index:5; border-radius:0 0 2px 2px; }
+.hp-f-wei::after { content:''; position:absolute; top:0; left:15%; right:15%; height:2px; background:var(--wei); z-index:5; border-radius:0 0 2px 2px; }
+.hp-f-wu::after  { content:''; position:absolute; top:0; left:15%; right:15%; height:2px; background:var(--wu);  z-index:5; border-radius:0 0 2px 2px; }
+.hp-f-qun::after { content:''; position:absolute; top:0; left:15%; right:15%; height:2px; background:var(--qun); z-index:5; border-radius:0 0 2px 2px; }
+
+.hp-xs::after { display: none; }
+
+/* ─── §2 ELEMENT ICONS — CSS shapes ──────────────────────────── */
+.ei {
+  display: inline-block;
+  width: 14px; height: 14px;
+  position: relative;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.ei-fire {
+  background: radial-gradient(ellipse at 50% 90%, #ef4444, #f97316 50%, transparent 70%);
+  clip-path: polygon(50% 0%, 65% 30%, 85% 20%, 75% 50%, 100% 45%, 70% 75%, 80% 100%, 50% 80%, 20% 100%, 30% 75%, 0% 45%, 25% 50%, 15% 20%, 35% 30%);
+  animation: fireFlicker 1.5s ease-in-out infinite alternate;
+}
+@keyframes fireFlicker {
+  0% { transform: scaleY(1) scaleX(1); opacity: .9; }
+  100% { transform: scaleY(1.08) scaleX(.95); opacity: 1; }
+}
+
+.ei-water {
+  background: linear-gradient(180deg, #3b82f6, #60a5fa);
+  clip-path: polygon(50% 0%, 80% 40%, 100% 70%, 85% 90%, 50% 100%, 15% 90%, 0% 70%, 20% 40%);
+}
+
+.ei-wind {
+  background: linear-gradient(135deg, #22c55e, #4ade80);
+  border-radius: 50%;
+  animation: windSpin 3s linear infinite;
+}
+.ei-wind::before {
+  content: '';
+  position: absolute; inset: 2px;
+  border: 2px solid transparent;
+  border-top-color: rgba(255,255,255,.6);
+  border-radius: 50%;
+}
+@keyframes windSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.ei-earth {
+  background: linear-gradient(135deg, #92400e, #b45309);
+  clip-path: polygon(20% 0%, 80% 0%, 100% 30%, 90% 100%, 10% 100%, 0% 30%);
+}
+
+.ei-lightning {
+  background: linear-gradient(180deg, #eab308, #facc15);
+  clip-path: polygon(40% 0%, 70% 0%, 50% 40%, 80% 40%, 30% 100%, 40% 55%, 15% 55%);
+  animation: lightningFlash 2s ease-in-out infinite;
+}
+@keyframes lightningFlash {
+  0%, 90%, 100% { opacity: 1; }
+  95% { opacity: .6; }
+}
+
+.ei-ice {
+  background: linear-gradient(135deg, #67e8f9, #a5f3fc);
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  animation: iceSpark 3s ease-in-out infinite;
+}
+@keyframes iceSpark {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.3); }
+}
+
+.ei-name {
+  font-size: 11px;
+  margin-left: 3px;
+  vertical-align: middle;
+}
+
+.elem-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(0,0,0,.35);
+  margin-left: 4px;
+  vertical-align: middle;
+  border: 1px solid var(--ec, rgba(255,255,255,.1));
+}
+
+/* ─── §3 FACTION BADGE ──────────────────────────────────────── */
+.faction-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px; height: 18px;
+  border-radius: 4px;
+  background: rgba(0,0,0,.3);
+  border: 1px solid var(--fc, var(--dim));
+  color: var(--fc, var(--dim));
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+/* ─── §4 EQUIPMENT ICONS ─────────────────────────────────────── */
+.eq-icon {
+  width: 20px; height: 20px;
+  color: var(--text-soft, #d4c8b4);
+  flex-shrink: 0;
+}
+
+.eq-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  background: var(--card2, #1a1e2e);
+}
+
+.eq-r1 { color: #9ca3af; border: 1px solid rgba(156,163,175,.2); }
+.eq-r2 { color: #22c55e; border: 1px solid rgba(34,197,94,.2); }
+.eq-r3 { color: #3b82f6; border: 1px solid rgba(59,130,246,.3); }
+.eq-r4 { color: #a855f7; border: 1px solid rgba(168,85,247,.3); box-shadow: 0 0 6px rgba(168,85,247,.1); }
+.eq-r5 { color: #f59e0b; border: 1px solid rgba(245,158,11,.3); box-shadow: 0 0 8px rgba(245,158,11,.15); }
+
+/* ─── §5 UNIT TYPE ICONS ─────────────────────────────────────── */
+.ui-icon {
+  width: 16px; height: 16px;
+  color: var(--dim);
+  vertical-align: middle;
+  display: inline-block;
+}
+
+/* ─── §6 RESOURCE ICONS ──────────────────────────────────────── */
+.res-icon {
+  width: 16px; height: 16px;
+  vertical-align: middle;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.ri-gold, .ri-gem, .ri-exp, .ri-shard {
+  margin-right: 2px;
+}
+
+/* ─── §7 NAV SVG ICONS ──────────────────────────────────────── */
+.nav-svg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px; height: 24px;
+}
+
+.nav-svg svg {
+  width: 22px; height: 22px;
+  color: inherit;
+  transition: transform .25s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+.nav-item.active .nav-svg svg {
+  transform: scale(1.1) translateY(-1px);
+}
+
+/* ─── §8 SECTION ICONS ───────────────────────────────────────── */
+.sec-icon {
+  width: 16px; height: 16px;
+  color: var(--gold);
+  vertical-align: middle;
+  display: inline-block;
+  margin-right: 4px;
+}
+
+/* ─── §9 BOSS SKULL ──────────────────────────────────────────── */
+.boss-skull {
+  width: 28px; height: 28px;
+  color: var(--gold);
+  filter: drop-shadow(0 0 4px rgba(212,168,67,.3));
+}
+
+/* ─── §10 VS BADGE ───────────────────────────────────────────── */
+.vs-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; height: 40px;
+}
+
+.vs-badge svg {
+  width: 36px; height: 36px;
+  color: var(--gold);
+  filter: drop-shadow(0 0 8px rgba(212,168,67,.3));
+  animation: vsPulse 2s ease-in-out infinite;
+}
+
+/* ─── §11 HERO TAG (for battle logs) ─────────────────────────── */
+.hero-tag {
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .05em;
+}
+
+/* ─── §12 TERRAIN & WEATHER LABELS ───────────────────────────── */
+.terrain-label, .weather-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.terrain-label::before, .weather-label::before {
+  content: '';
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tl-plains::before  { background: #a3b18a; }
+.tl-mountain::before { background: #8d99ae; }
+.tl-water::before, .tl-river::before { background: #60a5fa; }
+.tl-forest::before  { background: #4ade80; }
+.tl-castle::before  { background: #d4a843; }
+
+.wl-clear::before { background: #facc15; }
+.wl-rain::before  { background: #60a5fa; }
+.wl-fog::before   { background: #9ca3af; }
+.wl-fire::before  { background: #ef4444; }
+.wl-wind::before  { background: #4ade80; }
+
+/* ─── §13 AFFINITY ICON ──────────────────────────────────────── */
+.aff-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(212,168,67,.15), rgba(184,146,46,.08));
+  border: 1px solid rgba(212,168,67,.2);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+/* ─── §14 GACHA BANNER ───────────────────────────────────────── */
+.gacha-banner {
+  position: relative;
+  text-align: center;
+  padding: 24px;
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(212,168,67,.1), transparent 60%),
+    linear-gradient(135deg, var(--card), rgba(212,168,67,.03));
+  border: 1px solid rgba(212,168,67,.2);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.gacha-banner::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: linear-gradient(45deg, transparent 38%, rgba(212,168,67,.05) 50%, transparent 62%);
+  animation: shimmer 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Gacha pull card */
+.gacha-card {
+  text-align: center;
+  padding: 8px 4px;
+  background: var(--card2);
+  border-radius: 10px;
+  transition: transform .3s;
+  animation: gachaCardReveal .5s ease-out backwards;
+}
+
+.gacha-card:nth-child(1) { animation-delay: .05s; }
+.gacha-card:nth-child(2) { animation-delay: .1s; }
+.gacha-card:nth-child(3) { animation-delay: .15s; }
+.gacha-card:nth-child(4) { animation-delay: .2s; }
+.gacha-card:nth-child(5) { animation-delay: .25s; }
+.gacha-card:nth-child(6) { animation-delay: .3s; }
+.gacha-card:nth-child(7) { animation-delay: .35s; }
+.gacha-card:nth-child(8) { animation-delay: .4s; }
+.gacha-card:nth-child(9) { animation-delay: .45s; }
+.gacha-card:nth-child(10) { animation-delay: .5s; }
+
+@keyframes gachaCardReveal {
+  0% { transform: scale(0) rotateY(90deg); opacity: 0; }
+  60% { transform: scale(1.05) rotateY(-5deg); }
+  100% { transform: scale(1) rotateY(0); opacity: 1; }
+}
+
+/* ─── §15 QUICK ACTION ICONS ─────────────────────────────────── */
+.qa-icon {
+  width: 28px; height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qa-icon svg {
+  width: 24px; height: 24px;
+  color: var(--gold);
+}
+
+/* ─── §16 MISSION ICONS ──────────────────────────────────────── */
+.dm-icon .sec-icon {
+  width: 22px; height: 22px;
+}
+
+/* ─── §17 RARITY GLOW BACKGROUNDS — for hero detail ──────────── */
+.hp-detail-bg {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.hp-detail-bg::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 150px; height: 150px;
+  border-radius: 50%;
+  opacity: .15;
+  filter: blur(40px);
+  pointer-events: none;
+}
+
+.hp-detail-bg.r1::before { background: #9ca3af; }
+.hp-detail-bg.r2::before { background: #22c55e; }
+.hp-detail-bg.r3::before { background: #3b82f6; }
+.hp-detail-bg.r4::before { background: #a855f7; }
+.hp-detail-bg.r5::before { background: #d4a843; }
+
+/* ─── §18 DUNGEON TAB ICONS ──────────────────────────────────── */
+.tab-icon {
+  display: inline-block;
+  width: 14px; height: 14px;
+  margin-right: 3px;
+  vertical-align: middle;
+}
+
+.tab-icon svg {
+  width: 14px; height: 14px;
+  color: inherit;
+}

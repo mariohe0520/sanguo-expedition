@@ -1,0 +1,401 @@
+/* ===== STRATEGY CARDS — Premium Card Game Styling ===== */
+
+/* Overlay */
+#strategy-select-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0,0,0,0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: stratOverlayIn 0.4s ease-out;
+}
+@keyframes stratOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.strat-overlay-inner {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  animation: stratContentIn 0.5s 0.15s ease-out both;
+}
+@keyframes stratContentIn {
+  from { opacity: 0; transform: translateY(24px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.strat-title {
+  text-align: center;
+  color: var(--gold);
+  margin-bottom: 6px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  text-shadow: 0 0 20px rgba(212,168,67,0.4);
+}
+.strat-subtitle {
+  text-align: center;
+  color: var(--dim);
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+/* Card Hand Container */
+#strategy-hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+  min-height: 180px;
+  align-items: center;
+}
+
+/* ===== INDIVIDUAL CARD ===== */
+.strat-card {
+  width: 112px;
+  height: 164px;
+  border-radius: 12px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-style: preserve-3d;
+  perspective: 800px;
+  user-select: none;
+  -webkit-user-select: none;
+  flex-shrink: 0;
+}
+.strat-card:active {
+  transform: scale(0.95);
+}
+
+.strat-card-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 6px 8px;
+  border: 2px solid transparent;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+/* Rarity backgrounds & borders */
+.strat-card[data-rarity="common"] .strat-card-inner {
+  background: linear-gradient(165deg, #1a1e2e 0%, #252a3a 50%, #1a1e2e 100%);
+  border-color: #4a4e5e;
+}
+.strat-card[data-rarity="rare"] .strat-card-inner {
+  background: linear-gradient(165deg, #0f1a33 0%, #162244 50%, #0f1a33 100%);
+  border-color: #3a6fd8;
+  box-shadow: 0 0 12px rgba(58,111,216,0.2), inset 0 0 15px rgba(58,111,216,0.05);
+}
+.strat-card[data-rarity="epic"] .strat-card-inner {
+  background: linear-gradient(165deg, #1a0f2e 0%, #2a1644 50%, #1a0f2e 100%);
+  border-color: #9a4ddb;
+  box-shadow: 0 0 12px rgba(154,77,219,0.25), inset 0 0 15px rgba(154,77,219,0.05);
+}
+.strat-card[data-rarity="legendary"] .strat-card-inner {
+  background: linear-gradient(165deg, #1a1508 0%, #2a2210 50%, #1a1508 100%);
+  border-color: #d4a843;
+  box-shadow: 0 0 16px rgba(212,168,67,0.3), inset 0 0 20px rgba(212,168,67,0.06);
+}
+
+/* Rarity glow animation for epic+ */
+.strat-card[data-rarity="epic"] .strat-card-inner::before,
+.strat-card[data-rarity="legendary"] .strat-card-inner::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 12px;
+  z-index: -1;
+  opacity: 0.5;
+  animation: cardGlow 3s ease-in-out infinite;
+}
+.strat-card[data-rarity="epic"] .strat-card-inner::before {
+  background: conic-gradient(from 0deg, transparent, rgba(154,77,219,0.4), transparent, rgba(154,77,219,0.4), transparent);
+}
+.strat-card[data-rarity="legendary"] .strat-card-inner::before {
+  background: conic-gradient(from 0deg, transparent, rgba(212,168,67,0.5), transparent, rgba(212,168,67,0.5), transparent);
+}
+@keyframes cardGlow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Card shimmer effect */
+.strat-card-inner::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    115deg,
+    transparent 40%,
+    rgba(255,255,255,0.04) 45%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.04) 55%,
+    transparent 60%
+  );
+  pointer-events: none;
+  animation: cardShimmer 4s ease-in-out infinite;
+}
+@keyframes cardShimmer {
+  0%, 100% { transform: translateX(-30%) translateY(-30%) rotate(15deg); }
+  50% { transform: translateX(30%) translateY(30%) rotate(15deg); }
+}
+
+/* Card icon area */
+.strat-card-icon {
+  font-size: 32px;
+  line-height: 1;
+  margin-bottom: 6px;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+  transition: transform 0.3s;
+  position: relative;
+  z-index: 1;
+}
+
+/* Card name */
+.strat-card-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 4px;
+  line-height: 1.2;
+  position: relative;
+  z-index: 1;
+}
+
+/* Card effect description */
+.strat-card-desc {
+  font-size: 10px;
+  color: var(--dim);
+  text-align: center;
+  line-height: 1.4;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 2px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Rarity indicator at bottom */
+.strat-card-rarity {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  margin-top: auto;
+  position: relative;
+  z-index: 1;
+}
+.strat-rarity-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+.strat-card[data-rarity="common"] .strat-rarity-dot { background: #6b7280; }
+.strat-card[data-rarity="rare"] .strat-rarity-dot { background: #3a6fd8; }
+.strat-card[data-rarity="epic"] .strat-rarity-dot { background: #9a4ddb; }
+.strat-card[data-rarity="legendary"] .strat-rarity-dot { background: #d4a843; }
+
+.strat-rarity-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-left: 2px;
+}
+.strat-card[data-rarity="common"] .strat-rarity-label { color: #6b7280; }
+.strat-card[data-rarity="rare"] .strat-rarity-label { color: #5a8fc7; }
+.strat-card[data-rarity="epic"] .strat-rarity-label { color: #b07de8; }
+.strat-card[data-rarity="legendary"] .strat-rarity-label { color: #d4a843; }
+
+/* ===== SELECTED STATE ===== */
+.strat-card.selected {
+  transform: scale(1.06) translateY(-4px);
+  z-index: 10;
+}
+.strat-card.selected .strat-card-inner {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 24px rgba(212,168,67,0.5), 0 8px 32px rgba(0,0,0,0.4) !important;
+}
+.strat-card.selected .strat-card-check {
+  display: flex;
+}
+
+/* Checkmark badge */
+.strat-card-check {
+  display: none;
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--gold);
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #000;
+  font-weight: 900;
+  z-index: 20;
+  box-shadow: 0 2px 8px rgba(212,168,67,0.5);
+  animation: checkBounce 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes checkBounce {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+/* ===== DIMMED (when 2 already selected) ===== */
+.strat-card.dimmed {
+  opacity: 0.35;
+  pointer-events: none;
+  filter: grayscale(0.5);
+}
+
+/* ===== BUTTONS ===== */
+.strat-btn-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.strat-btn-skip {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  color: var(--dim);
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.strat-btn-skip:active {
+  transform: scale(0.95);
+  background: var(--card);
+}
+.strat-btn-confirm {
+  background: linear-gradient(135deg, #b8922e, #d4a843);
+  color: #0a0e1a;
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  opacity: 0.4;
+  letter-spacing: 2px;
+}
+.strat-btn-confirm:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.strat-btn-confirm.active {
+  opacity: 1;
+  box-shadow: 0 0 20px rgba(212,168,67,0.4);
+}
+.strat-btn-confirm.active:active {
+  transform: scale(0.95);
+}
+
+/* ===== SELECTED PREVIEW ===== */
+#strategy-selected-preview {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 12px;
+  min-height: 36px;
+  align-items: center;
+}
+.strat-preview-slot {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 2px dashed var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all 0.3s;
+}
+.strat-preview-slot.filled {
+  border-style: solid;
+  border-color: var(--gold);
+  background: rgba(212,168,67,0.1);
+  animation: slotFill 0.3s ease-out;
+}
+@keyframes slotFill {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* ===== BATTLE LOG STRATEGY ENTRIES ===== */
+.log-strategy {
+  color: #d4a843 !important;
+  font-weight: 600;
+}
+.log-burn {
+  color: #f97316 !important;
+}
+
+/* ===== CARD ENTRANCE ANIMATION ===== */
+.strat-card {
+  animation: cardEntrance 0.4s ease-out both;
+}
+.strat-card:nth-child(1) { animation-delay: 0.05s; }
+.strat-card:nth-child(2) { animation-delay: 0.1s; }
+.strat-card:nth-child(3) { animation-delay: 0.15s; }
+.strat-card:nth-child(4) { animation-delay: 0.2s; }
+.strat-card:nth-child(5) { animation-delay: 0.25s; }
+.strat-card:nth-child(6) { animation-delay: 0.3s; }
+.strat-card:nth-child(7) { animation-delay: 0.35s; }
+.strat-card:nth-child(8) { animation-delay: 0.4s; }
+
+@keyframes cardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.8) rotateX(15deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotateX(0deg);
+  }
+}
+
+/* ===== HEADER DECORATION ===== */
+.strat-header-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212,168,67,0.4), transparent);
+  margin: 0 40px 16px;
+}
+
+/* ===== CARD COLLECTION BADGE (for future use in profile/roster) ===== */
+.strat-collection-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.strat-collection-badge.common { background: rgba(107,114,128,0.2); color: #9ca3af; }
+.strat-collection-badge.rare { background: rgba(58,111,216,0.2); color: #5a8fc7; }
+.strat-collection-badge.epic { background: rgba(154,77,219,0.2); color: #b07de8; }
+.strat-collection-badge.legendary { background: rgba(212,168,67,0.2); color: #d4a843; }

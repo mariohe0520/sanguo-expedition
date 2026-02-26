@@ -1,0 +1,15 @@
+{
+  "appId": "com.mariohe.sanguoExpedition",
+  "appName": "三国·天命",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "always",
+    "allowsLinkPreview": false,
+    "scrollEnabled": false,
+    "backgroundColor": "#060810"
+  },
+  "server": {
+    "androidScheme": "https",
+    "iosScheme": "capacitor"
+  }
+}
