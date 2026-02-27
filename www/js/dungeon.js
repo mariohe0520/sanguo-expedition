@@ -42,7 +42,8 @@ const Dungeon = {
 
   isUnlocked() {
     const progress = Storage.getCampaignProgress();
-    return progress.chapter > 6 || (progress.chapter === 6 && progress.stage > 10);
+    // Unlocked after completing Chapter 3 (accessible early enough to be useful)
+    return progress.chapter >= 4;
   },
 
   seededRandom(seed) {

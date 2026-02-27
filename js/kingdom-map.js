@@ -312,6 +312,13 @@ const KingdomMap = {
 
   // Apply event option effect
   applyEventEffect(effect) {
+    // Check if player can afford negative gold effects
+    if (effect.gold && effect.gold < 0) {
+      const player = Storage.getPlayer();
+      if ((player.gold || 0) < Math.abs(effect.gold)) {
+        return { error: '金币不足', shortfall: Math.abs(effect.gold) - (player.gold || 0) };
+      }
+    }
     if (effect.gold) Storage.addGold(effect.gold);
     if (effect.exp) Storage.addExp(effect.exp);
     if (effect.reputation) {

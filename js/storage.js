@@ -6,8 +6,8 @@ const Storage = {
   // Player
   getPlayer() { return this._get('player', { name: '主公', level: 1, exp: 0, gold: 500, gems: 10, troops: 50 }); },
   savePlayer(p) { this._set('player', p); },
-  addGold(n) { const p = this.getPlayer(); p.gold += n; this.savePlayer(p); return p.gold; },
-  addGems(n) { const p = this.getPlayer(); p.gems = (p.gems || 0) + n; this.savePlayer(p); return p.gems; },
+  addGold(n) { const p = this.getPlayer(); p.gold = Math.max(0, (p.gold || 0) + n); this.savePlayer(p); return p.gold; },
+  addGems(n) { const p = this.getPlayer(); p.gems = Math.max(0, (p.gems || 0) + n); this.savePlayer(p); return p.gems; },
   addExp(n) { const p = this.getPlayer(); p.exp += n; while (p.exp >= p.level * 100) { p.exp -= p.level * 100; p.level++; } this.savePlayer(p); return p; },
 
   // Roster (owned heroes)

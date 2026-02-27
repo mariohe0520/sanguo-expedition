@@ -779,7 +779,7 @@ const HeroPersonality = {
   dailyLoyaltyDecay() {
     if (typeof Storage === 'undefined') return;
     const roster = Storage.getRoster();
-    const lastDecay = Storage._get('sg-loyaltyLastDecay', 0);
+    const lastDecay = Storage._get('loyaltyLastDecay', 0);
     const now = Date.now();
     const dayMs = 86400000;
 
@@ -796,7 +796,7 @@ const HeroPersonality = {
       }
     }
 
-    Storage._set('sg-loyaltyLastDecay', now);
+    Storage._set('loyaltyLastDecay', now);
   },
 
   // ═══════════════════════════════════════

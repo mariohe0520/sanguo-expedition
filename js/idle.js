@@ -67,11 +67,12 @@ const Idle = {
           const roster = Storage.getRoster();
           if (roster[heroId]) {
             roster[heroId].exp = (roster[heroId].exp || 0) + perHeroExp;
-            // Auto-level if enough exp
-            const needed = (roster[heroId].level || 1) * 100;
+            // Auto-level if enough exp (recalculate needed each level)
+            let needed = (roster[heroId].level || 1) * 100;
             while (roster[heroId].exp >= needed && roster[heroId].level < 60) {
               roster[heroId].exp -= needed;
               roster[heroId].level = (roster[heroId].level || 1) + 1;
+              needed = roster[heroId].level * 100; // Recalculate for next level
             }
           }
           Storage.saveRoster(roster);

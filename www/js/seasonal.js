@@ -44,10 +44,19 @@ const Seasonal = {
 
   getSeasonEndDate() {
     const season = this.getCurrentSeason();
-    const lastMonth = Math.max(...season.months);
+    // The last month in the season is the last element of the months array
+    // (e.g., winter [12,1,2] -> last month is 2, not Math.max which gives 12)
+    const lastMonth = season.months[season.months.length - 1];
     const year = new Date().getFullYear();
-    // If Dec→Feb spans years, handle that
-    const endYear = lastMonth < season.months[0] ? year + 1 : year;
+    const currentMonth = new Date().getMonth() + 1;
+    // If the season wraps around year boundary (e.g., Dec→Feb),
+    // and we're still in the early months, end date is this year;
+    // if we're in Dec, end date is next year
+    let endYear = year;
+    if (season.months[0] > lastMonth) {
+      // Season wraps year boundary (e.g., winter: 12,1,2)
+      endYear = currentMonth >= season.months[0] ? year + 1 : year;
+    }
     return new Date(endYear, lastMonth, 0); // Last day of last month
   },
 
