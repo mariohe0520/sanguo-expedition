@@ -660,7 +660,7 @@ const HeroPersonality = {
   applyBondEffects(fighters) {
     const ids = fighters.filter(f => f).map(f => f.id);
     const activeBonds = this.getActiveBonds(ids);
-    fighter_bond_applied: for (const bond of activeBonds) {
+    for (const bond of activeBonds) {
       for (const f of fighters) {
         if (!f || !bond.heroes.includes(f.id)) continue;
         const bonus = bond.bonus;

@@ -655,7 +655,6 @@ const HERO_ELEMENTS = {
   navy_soldier: 'water', fire_archer: 'fire', fire_soldier: 'fire',
   mage_acolyte: 'fire', strategist: 'wind', supply_guard: 'earth',
   shield_militia: 'earth', caoren: 'earth', crossbow_corps: 'wind',
-  caocao: 'wind',
 };
 
 const ELEMENT_REACTIONS = {
@@ -688,9 +687,9 @@ function getActiveAffinities(teamHeroIds) {
   return active;
 }
 
-// Get total hero count (excluding mystery/locked)
+// Get total hero count (excluding mystery/locked/comingSoon — only currently obtainable heroes)
 function getTotalHeroCount() {
-  return Object.values(HEROES).filter(h => !h.mystery).length;
+  return Object.values(HEROES).filter(h => !h.mystery && !h.locked && !h.comingSoon).length;
 }
 
 // Export for module use

@@ -120,12 +120,16 @@ const Equipment = {
 
   // Drop tables per chapter
   DROP_TABLES: {
-    1: { maxRarity:2, dropChance:0.40, setChance:0    },
-    2: { maxRarity:3, dropChance:0.45, setChance:0.02 },
-    3: { maxRarity:3, dropChance:0.50, setChance:0.05 },
-    4: { maxRarity:4, dropChance:0.55, setChance:0.08 },
-    5: { maxRarity:4, dropChance:0.60, setChance:0.10 },
-    6: { maxRarity:5, dropChance:0.65, setChance:0.12 },
+    1:  { maxRarity:2, dropChance:0.40, setChance:0    },
+    2:  { maxRarity:3, dropChance:0.45, setChance:0.02 },
+    3:  { maxRarity:3, dropChance:0.50, setChance:0.05 },
+    4:  { maxRarity:4, dropChance:0.55, setChance:0.08 },
+    5:  { maxRarity:4, dropChance:0.60, setChance:0.10 },
+    6:  { maxRarity:5, dropChance:0.65, setChance:0.12 },
+    7:  { maxRarity:5, dropChance:0.68, setChance:0.14 },
+    8:  { maxRarity:5, dropChance:0.72, setChance:0.16 },
+    9:  { maxRarity:5, dropChance:0.75, setChance:0.18 },
+    10: { maxRarity:5, dropChance:0.80, setChance:0.20 },
   },
 
   // Generate a drop from stage completion

@@ -163,14 +163,14 @@ const Campaign = {
         { id: 1, name: '司马昭之心', enemies: ['strategist','elite_cavalry','crossbow_corps','elite_spear','shield_militia'], reward: { gold: 15000, exp: 9000 } },
         { id: 2, name: '铁骑南下', enemies: ['elite_cavalry','elite_cavalry','crossbow_corps','strategist','fire_archer'], reward: { gold: 16000, exp: 9500 } },
         { id: 3, name: '三路合围', enemies: ['elite_spear','navy_soldier','fire_archer','crossbow_corps','elite_cavalry'], reward: { gold: 17000, exp: 10000 } },
-        { id: 4, name: '最后的抵抗', enemies: ['strategist','crossbow_corps','elite_cavalry','fire_archer','supply_guard','shield_militia'], reward: { gold: 18000, exp: 11000 }, elite: true },
+        { id: 4, name: '最后的抵抗', enemies: ['strategist','crossbow_corps','elite_cavalry','fire_archer','supply_guard'], reward: { gold: 18000, exp: 11000 }, elite: true },
         { id: 5, name: '司马昭出阵', enemies: ['elite_cavalry','strategist','simazhao','crossbow_corps','elite_spear'], boss: true, reward: { gold: 20000, exp: 12000 } },
         // --- 天命抉择 #10: 兴复汉室 vs 顺应天命 ---
         { id: 6, name: '复汉旗帜', enemies: ['elite_cavalry','fire_archer','strategist','crossbow_corps','elite_spear'], reward: { gold: 20000, exp: 12500 }, branch: 'A' },
-        { id: 7, name: '光复之战', enemies: ['elite_spear','crossbow_corps','elite_cavalry','strategist','fire_archer','navy_soldier'], reward: { gold: 22000, exp: 13500 }, branch: 'A' },
+        { id: 7, name: '光复之战', enemies: ['elite_spear','crossbow_corps','elite_cavalry','strategist','fire_archer'], reward: { gold: 22000, exp: 13500 }, branch: 'A' },
         { id: 8, name: '顺天应命', enemies: ['strategist','elite_cavalry','crossbow_corps','shield_militia','supply_guard'], reward: { gold: 20000, exp: 12500 }, branch: 'B' },
-        { id: 9, name: '新朝之序', enemies: ['elite_cavalry','strategist','crossbow_corps','fire_archer','elite_spear','shield_militia'], reward: { gold: 22000, exp: 13500 }, branch: 'B' },
-        { id: 10, name: '天命终章', enemies: ['elite_cavalry','strategist','simazhao','crossbow_corps','fire_archer','elite_spear'], boss: true, reward: { gold: 25000, exp: 15000, hero_shard: 'simayi' }, boss_enhanced: { phases: 3, mirror: true, teleport: true, enrage: true } },
+        { id: 9, name: '新朝之序', enemies: ['elite_cavalry','strategist','crossbow_corps','fire_archer','elite_spear'], reward: { gold: 22000, exp: 13500 }, branch: 'B' },
+        { id: 10, name: '天命终章', enemies: ['elite_cavalry','strategist','simazhao','crossbow_corps','fire_archer'], boss: true, reward: { gold: 25000, exp: 15000, hero_shard: 'simayi' }, boss_enhanced: { phases: 3, mirror: true, teleport: true, enrage: true } },
       ]
     }
   ],

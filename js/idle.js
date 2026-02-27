@@ -177,6 +177,7 @@ const Idle = {
       const candidates = heroIds.filter(id => {
         const hero = HEROES[id];
         if (!hero) return false;
+        if (hero.mystery || hero.locked) return false; // No shards for unreleased heroes
         if (chapter < 5 && hero.rarity >= 5) return false; // No SSR shards before ch5
         if (chapter < 3 && hero.rarity >= 4) return false; // No SR shards before ch3
         return true;

@@ -13,7 +13,7 @@ const Storage = {
   // Roster (owned heroes)
   getRoster() { return this._get('roster', { soldier: { level: 1, stars: 1, shards: 0 }, archer_recruit: { level: 1, stars: 1, shards: 0 } }); },
   saveRoster(r) { this._set('roster', r); },
-  addHero(heroId) { const r = this.getRoster(); if (!r[heroId]) r[heroId] = { level: 1, stars: HEROES[heroId]?.rarity || 1, shards: 0 }; this.saveRoster(r); },
+  addHero(heroId) { const hero = HEROES[heroId]; if (!hero || hero.mystery || hero.locked) return; const r = this.getRoster(); if (!r[heroId]) r[heroId] = { level: 1, stars: hero.rarity || 1, shards: 0 }; this.saveRoster(r); },
   getHeroLevel(heroId) { return this.getRoster()[heroId]?.level || 1; },
   getHeroStars(heroId) { const r = this.getRoster(); return r[heroId]?.stars || HEROES[heroId]?.rarity || 1; },
   addShards(heroId, n) { const r = this.getRoster(); if (!r[heroId]) r[heroId] = { level: 1, stars: HEROES[heroId]?.rarity || 1, shards: 0 }; r[heroId].shards += n; this.saveRoster(r); },

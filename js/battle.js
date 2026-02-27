@@ -40,11 +40,13 @@ const Battle = {
   createFighter(heroId, side, pos, enemyScale) {
     const hero = typeof heroId === 'string' ? HEROES[heroId] : heroId;
     if (!hero) return null;
+    // Block mystery/locked placeholder heroes from entering battle
+    if (hero.mystery || hero.locked) return null;
     const level = side === 'player' ? (Storage?.getHeroLevel?.(hero.id) || 1) : 1;
     const stars = side === 'player' ? (Storage?.getHeroStars?.(hero.id) || hero.rarity || 1) : (hero.rarity || 1);
     let mult = (1 + (level - 1) * 0.08) * (1 + (stars - 1) * 0.15);
-    // Scale enemy fighters for dungeon/arena/raid
-    if (side === 'enemy' && enemyScale > 1) mult *= enemyScale;
+    // Scale enemy fighters by chapter/dungeon/arena difficulty
+    if (side === 'enemy' && enemyScale && enemyScale !== 1) mult *= enemyScale;
 
     let eqHP=0, eqATK=0, eqDEF=0, eqSPD=0, eqINT=0;
     let equipEffects = { crit_pct:0, skill_dmg_pct:0, reflect_pct:0 };
@@ -824,7 +826,14 @@ const Battle = {
     dmg = Math.floor(dmg * this.getTerrainMult(attacker.unit, this.state.terrain));
 
     // Weather effect
-    dmg = Math.floor(dmg * this.getWeatherMult(attacker, this.state.weather));
+    const weatherMult = this.getWeatherMult(attacker, this.state.weather);
+    if (weatherMult === 0) {
+      // Fog miss: attack completely whiffs, give attacker small rage gain and return
+      attacker.rage = Math.min(attacker.maxRage, attacker.rage + 5);
+      this.vfx.push({ type: 'miss', target: `${defender.side}-${defender.pos}` });
+      return;
+    }
+    dmg = Math.floor(dmg * weatherMult);
 
     // Dynamic Battlefield damage modifier (weather + terrain + time of day)
     if (typeof DynamicBattlefield !== 'undefined') {

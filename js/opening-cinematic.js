@@ -4,8 +4,8 @@ const OpeningCinematic = {
   _played: false,
   
   init() {
-    // Check if already played
-    if (localStorage.getItem('sanguo_cinematic_played')) {
+    // Check if already played (check both old and new key for backwards compat)
+    if (localStorage.getItem('sg-cinematicPlayed') || localStorage.getItem('sanguo_cinematic_played')) {
       this._played = true;
       return;
     }
@@ -119,7 +119,7 @@ const OpeningCinematic = {
     setTimeout(() => {
       overlay.remove();
       this._played = true;
-      localStorage.setItem('sanguo_cinematic_played', 'true');
+      localStorage.setItem('sg-cinematicPlayed', JSON.stringify(true));
       
       // Resume normal BGM
       if (typeof BGM !== 'undefined') {
@@ -130,7 +130,8 @@ const OpeningCinematic = {
   
   // Reset for testing
   reset() {
-    localStorage.removeItem('sanguo_cinematic_played');
+    localStorage.removeItem('sg-cinematicPlayed');
+    localStorage.removeItem('sanguo_cinematic_played'); // legacy cleanup
     this._played = false;
   }
 };

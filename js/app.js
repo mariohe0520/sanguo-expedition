@@ -20,7 +20,7 @@ const Leaderboard = {
   generateRivals() {
     const week = this.getWeekNumber();
     const rng = this.seededRandom(week * 7919);
-    const heroIds = Object.keys(HEROES).filter(id => HEROES[id].rarity >= 2);
+    const heroIds = Object.keys(HEROES).filter(id => HEROES[id].rarity >= 2 && !HEROES[id].mystery && !HEROES[id].locked);
 
     return this.RIVAL_NAMES.map((name, i) => {
       const basePower = 1500 + i * 500;
@@ -179,7 +179,7 @@ const FormationAdvisor = {
     const scored = heroIds.map(id => {
       const hero = HEROES[id];
       const data = roster[id];
-      if (!hero) return null;
+      if (!hero || hero.mystery || hero.locked) return null;
 
       let score = 0;
       const reasons = [];
@@ -3185,7 +3185,7 @@ App.startBattle = async function() {
 
       document.getElementById('result-detail').innerHTML = detailText.replace(/\n/g, '<br>');
 
-      try { Storage.recordWin(); } catch(e) {}
+      try { Storage.recordWin(); } catch(e) { console.warn('[recordWin]', e); }
       // Hero Personality: post-battle mood/loyalty update
       try {
         if (typeof HeroPersonality !== 'undefined') {
@@ -3197,9 +3197,9 @@ App.startBattle = async function() {
           }
         }
       } catch(e) { console.error('[Personality victory]', e); }
-      try { DailyMissions.trackProgress('stages'); } catch(e) {}
+      try { DailyMissions.trackProgress('stages'); } catch(e) { console.warn('[trackProgress stages]', e); }
       if (stage.boss) {
-        try { Storage.recordBossWin(); DailyMissions.trackProgress('boss'); } catch(e) {}
+        try { Storage.recordBossWin(); DailyMissions.trackProgress('boss'); } catch(e) { console.warn('[recordBossWin]', e); }
       }
       try {
         if (typeof Achievements !== 'undefined') {
@@ -3236,7 +3236,7 @@ App.startBattle = async function() {
         console.error('[Defeat handling]', e);
       }
 
-      try { Storage.recordLoss(); } catch(e) {}
+      try { Storage.recordLoss(); } catch(e) { console.warn('[recordLoss]', e); }
       // Hero Personality: post-battle mood/loyalty update (defeat)
       try {
         if (typeof HeroPersonality !== 'undefined') {
@@ -3468,9 +3468,8 @@ App.goNextStage = function() {
   }
 };
 
-// Show emergency button 10s after battle starts
-const _origStartBattle2 = App.startBattle;
-const _wrappedStart = App.startBattle;
+// Show emergency button 15s after battle starts
+const _startBattleBeforeEmergency = App.startBattle;
 App.startBattle = async function() {
   // Show emergency return button after 15s in case battle freezes
   const skipBtn = document.getElementById('btn-battle-skip');
@@ -3478,7 +3477,7 @@ App.startBattle = async function() {
     skipBtn.style.display = 'none';
     setTimeout(() => { if (skipBtn) skipBtn.style.display = 'block'; }, 15000);
   }
-  return _wrappedStart.call(this);
+  return _startBattleBeforeEmergency.call(this);
 };
 
 // ===== BUTTON RIPPLE EFFECT =====
@@ -3753,14 +3752,20 @@ App._showDefectionEvent = function(defectedIds) {
 };
 
 // Hero Personality: daily decay check on init
-App._origInit = App.init;
+// Note: App.init is already wrapped at line ~3404 for tutorial/playtime.
+// Instead of re-wrapping (creating fragile chains), extend the existing wrapper.
+App._personalityInitDone = false;
+const _initForPersonality = App.init;
 App.init = function() {
-  this._origInit();
-  try {
-    if (typeof HeroPersonality !== 'undefined') {
-      HeroPersonality.dailyLoyaltyDecay();
-    }
-  } catch(e) { console.error('[Personality daily]', e); }
+  _initForPersonality.call(this);
+  if (!App._personalityInitDone) {
+    App._personalityInitDone = true;
+    try {
+      if (typeof HeroPersonality !== 'undefined') {
+        HeroPersonality.dailyLoyaltyDecay();
+      }
+    } catch(e) { console.error('[Personality daily]', e); }
+  }
 };
 
 // Boot

@@ -108,7 +108,7 @@ const KingdomMap = {
       weak:   ['soldier', 'elite_spear', 'archer_recruit'],
       mid:    ['elite_spear', 'elite_cavalry', 'strategist', 'shield_militia'],
       strong: ['elite_cavalry', 'strategist', 'crossbow_corps', 'fire_archer'],
-      boss:   ['luXun'],
+      boss:   ['jiangwei'],
     },
     wu: {
       weak:   ['navy_soldier', 'soldier', 'archer_recruit'],

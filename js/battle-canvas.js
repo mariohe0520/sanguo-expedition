@@ -85,7 +85,7 @@ const BattleCanvas = {
     this.canvas.height = this.height * dpr;
     this.canvas.style.width = this.width + 'px';
     this.canvas.style.height = this.height + 'px';
-    this.ctx.scale(dpr, dpr);
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   },
 
   // ═══ HELPER: Get hero element ═══

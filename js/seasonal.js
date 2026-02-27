@@ -156,9 +156,31 @@ const Seasonal = {
     { id: 'raid_boss', name: '讨伐Boss', desc: '击败周常Boss', target: 1, reward: { passXP: 800, gems: 10 } },
   ],
 
+  // Ensure saved state matches current season; reset if season changed
+  ensureCurrentSeason() {
+    const state = Storage.getSeasonalState();
+    const current = this.getCurrentSeason();
+    if (state.currentSeason !== current.id) {
+      // Season has changed -- reset pass progress but keep premium status
+      const wasPremium = state.premium || false;
+      const resetState = {
+        currentSeason: current.id,
+        passLevel: 0,
+        passXP: 0,
+        premium: wasPremium,
+        claimed: {},
+        stagesCleared: {},
+        achievements: {},
+      };
+      Storage.saveSeasonalState(resetState);
+      return resetState;
+    }
+    return state;
+  },
+
   // Add pass XP
   addPassXP(amount) {
-    const state = Storage.getSeasonalState();
+    const state = this.ensureCurrentSeason();
     state.passXP = (state.passXP || 0) + amount;
     while (state.passXP >= this.XP_PER_LEVEL && state.passLevel < this.PASS_LEVELS) {
       state.passXP -= this.XP_PER_LEVEL;
@@ -170,7 +192,7 @@ const Seasonal = {
 
   // Claim pass reward
   claimPassReward(level, track) {
-    const state = Storage.getSeasonalState();
+    const state = this.ensureCurrentSeason();
     if (state.passLevel < level) return null;
     if (track === 'premium' && !state.premium) return null;
 
@@ -189,7 +211,7 @@ const Seasonal = {
   },
 
   getPassProgress() {
-    const state = Storage.getSeasonalState();
+    const state = this.ensureCurrentSeason();
     return {
       level: state.passLevel || 0,
       xp: state.passXP || 0,

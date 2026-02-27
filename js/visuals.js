@@ -56,6 +56,8 @@ const Visuals = {
     yuanshao:      { ch:'绍', c1:'#5a2090', c2:'#8a40b0', pat:'crown' },
     dongzhuo:      { ch:'卓', c1:'#4a1040', c2:'#7a1020', pat:'beast' },
     zhenji:        { ch:'甄', c1:'#1a3050', c2:'#80b8d8', pat:'moon' },
+    sunquan:       { ch:'权', c1:'#9b3020', c2:'#d04040', pat:'crown' },
+    simazhao:      { ch:'昭', c1:'#0f1a2e', c2:'#2a4060', pat:'crown' },
     mystery_1:     { ch:'？', c1:'#2a2a3a', c2:'#3a3a4a', pat:'none' },
     mystery_2:     { ch:'？', c1:'#2a2a3a', c2:'#3a3a4a', pat:'none' },
     mystery_3:     { ch:'？', c1:'#2a2a3a', c2:'#3a3a4a', pat:'none' },
