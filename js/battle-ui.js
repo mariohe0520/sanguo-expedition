@@ -113,7 +113,11 @@ const BattleUI = {
 
     // Mark active
     this._active = true;
+    this._comboCount = 0;
     battlePage.classList.add('bui-active');
+
+    // Play battle start animation
+    this.playBattleStart();
   },
 
   // ══════════════════════════════════════════
@@ -349,7 +353,11 @@ const BattleUI = {
     for (const fx of vfxList) {
       try {
         if (fx.type === 'attack') {
-          await this.playAttack(fx.attacker, fx.target, fx.dmg, fx.isCrit);
+          // Only play attack VFX if target is still rendered
+          const tData = this._fighterEls[fx.target];
+          if (tData && tData.el && !tData.el.classList.contains('dead')) {
+            await this.playAttack(fx.attacker, fx.target, fx.dmg, fx.isCrit);
+          }
         } else if (fx.type === 'skill') {
           await this.playSkill(fx.caster, fx.skillName);
         } else if (fx.type === 'kill') {
@@ -377,14 +385,25 @@ const BattleUI = {
   // ══════════════════════════════════════════
   //  ATTACK ANIMATION
   // ══════════════════════════════════════════
+  // Track combo hits for combo counter
+  _comboCount: 0,
+  _comboTimer: null,
+
   async playAttack(attackerKey, targetKey, dmg, isCrit) {
     const aData = this._fighterEls[attackerKey];
     const tData = this._fighterEls[targetKey];
     if (!aData || !tData) return;
 
+    // Skip if target is already dead
+    if (tData.f && !tData.f.alive) return;
+
     const aEl = aData.el;
     const tEl = tData.el;
-    const duration = isCrit ? 900 : 700;
+
+    // Track combo
+    this._comboCount++;
+    clearTimeout(this._comboTimer);
+    this._comboTimer = setTimeout(() => { this._comboCount = 0; }, 2000);
 
     // 1. Highlight attacker
     aEl.classList.add('attacking');
@@ -397,22 +416,34 @@ const BattleUI = {
       await this._wait(80);
     }
 
-    // 3. Crit flash
+    // 3. Crit flash + screen shake
     if (isCrit) {
       this._showCritFlash();
+      this._screenShake('heavy');
+    } else {
+      this._screenShake('light');
     }
 
-    // 4. Impact on target
+    // 4. Impact on target — flash white then shake
     tEl.classList.add('hit');
+    this._showImpactFlash(tEl);
     this._showDamageNumber(tEl, dmg, isCrit);
 
-    // 5. Slash effect (on container)
+    // 5. Particle explosion on hit
+    this._spawnHitParticles(tEl, isCrit);
+
+    // 6. Slash effect (on container)
     this._showSlashEffect(aEl, tEl, isCrit);
+
+    // 7. Combo counter
+    if (this._comboCount >= 3) {
+      this._showComboText(this._comboCount);
+    }
 
     // Wait for animations
     await this._wait(isCrit ? 350 : 250);
 
-    // 6. Cleanup
+    // 8. Cleanup
     aEl.classList.remove('attacking');
     setTimeout(() => tEl.classList.remove('hit'), 350);
 
@@ -475,6 +506,15 @@ const BattleUI = {
     const cx = rect.left - containerRect.left + rect.width / 2;
     const cy = rect.top - containerRect.top + rect.height / 2;
 
+    // Heavy screen shake on kill
+    this._screenShake('heavy');
+
+    // Kill flash — brief red flash on entire screen
+    const killFlash = document.createElement('div');
+    killFlash.className = 'bui-kill-flash';
+    this.container.appendChild(killFlash);
+    setTimeout(() => killFlash.remove(), 300);
+
     const killText = document.createElement('div');
     killText.className = 'bui-kill-text';
     killText.textContent = '斩!';
@@ -482,6 +522,9 @@ const BattleUI = {
     killText.style.top = cy + 'px';
     killText.style.transform = 'translate(-50%, -50%)';
     this.container.appendChild(killText);
+
+    // Death particle burst
+    this._spawnDeathParticles(tEl);
 
     // Death animation
     tEl.classList.add('dying');
@@ -495,11 +538,46 @@ const BattleUI = {
     setTimeout(() => killText.remove(), 200);
   },
 
+  _spawnDeathParticles(targetEl) {
+    if (!this.container || !this.damageLayer) return;
+
+    const rect = targetEl.getBoundingClientRect();
+    const containerRect = this.container.getBoundingClientRect();
+    const cx = rect.left - containerRect.left + rect.width / 2;
+    const cy = rect.top - containerRect.top + rect.height / 2;
+
+    const colors = ['#ef4444', '#ff6b6b', '#ff8888', '#991b1b', '#fca5a5', '#dc2626'];
+    for (let i = 0; i < 20; i++) {
+      const p = document.createElement('div');
+      p.className = 'bui-death-particle';
+      const angle = (Math.PI * 2 / 20) * i + (Math.random() - 0.5);
+      const dist = 30 + Math.random() * 60;
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist;
+      p.style.left = cx + 'px';
+      p.style.top = cy + 'px';
+      p.style.setProperty('--dx', dx + 'px');
+      p.style.setProperty('--dy', dy + 'px');
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      p.style.width = (3 + Math.random() * 5) + 'px';
+      p.style.height = p.style.width;
+      p.style.animationDuration = (0.4 + Math.random() * 0.4) + 's';
+      this.damageLayer.appendChild(p);
+      setTimeout(() => p.remove(), 1000);
+    }
+  },
+
   // ══════════════════════════════════════════
   //  VICTORY / DEFEAT
   // ══════════════════════════════════════════
   async playVictory() {
     if (!this._active || !this.container) return;
+
+    // Golden flash
+    const goldFlash = document.createElement('div');
+    goldFlash.className = 'bui-victory-flash';
+    this.container.appendChild(goldFlash);
+    setTimeout(() => goldFlash.remove(), 500);
 
     // Glow all surviving player fighters
     for (const key of Object.keys(this._fighterEls)) {
@@ -509,16 +587,32 @@ const BattleUI = {
       }
     }
 
-    // Victory text
+    // Victory text with sub-text
     const overlay = document.createElement('div');
     overlay.className = 'bui-victory-overlay';
-    overlay.innerHTML = '<div class="bui-victory-text">大胜!</div>';
+    overlay.innerHTML = '<div class="bui-victory-text">大 胜</div>' +
+      '<div class="bui-victory-sub">VICTORY</div>';
     this.container.appendChild(overlay);
 
     // Confetti
     this._spawnConfetti();
 
-    await this._wait(1200);
+    // Victory light rays
+    this._spawnVictoryRays();
+
+    await this._wait(1500);
+  },
+
+  _spawnVictoryRays() {
+    if (!this.container) return;
+    for (let i = 0; i < 8; i++) {
+      const ray = document.createElement('div');
+      ray.className = 'bui-victory-ray';
+      ray.style.transform = 'rotate(' + (i * 45) + 'deg)';
+      ray.style.animationDelay = (i * 0.1) + 's';
+      this.container.appendChild(ray);
+      setTimeout(() => ray.remove(), 2000);
+    }
   },
 
   async playDefeat() {
@@ -698,6 +792,103 @@ const BattleUI = {
       this.container.appendChild(c);
       setTimeout(() => c.remove(), 2500);
     }
+  },
+
+  // ══════════════════════════════════════════
+  //  DRAMATIC SCREEN SHAKE
+  // ══════════════════════════════════════════
+  _screenShake(intensity) {
+    if (!this.container) return;
+    const cls = intensity === 'heavy' ? 'bui-shake-heavy' : 'bui-shake-light';
+    this.container.classList.add(cls);
+    setTimeout(() => this.container.classList.remove(cls), intensity === 'heavy' ? 400 : 250);
+  },
+
+  // ══════════════════════════════════════════
+  //  IMPACT FLASH on target (white flash overlay)
+  // ══════════════════════════════════════════
+  _showImpactFlash(targetEl) {
+    if (!targetEl) return;
+    const flash = document.createElement('div');
+    flash.className = 'bui-impact-flash';
+    const portrait = targetEl.querySelector('.bui-portrait');
+    if (portrait) {
+      portrait.style.position = 'relative';
+      portrait.appendChild(flash);
+      setTimeout(() => flash.remove(), 200);
+    }
+  },
+
+  // ══════════════════════════════════════════
+  //  PARTICLE EXPLOSION on hit
+  // ══════════════════════════════════════════
+  _spawnHitParticles(targetEl, isCrit) {
+    if (!this.container || !this.damageLayer) return;
+
+    const rect = targetEl.getBoundingClientRect();
+    const containerRect = this.container.getBoundingClientRect();
+    const cx = rect.left - containerRect.left + rect.width / 2;
+    const cy = rect.top - containerRect.top + rect.height / 2;
+
+    const count = isCrit ? 16 : 8;
+    const colors = isCrit
+      ? ['#ffd700', '#ff6b00', '#ff4444', '#ffaa00', '#fff']
+      : ['#ff6b6b', '#ff8888', '#ffaaaa', '#fff', '#ff4444'];
+
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'bui-hit-particle';
+      const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.5;
+      const dist = 20 + Math.random() * (isCrit ? 50 : 30);
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist;
+      p.style.left = cx + 'px';
+      p.style.top = cy + 'px';
+      p.style.setProperty('--dx', dx + 'px');
+      p.style.setProperty('--dy', dy + 'px');
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      p.style.width = (isCrit ? 4 + Math.random() * 4 : 3 + Math.random() * 3) + 'px';
+      p.style.height = p.style.width;
+      p.style.animationDuration = (0.3 + Math.random() * 0.3) + 's';
+      this.damageLayer.appendChild(p);
+      setTimeout(() => p.remove(), 700);
+    }
+  },
+
+  // ══════════════════════════════════════════
+  //  COMBO COUNTER TEXT
+  // ══════════════════════════════════════════
+  _showComboText(count) {
+    if (!this.container) return;
+
+    // Remove existing combo text
+    const existing = this.container.querySelector('.bui-combo-text');
+    if (existing) existing.remove();
+
+    const combo = document.createElement('div');
+    combo.className = 'bui-combo-text';
+    combo.innerHTML = '<span class="bui-combo-num">' + count + '</span><span class="bui-combo-label">COMBO</span>';
+    this.container.appendChild(combo);
+    setTimeout(() => combo.remove(), 1200);
+  },
+
+  // ══════════════════════════════════════════
+  //  BATTLE START ANIMATION
+  // ══════════════════════════════════════════
+  async playBattleStart() {
+    if (!this._active || !this.container) return;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'bui-battle-start-overlay';
+    overlay.innerHTML = '<div class="bui-battle-start-text">战 斗 开 始</div>' +
+      '<div class="bui-battle-start-sub">BATTLE START</div>';
+    this.container.appendChild(overlay);
+
+    await this._wait(1200);
+    overlay.style.opacity = '0';
+    overlay.style.transition = 'opacity 0.3s ease';
+    await this._wait(400);
+    overlay.remove();
   },
 
   _setupWeather(weather) {

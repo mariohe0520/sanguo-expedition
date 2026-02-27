@@ -27,12 +27,12 @@ const KingdomMap = {
 
   // Faction colors & names
   FACTIONS: {
-    neutral: { name: '中立', color: '#8a7e6d', fill: 'rgba(138,126,109,.25)', glow: 'rgba(138,126,109,.4)' },
-    wei:     { name: '魏', color: '#5a8fc7', fill: 'rgba(90,143,199,.25)', glow: 'rgba(90,143,199,.5)' },
-    shu:     { name: '蜀', color: '#4a8c6f', fill: 'rgba(74,140,111,.25)', glow: 'rgba(74,140,111,.5)' },
-    wu:      { name: '吴', color: '#c04040', fill: 'rgba(192,64,64,.25)', glow: 'rgba(192,64,64,.5)' },
-    qun:     { name: '群', color: '#9a6dd7', fill: 'rgba(154,109,215,.25)', glow: 'rgba(154,109,215,.5)' },
-    player:  { name: '我军', color: '#d4a843', fill: 'rgba(212,168,67,.3)', glow: 'rgba(212,168,67,.6)' },
+    neutral: { name: '中立', color: '#b0a490', fill: 'rgba(176,164,144,.3)', glow: 'rgba(176,164,144,.5)' },
+    wei:     { name: '魏', color: '#6ea8e6', fill: 'rgba(110,168,230,.3)', glow: 'rgba(110,168,230,.6)' },
+    shu:     { name: '蜀', color: '#5cb88a', fill: 'rgba(92,184,138,.3)', glow: 'rgba(92,184,138,.6)' },
+    wu:      { name: '吴', color: '#e05050', fill: 'rgba(224,80,80,.3)', glow: 'rgba(224,80,80,.6)' },
+    qun:     { name: '群', color: '#b88ae8', fill: 'rgba(184,138,232,.3)', glow: 'rgba(184,138,232,.6)' },
+    player:  { name: '我军', color: '#e8c050', fill: 'rgba(232,192,80,.35)', glow: 'rgba(232,192,80,.7)' },
   },
 
   // Territory stages (3 per territory)
@@ -357,20 +357,24 @@ const KingdomMap = {
     const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
     defs.innerHTML = `
       <filter id="map-glow">
-        <feGaussianBlur stdDeviation="1.2" result="blur"/>
+        <feGaussianBlur stdDeviation="1.5" result="blur"/>
         <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
       <filter id="map-shadow">
-        <feDropShadow dx="0" dy="0.5" stdDeviation="0.8" flood-color="#000" flood-opacity="0.5"/>
+        <feDropShadow dx="0" dy="0.6" stdDeviation="1.0" flood-color="#000" flood-opacity="0.5"/>
+      </filter>
+      <filter id="map-node-glow">
+        <feGaussianBlur stdDeviation="2" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
       <pattern id="map-grid" width="5" height="5" patternUnits="userSpaceOnUse">
-        <path d="M 5 0 L 0 0 0 5" fill="none" stroke="rgba(212,168,67,0.04)" stroke-width="0.15"/>
+        <path d="M 5 0 L 0 0 0 5" fill="none" stroke="rgba(212,168,67,0.06)" stroke-width="0.15"/>
       </pattern>
       <radialGradient id="territory-pulse" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#d4a843" stop-opacity="0.4">
-          <animate attributeName="stop-opacity" values="0.4;0.1;0.4" dur="2s" repeatCount="indefinite"/>
+        <stop offset="0%" stop-color="#e8c050" stop-opacity="0.5">
+          <animate attributeName="stop-opacity" values="0.5;0.15;0.5" dur="2s" repeatCount="indefinite"/>
         </stop>
-        <stop offset="100%" stop-color="#d4a843" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#e8c050" stop-opacity="0"/>
       </radialGradient>
     `;
     svgEl.appendChild(defs);
@@ -390,8 +394,8 @@ const KingdomMap = {
     mapBorder.setAttribute('height', '98');
     mapBorder.setAttribute('rx', '2');
     mapBorder.setAttribute('fill', 'none');
-    mapBorder.setAttribute('stroke', 'rgba(212,168,67,0.08)');
-    mapBorder.setAttribute('stroke-width', '0.3');
+    mapBorder.setAttribute('stroke', 'rgba(212,168,67,0.15)');
+    mapBorder.setAttribute('stroke-width', '0.4');
     svgEl.appendChild(mapBorder);
 
     // Title text
@@ -399,7 +403,7 @@ const KingdomMap = {
     titleText.setAttribute('x', '50');
     titleText.setAttribute('y', '6');
     titleText.setAttribute('text-anchor', 'middle');
-    titleText.setAttribute('fill', 'rgba(212,168,67,0.2)');
+    titleText.setAttribute('fill', 'rgba(212,168,67,0.35)');
     titleText.setAttribute('font-size', '3');
     titleText.setAttribute('font-weight', '700');
     titleText.textContent = '三 国 疆 域 图';
@@ -427,8 +431,8 @@ const KingdomMap = {
         line.setAttribute('y1', t.y);
         line.setAttribute('x2', other.x);
         line.setAttribute('y2', other.y);
-        line.setAttribute('stroke', bothConquered ? 'rgba(212,168,67,0.3)' : anyAvailable ? 'rgba(212,168,67,0.15)' : 'rgba(138,126,109,0.2)');
-        line.setAttribute('stroke-width', bothConquered ? '0.4' : '0.25');
+        line.setAttribute('stroke', bothConquered ? 'rgba(232,192,80,0.45)' : anyAvailable ? 'rgba(212,168,67,0.3)' : 'rgba(176,164,144,0.25)');
+        line.setAttribute('stroke-width', bothConquered ? '0.5' : '0.35');
         if (!anyAvailable) {
           line.setAttribute('stroke-dasharray', '1,1');
         }
@@ -450,99 +454,116 @@ const KingdomMap = {
       g.style.cursor = isLocked ? 'default' : 'pointer';
       g.setAttribute('pointer-events', isLocked ? 'none' : 'all');
 
-      // Pulse for available territories
+      // Pulse for available territories — LARGER
       if (isAvailable) {
         const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         pulse.setAttribute('cx', t.x);
         pulse.setAttribute('cy', t.y);
-        pulse.setAttribute('r', '6.5');
+        pulse.setAttribute('r', '9');
         pulse.setAttribute('fill', 'url(#territory-pulse)');
         g.appendChild(pulse);
       }
 
-      // Outer glow for current territory
+      // Outer glow for current territory — LARGER & BRIGHTER
       if (isCurrent) {
         const glow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         glow.setAttribute('cx', t.x);
         glow.setAttribute('cy', t.y);
-        glow.setAttribute('r', '7');
+        glow.setAttribute('r', '9.5');
         glow.setAttribute('fill', 'none');
-        glow.setAttribute('stroke', '#d4a843');
-        glow.setAttribute('stroke-width', '0.4');
-        glow.setAttribute('opacity', '0.7');
+        glow.setAttribute('stroke', '#e8c050');
+        glow.setAttribute('stroke-width', '0.5');
+        glow.setAttribute('opacity', '0.8');
         const animR = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
         animR.setAttribute('attributeName', 'r');
-        animR.setAttribute('values', '7;8.5;7');
+        animR.setAttribute('values', '9.5;11.5;9.5');
         animR.setAttribute('dur', '2s');
         animR.setAttribute('repeatCount', 'indefinite');
         glow.appendChild(animR);
         g.appendChild(glow);
       }
 
-      // Invisible larger hit area for mobile tap (minimum 44px equivalent)
+      // Invisible larger hit area for mobile tap (minimum 44px equivalent) — BIGGER
       const hitArea = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       hitArea.setAttribute('cx', t.x);
       hitArea.setAttribute('cy', t.y);
-      hitArea.setAttribute('r', '7');
+      hitArea.setAttribute('r', '10');
       hitArea.setAttribute('fill', 'rgba(0,0,0,0.001)');
       hitArea.setAttribute('stroke', 'none');
       hitArea.setAttribute('pointer-events', 'all');
       g.appendChild(hitArea);
 
-      // Territory circle background
+      // Territory circle background — 40% LARGER for visibility
       const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       circle.setAttribute('cx', t.x);
       circle.setAttribute('cy', t.y);
-      circle.setAttribute('r', '5');
-      circle.setAttribute('fill', isLocked ? 'rgba(50,45,38,0.9)' : faction.fill);
-      circle.setAttribute('stroke', isLocked ? 'rgba(138,126,109,0.4)' : isConquered ? '#d4a843' : faction.color);
-      circle.setAttribute('stroke-width', isCurrent ? '0.6' : isLocked ? '0.3' : '0.35');
-      if (!isLocked) circle.setAttribute('filter', 'url(#map-shadow)');
+      circle.setAttribute('r', '7');
+      circle.setAttribute('fill', isLocked ? 'rgba(60,55,48,0.9)' : faction.fill);
+      circle.setAttribute('stroke', isLocked ? 'rgba(176,164,144,0.5)' : isConquered ? '#e8c050' : faction.color);
+      circle.setAttribute('stroke-width', isCurrent ? '0.8' : isLocked ? '0.4' : '0.5');
+      if (!isLocked) circle.setAttribute('filter', 'url(#map-node-glow)');
       g.appendChild(circle);
 
-      // Territory icon
+      // Territory icon — BIGGER
       const iconText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       iconText.setAttribute('x', t.x);
-      iconText.setAttribute('y', t.y + 0.5);
+      iconText.setAttribute('y', t.y + 0.8);
       iconText.setAttribute('text-anchor', 'middle');
       iconText.setAttribute('dominant-baseline', 'middle');
-      iconText.setAttribute('font-size', '4.2');
-      iconText.setAttribute('opacity', isLocked ? '0.4' : '1');
+      iconText.setAttribute('font-size', '5.5');
+      iconText.setAttribute('opacity', isLocked ? '0.45' : '1');
       iconText.textContent = isConquered ? '🚩' : t.icon;
       g.appendChild(iconText);
 
-      // Territory name label
+      // Territory name label — BIGGER & BRIGHTER
       const nameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       nameText.setAttribute('x', t.x);
-      nameText.setAttribute('y', t.y + 7.5);
+      nameText.setAttribute('y', t.y + 9.5);
       nameText.setAttribute('text-anchor', 'middle');
-      nameText.setAttribute('fill', isLocked ? 'rgba(138,126,109,0.45)' : isConquered ? '#d4a843' : '#f0e6d3');
-      nameText.setAttribute('font-size', '2.5');
-      nameText.setAttribute('font-weight', '600');
+      nameText.setAttribute('fill', isLocked ? 'rgba(176,164,144,0.55)' : isConquered ? '#e8c050' : '#f5ece0');
+      nameText.setAttribute('font-size', '3.2');
+      nameText.setAttribute('font-weight', '700');
+      nameText.setAttribute('filter', isLocked ? '' : 'url(#map-shadow)');
       nameText.textContent = t.name;
       g.appendChild(nameText);
 
-      // Level indicator
+      // Level indicator — BIGGER
       if (!isLocked) {
         const lvlText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         lvlText.setAttribute('x', t.x);
-        lvlText.setAttribute('y', t.y + 9.5);
+        lvlText.setAttribute('y', t.y + 12);
         lvlText.setAttribute('text-anchor', 'middle');
-        lvlText.setAttribute('fill', 'rgba(138,126,109,0.5)');
-        lvlText.setAttribute('font-size', '1.6');
+        lvlText.setAttribute('fill', isConquered ? 'rgba(232,192,80,0.6)' : 'rgba(176,164,144,0.65)');
+        lvlText.setAttribute('font-size', '2');
+        lvlText.setAttribute('font-weight', '600');
         lvlText.textContent = isConquered ? '已占领' : 'Lv.' + t.level;
         g.appendChild(lvlText);
       }
 
-      // Stage progress dots (for in-battle territories)
+      // Faction label for unlocked non-player territories
+      if (!isLocked && !isConquered && t.faction !== 'neutral') {
+        const facText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        facText.setAttribute('x', t.x);
+        facText.setAttribute('y', t.y - 8.5);
+        facText.setAttribute('text-anchor', 'middle');
+        facText.setAttribute('fill', faction.color);
+        facText.setAttribute('font-size', '1.8');
+        facText.setAttribute('font-weight', '700');
+        facText.setAttribute('opacity', '0.7');
+        facText.textContent = this.FACTIONS[t.faction]?.name || '';
+        g.appendChild(facText);
+      }
+
+      // Stage progress dots (for in-battle territories) — BIGGER
       if (tState.status === 'in_battle' || isAvailable) {
         const cleared = tState.stagesCleared || 0;
         for (let i = 0; i < 3; i++) {
           const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-          dot.setAttribute('cx', t.x - 2 + i * 2);
-          dot.setAttribute('cy', t.y - 6.5);
-          dot.setAttribute('r', '0.7');
-          dot.setAttribute('fill', i < cleared ? '#d4a843' : 'rgba(138,126,109,0.3)');
+          dot.setAttribute('cx', t.x - 2.5 + i * 2.5);
+          dot.setAttribute('cy', t.y - 8.5);
+          dot.setAttribute('r', '1');
+          dot.setAttribute('fill', i < cleared ? '#e8c050' : 'rgba(176,164,144,0.35)');
+          if (i < cleared) dot.setAttribute('filter', 'url(#map-glow)');
           g.appendChild(dot);
         }
       }
@@ -555,18 +576,19 @@ const KingdomMap = {
       svgEl.appendChild(g);
     }
 
-    // Player position marker
+    // Player position marker — BIGGER & MORE VISIBLE
     if (state.currentTerritory && this.TERRITORIES[state.currentTerritory]) {
       const ct = this.TERRITORIES[state.currentTerritory];
       const marker = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      marker.setAttribute('x', ct.x + 3.5);
-      marker.setAttribute('y', ct.y - 2);
-      marker.setAttribute('font-size', '2.5');
+      marker.setAttribute('x', ct.x + 5);
+      marker.setAttribute('y', ct.y - 3);
+      marker.setAttribute('font-size', '4');
+      marker.setAttribute('filter', 'url(#map-glow)');
       marker.textContent = '⚔️';
       const animY = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
       animY.setAttribute('attributeName', 'y');
-      const baseY = ct.y - 2;
-      animY.setAttribute('values', (baseY) + ';' + (baseY - 1) + ';' + (baseY));
+      const baseY = ct.y - 3;
+      animY.setAttribute('values', (baseY) + ';' + (baseY - 1.5) + ';' + (baseY));
       animY.setAttribute('dur', '1.5s');
       animY.setAttribute('repeatCount', 'indefinite');
       marker.appendChild(animY);

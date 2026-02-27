@@ -44,19 +44,71 @@ const Narrative = (() => {
         { speaker: 'narrator', text: '乱世，才刚刚开始。' },
       ]
     },
+    'ch1_pre2': {
+      lines: [
+        { speaker: 'narrator', text: '黄巾军声势浩大，旌旗蔽日。然乌合之众终不敌铁血之师。' },
+        { speaker: 'player', text: '敌军虽多，但阵形松散。以少击多，关键在于先声夺人！' },
+      ]
+    },
+    'ch1_pre3': {
+      lines: [
+        { speaker: 'narrator', text: '广宗城已被团团围住，城中百姓惶恐不安。' },
+        { speaker: 'player', text: '城在人在！传令三军——死守广宗！' },
+        { speaker: 'narrator', text: '战鼓擂动，杀声震天。一场恶战在所难免。' },
+      ]
+    },
+    'ch1_pre4': {
+      lines: [
+        { speaker: 'narrator', text: '斥候来报：黄巾军派出了精锐小队，企图突袭侧翼。' },
+        { speaker: 'player', text: '将计就计！设伏于此，给他们一个迎头痛击！' },
+      ]
+    },
+    'ch1_post10': {
+      lines: [
+        { speaker: 'narrator', text: '张宝伏诛，黄巾之乱终于平定。' },
+        { speaker: 'narrator', text: '然战后的废墟中，新的野心正在萌芽。' },
+        { speaker: 'player', text: '和平来之不易。但我知道……这只是暴风雨前的宁静。' },
+        { speaker: 'narrator', text: '—— 第一章「黄巾之乱」完 ——' },
+      ]
+    },
     'ch1_pre10': {
       lines: [
         { speaker: 'narrator', text: '黄巾残部卷土重来，张宝誓为兄报仇。' },
-        { speaker: 'player', text: '来吧，这次我不会再让百姓受苦。' },
+        { speaker: 'narrator', text: '"大哥！我定要让那些人血债血偿！"' },
+        { speaker: 'player', text: '张宝虽悲愤，但愤怒会蒙蔽双眼。来吧，这次我不会再让百姓受苦。' },
       ]
     },
 
     // ── Chapter 2: 虎牢关 ──
     'ch2_pre1': {
       lines: [
-        { speaker: 'narrator', text: '董卓废帝，挟天子以令诸侯。' },
-        { speaker: 'narrator', text: '十八路诸侯会盟讨董，兵锋直指虎牢关。' },
-        { speaker: 'player', text: '虎牢关雄踞天险，此战凶险万分。' },
+        { speaker: 'narrator', text: '初平元年，春。董卓废帝篡权，洛阳民不聊生。' },
+        { speaker: 'narrator', text: '十八路诸侯盟誓于酸枣——"讨伐国贼董卓！"' },
+        { speaker: 'narrator', text: '大军浩荡西进，兵锋直指虎牢关。' },
+        { speaker: 'player', text: '虎牢关雄踞天险，一夫当关万夫莫开。此战凶险万分。' },
+        { speaker: 'narrator', text: '关城之上，一面"董"字大旗在朔风中猎猎作响。' },
+      ]
+    },
+    'ch2_pre2': {
+      lines: [
+        { speaker: 'narrator', text: '汜水关前，敌军严阵以待。' },
+        { speaker: 'player', text: '先取汜水关，再图虎牢。步步为营！' },
+      ]
+    },
+    'ch2_pre3': {
+      lines: [
+        { speaker: 'narrator', text: '前方传来噩耗——华雄连斩数员大将！' },
+        { speaker: 'narrator', text: '"鲍忠、祖茂，俱死于华雄刀下。"' },
+        { speaker: 'player', text: '华雄此人，武艺非凡。必须从长计议。' },
+      ]
+    },
+    'ch2_post10': {
+      lines: [
+        { speaker: 'narrator', text: '吕布虽败，仍似困兽犹斗。' },
+        { speaker: 'narrator', text: '方天画戟划过长空，带着不甘与怒火。' },
+        { speaker: 'lvbu', text: '天下英雄……终有一日，我会让你们跪在我面前！', mood: 'angry' },
+        { speaker: 'narrator', text: '虎牢关之战落幕，但吕布的传说远未结束。' },
+        { speaker: 'narrator', text: '—— 第二章「虎牢关」完 ——' },
       ]
     },
     'ch2_pre4': {
@@ -102,9 +154,24 @@ const Narrative = (() => {
     // ── Chapter 3: 赤壁 ──
     'ch3_pre1': {
       lines: [
-        { speaker: 'narrator', text: '建安十三年冬，曹操率八十万大军南下。' },
-        { speaker: 'narrator', text: '长江之上，雾气弥漫，战云密布。' },
-        { speaker: 'player', text: '赤壁……这是决定天下三分的一战。' },
+        { speaker: 'narrator', text: '建安十三年冬，曹操率号称八十万大军南下。' },
+        { speaker: 'narrator', text: '荆州刘琮不战而降，曹军势如破竹。' },
+        { speaker: 'narrator', text: '长江之上，雾气弥漫，战云密布。两岸万家灯火，不知明日是否还能点亮。' },
+        { speaker: 'player', text: '赤壁……这是决定天下三分的一战。成败在此一举。' },
+        { speaker: 'zhouyu', text: '曹操虽强，但北人不习水战。此乃天赐良机。', mood: 'calm' },
+      ]
+    },
+    'ch3_pre2': {
+      lines: [
+        { speaker: 'narrator', text: '浓雾笼江，视线不及十步。' },
+        { speaker: 'player', text: '雾中巡逻，最忌大意。保持警惕！' },
+      ]
+    },
+    'ch3_pre3': {
+      lines: [
+        { speaker: 'narrator', text: '曹军水寨规模惊人，战船首尾相连，绵延数里。' },
+        { speaker: 'zhouyu', text: '铁索连环……这不正是天助我也？', mood: 'calm' },
+        { speaker: 'narrator', text: '周瑜的嘴角浮起一抹意味深长的笑。' },
       ]
     },
     'ch3_pre5': {
@@ -182,9 +249,35 @@ const Narrative = (() => {
     // ── Chapter 5: 夷陵之战 ──
     'ch5_pre1': {
       lines: [
-        { speaker: 'narrator', text: '关羽遇害，张飞被刺。桃园三结义只剩刘备一人。' },
-        { speaker: 'narrator', text: '怒火焚心的刘备，率蜀军倾巢东征。' },
+        { speaker: 'narrator', text: '章武元年。关羽败走麦城，身首异处。张飞为部将所害。' },
+        { speaker: 'narrator', text: '桃园三结义，如今只剩刘备一人。' },
+        { speaker: 'narrator', text: '"不求同年同月同日生，但求同年同月同日死。"' },
+        { speaker: 'narrator', text: '怒火焚心的刘备，不顾群臣劝阻，率蜀军倾巢东征。' },
         { speaker: 'player', text: '七百里连营……这一仗，赌上了蜀汉的国运。' },
+      ]
+    },
+    'ch5_pre2': {
+      lines: [
+        { speaker: 'narrator', text: '蜀军深入吴境，林木幽深，道路曲折。' },
+        { speaker: 'player', text: '此地地形复杂，需小心伏击。' },
+        { speaker: 'narrator', text: '一阵山风吹过，林叶沙沙作响，仿佛暗藏杀机。' },
+      ]
+    },
+    'ch5_post5': {
+      lines: [
+        { speaker: 'luXun', text: '还不是时候。再等等。', mood: 'calm' },
+        { speaker: 'narrator', text: '陆逊年仅二十七，却有着远超年龄的沉稳。' },
+        { speaker: 'narrator', text: '蜀军连营七百里，渐成强弩之末。' },
+        { speaker: 'player', text: '陆逊在等什么？这份从容，让人不寒而栗……' },
+      ]
+    },
+    'ch5_post10': {
+      lines: [
+        { speaker: 'narrator', text: '夷陵火光冲天，蜀军七百里连营一夕化为灰烬。' },
+        { speaker: 'narrator', text: '刘备退守白帝城，蜀汉元气大伤。' },
+        { speaker: 'player', text: '关羽、张飞……对不起，我终究未能为你们报仇。' },
+        { speaker: 'narrator', text: '桃园之誓犹在耳畔，但英雄已垂暮。' },
+        { speaker: 'narrator', text: '—— 第五章「夷陵之战」完 ——' },
       ]
     },
     'ch5_pre5': {
@@ -206,9 +299,26 @@ const Narrative = (() => {
     // ── Chapter 6: 北伐 ──
     'ch6_pre1': {
       lines: [
-        { speaker: 'narrator', text: '姜维继承丞相遗志，九伐中原。' },
-        { speaker: 'jiangwei', text: '师父的北伐之志，由我来完成。', mood: 'brave' },
-        { speaker: 'player', text: '蜀道难，但不伐中原，蜀汉何以存？' },
+        { speaker: 'narrator', text: '延熙十六年。蜀汉偏安一隅，国力日衰。' },
+        { speaker: 'narrator', text: '大将军姜维继承诸葛武侯遗志，誓要北伐中原。' },
+        { speaker: 'jiangwei', text: '师父的北伐之志，由我来完成。鞠躬尽瘁，死而后已。', mood: 'brave' },
+        { speaker: 'player', text: '蜀道难，但不伐中原，蜀汉何以存？粮草务必先行！' },
+        { speaker: 'narrator', text: '大军出汉中，向着中原的方向再次进发。' },
+      ]
+    },
+    'ch6_post5': {
+      lines: [
+        { speaker: 'narrator', text: '司马懿故技重施，深沟高垒拒不出战。' },
+        { speaker: 'jiangwei', text: '又是这一招……粮草撑不了多久了。', mood: 'sad' },
+        { speaker: 'narrator', text: '北伐的最大敌人，从来不是魏军——而是蜀道千里运粮的难题。' },
+      ]
+    },
+    'ch6_post10': {
+      lines: [
+        { speaker: 'narrator', text: '九伐中原，功败垂成。' },
+        { speaker: 'jiangwei', text: '师父……维尽力了。', mood: 'sad' },
+        { speaker: 'narrator', text: '姜维望着北方的天空，眼中闪着不灭的光。' },
+        { speaker: 'narrator', text: '—— 第六章「北伐」完 ——' },
       ]
     },
     'ch6_pre5': {
@@ -246,9 +356,26 @@ const Narrative = (() => {
     // ── Chapter 8: 合肥之战 ──
     'ch8_pre1': {
       lines: [
-        { speaker: 'narrator', text: '合肥城——曹魏的南方门户。' },
-        { speaker: 'narrator', text: '张辽以八百精骑，威震逍遥津。' },
-        { speaker: 'player', text: '八百破十万？这得是何等勇武……' },
+        { speaker: 'narrator', text: '建安二十年。合肥城——曹魏的南方门户，扼守淮水要冲。' },
+        { speaker: 'narrator', text: '曹操北征张鲁，留张辽、李典、乐进三人守合肥，仅七千余人。' },
+        { speaker: 'narrator', text: '孙权趁虚而入，率十万大军兵临城下。' },
+        { speaker: 'player', text: '八百破十万？这得是何等勇武……张文远，当世之虎将也！' },
+      ]
+    },
+    'ch8_post5': {
+      lines: [
+        { speaker: 'narrator', text: '张辽率八百勇士突入吴军大阵，直冲孙权中军！' },
+        { speaker: 'narrator', text: '吴军十万之众，竟被这八百人杀得人仰马翻。' },
+        { speaker: 'sunquan', text: '张辽这个疯子……快撤！快撤！', mood: 'shocked' },
+        { speaker: 'narrator', text: '逍遥津之战，张辽威震江东，小儿闻其名止啼。' },
+      ]
+    },
+    'ch8_post10': {
+      lines: [
+        { speaker: 'narrator', text: '合肥之战，魏军以少胜多，孙权铩羽而归。' },
+        { speaker: 'narrator', text: '"张辽止啼"之名传遍江东，成为一代佳话。' },
+        { speaker: 'player', text: '以七千破十万……张辽之勇，千古无双。' },
+        { speaker: 'narrator', text: '—— 第八章「合肥之战」完 ——' },
       ]
     },
     'ch8_pre5': {
@@ -348,6 +475,10 @@ const Narrative = (() => {
     cold: '❄️',
     proud: '✨',
     arrogant: '👑',
+    determined: '💪',
+    fearful: '😰',
+    cunning: '🧠',
+    melancholy: '🌙',
   };
 
   // ═══════════════════════════════════════════════════

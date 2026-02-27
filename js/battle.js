@@ -329,10 +329,13 @@ const Battle = {
           const playerAlive = this.state.player.filter(f => f?.alive);
           if (playerAlive.length > 1) {
             const weakest = playerAlive.sort((a,b) => a.hp/a.maxHp - b.hp/b.maxHp)[0];
-            const hit = Math.floor(this.getEffStat(bossUnit, 'atk') * 1.5);
-            weakest.hp = Math.max(0, weakest.hp - hit);
-            if (weakest.hp <= 0) weakest.alive = false;
-            this.addLog(`⚡ Boss 瞬移至 ${weakest.name} 身后，偷袭 ${hit} 伤害！`);
+            if (weakest && weakest.alive) {
+              const hit = Math.floor(this.getEffStat(bossUnit, 'atk') * 1.5);
+              weakest.hp = Math.max(0, weakest.hp - hit);
+              if (weakest.hp <= 0) { weakest.alive = false; this.vfx.push({ type: 'kill', target: `${weakest.side}-${weakest.pos}` }); }
+              this.addLog(`⚡ Boss 瞬移至 ${weakest.name} 身后，偷袭 ${hit} 伤害！`);
+              this.vfx.push({ type: 'attack', attacker: `enemy-${bossUnit.pos}`, target: `${weakest.side}-${weakest.pos}`, dmg: hit, isCrit: false });
+            }
           }
         }
         // mirror: on even turns, boss copies the highest-ATK player skill
@@ -340,10 +343,13 @@ const Battle = {
           const playerAlive = this.state.player.filter(f => f?.alive && f.skill);
           if (playerAlive.length > 0) {
             const strongest = playerAlive.sort((a,b) => (b.atk + b.int) - (a.atk + a.int))[0];
-            const mirrorDmg = Math.floor((this.getEffStat(bossUnit, 'int') || this.getEffStat(bossUnit, 'atk')) * 1.2);
-            strongest.hp = Math.max(0, strongest.hp - mirrorDmg);
-            if (strongest.hp <= 0) strongest.alive = false;
-            this.addLog(`🔮 Boss 镜像了【${strongest.skill?.name || '技能'}】！对 ${strongest.name} 造成 ${mirrorDmg} 伤害！`);
+            if (strongest && strongest.alive) {
+              const mirrorDmg = Math.floor((this.getEffStat(bossUnit, 'int') || this.getEffStat(bossUnit, 'atk')) * 1.2);
+              strongest.hp = Math.max(0, strongest.hp - mirrorDmg);
+              if (strongest.hp <= 0) { strongest.alive = false; this.vfx.push({ type: 'kill', target: `${strongest.side}-${strongest.pos}` }); }
+              this.addLog(`🔮 Boss 镜像了【${strongest.skill?.name || '技能'}】！对 ${strongest.name} 造成 ${mirrorDmg} 伤害！`);
+              this.vfx.push({ type: 'attack', attacker: `enemy-${bossUnit.pos}`, target: `${strongest.side}-${strongest.pos}`, dmg: mirrorDmg, isCrit: false });
+            }
           }
         }
       }
@@ -404,6 +410,12 @@ const Battle = {
 
     for (const fighter of order) {
       if (!fighter.alive) continue;
+
+      // Early-exit: check if the battle is already over (all enemies or all players dead)
+      const playerStillAlive = this.state.player.some(f => f?.alive);
+      const enemyStillAlive = this.state.enemy.some(f => f?.alive);
+      if (!playerStillAlive || !enemyStillAlive) break;
+
       if (fighter.effects.some(e => e.type === 'stun')) {
         this.addLog(`${Visuals.heroTag(fighter.id)} ${fighter.name} 被眩晕，无法行动！`);
         continue;
@@ -436,10 +448,11 @@ const Battle = {
         if (typeof Strategy !== 'undefined') {
           target = Strategy.getChainTarget(fighter, this.state);
         }
-        if (!target) {
-          // Target: front row first, then back
-          target = enemies.sort((a, b) => a.pos - b.pos)[0];
+        if (!target || !target.alive) {
+          // Target: front row first, then back — always re-check alive
+          target = enemies.filter(f => f?.alive).sort((a, b) => a.pos - b.pos)[0];
         }
+        if (!target || !target.alive) continue; // No valid target
         this.doAttack(fighter, target);
       }
 
@@ -480,12 +493,13 @@ const Battle = {
     switch (ult.type) {
       case 'aoe_damage': {
         for (const t of enemies) {
+          if (!t.alive) continue; // Skip already-dead targets
           let defStat = this.getEffStat(t, 'def');
           if (ult.pen) defStat = Math.floor(defStat * (1 - ult.pen));
           const dmg = Math.floor(Math.max(1, atkStat * ult.mult - defStat * 0.3));
           t.hp = Math.max(0, t.hp - dmg);
           this.addLog(`  → ${t.name} -${dmg}`);
-          if (t.hp <= 0) t.alive = false;
+          if (t.hp <= 0) { t.alive = false; this.vfx.push({ type: 'kill', target: `${t.side}-${t.pos}` }); }
         }
         break;
       }
@@ -498,7 +512,7 @@ const Battle = {
           const dmg = Math.floor(atkStat * ult.mult);
           t.hp = Math.max(0, t.hp - dmg);
           this.addLog(`  → 第${i + 1}击 ${t.name} -${dmg}`);
-          if (t.hp <= 0) t.alive = false;
+          if (t.hp <= 0) { t.alive = false; this.vfx.push({ type: 'kill', target: `${t.side}-${t.pos}` }); }
         }
         break;
       }
@@ -509,37 +523,39 @@ const Battle = {
             const dmg = Math.floor(atkStat * ult.mult);
             t.hp = Math.max(0, t.hp - dmg);
             if (i === 0) this.addLog(`  → ${t.name} -${dmg} x${ult.hits}`);
-            if (t.hp <= 0) t.alive = false;
+            if (t.hp <= 0) { t.alive = false; this.vfx.push({ type: 'kill', target: `${t.side}-${t.pos}` }); }
           }
         }
         break;
       }
       case 'single_nuke': {
         if (enemies.length === 0) break;
-        const t = enemies.sort((a, b) => a.hp - b.hp)[0]; // lowest HP
+        const t = enemies.filter(f => f.alive).sort((a, b) => a.hp - b.hp)[0]; // lowest HP, only alive
+        if (!t) break;
         let defStat = this.getEffStat(t, 'def');
         if (ult.pen) defStat = Math.floor(defStat * (1 - ult.pen));
         let dmg = Math.floor(Math.max(1, atkStat * ult.mult - defStat * 0.3));
         if (ult.guaranteed_crit) dmg = Math.floor(dmg * (ult.critMult || 1.5));
         t.hp = Math.max(0, t.hp - dmg);
         this.addLog(`  → ${t.name} -${dmg}${ult.guaranteed_crit ? ' 暴击!' : ''}`);
-        if (t.hp <= 0) t.alive = false;
+        if (t.hp <= 0) { t.alive = false; this.vfx.push({ type: 'kill', target: `${t.side}-${t.pos}` }); }
         if (ult.stunDur && t.alive) t.effects.push({ type: 'stun', duration: ult.stunDur });
         break;
       }
       case 'single_aoe': {
         if (enemies.length === 0) break;
-        const primary = enemies.sort((a, b) => a.hp - b.hp)[0];
+        const primary = enemies.filter(f => f.alive).sort((a, b) => a.hp - b.hp)[0];
+        if (!primary) break;
         const singleDmg = Math.floor(atkStat * ult.singleMult);
         primary.hp = Math.max(0, primary.hp - singleDmg);
         this.addLog(`  → ${primary.name} -${singleDmg}`);
-        if (primary.hp <= 0) primary.alive = false;
+        if (primary.hp <= 0) { primary.alive = false; this.vfx.push({ type: 'kill', target: `${primary.side}-${primary.pos}` }); }
         for (const t of enemies) {
           if (!t.alive || t === primary) continue;
           const aoeDmg = Math.floor(atkStat * ult.aoeMult);
           t.hp = Math.max(0, t.hp - aoeDmg);
           this.addLog(`  → ${t.name} -${aoeDmg}`);
-          if (t.hp <= 0) t.alive = false;
+          if (t.hp <= 0) { t.alive = false; this.vfx.push({ type: 'kill', target: `${t.side}-${t.pos}` }); }
         }
         break;
       }
@@ -621,10 +637,11 @@ const Battle = {
       }
       case 'aoe_stun': {
         for (const t of enemies) {
+          if (!t.alive) continue;
           const dmg = Math.floor(atkStat * ult.mult);
           t.hp = Math.max(0, t.hp - dmg);
           this.addLog(`  → ${t.name} -${dmg}`);
-          if (t.hp <= 0) { t.alive = false; continue; }
+          if (t.hp <= 0) { t.alive = false; this.vfx.push({ type: 'kill', target: `${t.side}-${t.pos}` }); continue; }
           const stunChance = ult.stunChance || 100;
           if (Math.random() * 100 < stunChance) {
             t.effects.push({ type: 'stun', duration: ult.stunDur });
@@ -635,11 +652,12 @@ const Battle = {
       }
       case 'aoe_debuff': {
         for (const t of enemies) {
+          if (!t.alive) continue;
           if (ult.mult) {
             const dmg = Math.floor(atkStat * ult.mult);
             t.hp = Math.max(0, t.hp - dmg);
             this.addLog(`  → ${t.name} -${dmg}`);
-            if (t.hp <= 0) { t.alive = false; continue; }
+            if (t.hp <= 0) { t.alive = false; this.vfx.push({ type: 'kill', target: `${t.side}-${t.pos}` }); continue; }
           }
           for (const stat of ['atk', 'def', 'spd', 'int']) {
             t.debuffs.push({ stat, pct: ult.debuffPct, duration: ult.duration });
@@ -669,13 +687,15 @@ const Battle = {
       }
       case 'aoe_execute': {
         for (const t of enemies) {
+          if (!t.alive) continue;
           const dmg = Math.floor(atkStat * ult.mult);
           t.hp = Math.max(0, t.hp - dmg);
           this.addLog(`  → ${t.name} -${dmg}`);
-          if (t.hp <= 0) { t.alive = false; continue; }
+          if (t.hp <= 0) { t.alive = false; this.vfx.push({ type: 'kill', target: `${t.side}-${t.pos}` }); continue; }
           if (ult.executeChance && Math.random() * 100 < ult.executeChance) {
             t.hp = 0; t.alive = false;
             this.addLog(`  → ${t.name} 即死！`);
+            this.vfx.push({ type: 'kill', target: `${t.side}-${t.pos}` });
           }
         }
         break;
@@ -713,13 +733,13 @@ const Battle = {
         break;
       }
       case 'front_damage': {
-        const frontEnemies = enemies.filter(f => f.pos < 2).length > 0 ? enemies.filter(f => f.pos < 2) : enemies.slice(0, 2);
+        const frontEnemies = enemies.filter(f => f.alive && f.pos < 2).length > 0 ? enemies.filter(f => f.alive && f.pos < 2) : enemies.filter(f => f.alive).slice(0, 2);
         for (const t of frontEnemies) {
           if (!t.alive) continue;
           const dmg = Math.floor(atkStat * ult.mult);
           t.hp = Math.max(0, t.hp - dmg);
           this.addLog(`  → ${t.name} -${dmg}`);
-          if (t.hp <= 0) t.alive = false;
+          if (t.hp <= 0) { t.alive = false; this.vfx.push({ type: 'kill', target: `${t.side}-${t.pos}` }); }
         }
         if (ult.defBuff) {
           fighter.buffs.push({ stat: 'def', pct: ult.defBuff, duration: ult.duration });
@@ -1070,8 +1090,10 @@ const Battle = {
         targets = targets.filter(Boolean); // Safety: remove nulls
 
         for (const t of targets) {
+          if (!t.alive) continue; // Skip already-dead targets
           const hits = s.hits || 1;
           for (let h = 0; h < hits; h++) {
+            if (!t.alive) break; // Re-check alive status between multi-hits
             let dmg = Math.floor(this.getEffStat(fighter, 'atk') * s.value);
             dmg = Math.floor(dmg * (1 + skillDmgBonus / 100));
             if (s.guaranteed_crit) dmg = Math.floor(dmg * 1.5);
@@ -1082,7 +1104,7 @@ const Battle = {
             else this._totalDamageEnemy += dmg;
             t.hp = Math.max(0, t.hp - dmg);
             this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} -${dmg} HP`);
-            if (t.hp <= 0) { t.alive = false; break; }
+            if (t.hp <= 0) { t.alive = false; this.vfx.push({ type: 'kill', target: `${t.side}-${t.pos}` }); break; }
           }
         }
         // Apply debuff to targets (e.g. Xu Huang armor break, Dong Zhuo fear)
@@ -1109,10 +1131,11 @@ const Battle = {
             this.addLog(`✨ ${fighter.name} 感诸葛亮在侧，触发【卧龙遗计】！`);
             const liveEnemies = (fighter.side === 'player' ? this.state.enemy : this.state.player).filter(f => f?.alive);
             for (const t of liveEnemies) {
+              if (!t.alive) continue; // Re-check alive in case previous iteration killed them
               const inheritDmg = Math.floor(this.getEffStat(fighter, 'int') * (bonus.value || 1.5));
               t.hp = Math.max(0, t.hp - inheritDmg);
               this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} -${inheritDmg} 法伤（遗计）`);
-              if (t.hp <= 0) t.alive = false;
+              if (t.hp <= 0) { t.alive = false; this.vfx.push({ type: 'kill', target: `${t.side}-${t.pos}` }); }
             }
           }
         }
@@ -1122,6 +1145,7 @@ const Battle = {
         if (enemies.length === 0) break;
         const targets = s.target === 'all_enemy' ? enemies : [enemies.sort((a,b) => a.hp - b.hp)[0]];
         for (const t of targets) {
+          if (!t.alive) continue; // Skip already-dead targets
           let dmg = Math.floor(this.getEffStat(fighter, 'int') * s.value);
           dmg = Math.floor(dmg * (1 + skillDmgBonus / 100));
           // Weather affects magic skills (e.g. rain weakens fire magic)
@@ -1133,7 +1157,7 @@ const Battle = {
           else this._totalDamageEnemy += dmg;
           t.hp = Math.max(0, t.hp - dmg);
           this.addLog(`  → ${Visuals.heroTag(t.id)} ${t.name} -${dmg} 法伤`);
-          if (t.hp <= 0) t.alive = false;
+          if (t.hp <= 0) { t.alive = false; this.vfx.push({ type: 'kill', target: `${t.side}-${t.pos}` }); }
           // Element reaction from skills
           else if (fighter.element && typeof ELEMENT_REACTIONS !== 'undefined') {
             this.checkElementReaction(fighter, t);

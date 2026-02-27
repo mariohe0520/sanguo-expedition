@@ -6,9 +6,9 @@ const Campaign = {
       desc: '苍天已死，黄天当立。乱世之始。',
       stages: [
         { id: 1, name: '颍川遭遇', enemies: ['soldier','soldier','archer_recruit'], reward: { gold: 100, exp: 50 }, tutorial: 'basic' },
-        { id: 2, name: '黄巾先锋', enemies: ['soldier','soldier','soldier'], reward: { gold: 120, exp: 60 }, tutorial: 'counter' },
-        { id: 3, name: '广宗之围', enemies: ['soldier','archer_recruit','soldier','archer_recruit'], reward: { gold: 150, exp: 80 } },
-        { id: 4, name: '精锐小队', enemies: ['soldier','soldier','archer_recruit','soldier'], reward: { gold: 180, exp: 100 }, elite: true },
+        { id: 2, name: '黄巾先锋', enemies: ['soldier','archer_recruit','soldier'], reward: { gold: 120, exp: 60 }, tutorial: 'counter' },
+        { id: 3, name: '广宗之围', enemies: ['soldier','archer_recruit','shield_militia','soldier'], reward: { gold: 150, exp: 80 } },
+        { id: 4, name: '精锐小队', enemies: ['elite_spear','soldier','archer_recruit','shield_militia'], reward: { gold: 180, exp: 100 }, elite: true },
         { id: 5, name: '张角降临', enemies: ['soldier','soldier','zhangjiao','soldier','archer_recruit'], boss: true, reward: { gold: 300, exp: 200, hero_shard: 'zhangjiao' } },
         // --- 天命抉择 #1: 救卢植？---
         { id: 6, name: '南阳追击', enemies: ['soldier','soldier','soldier','archer_recruit','soldier'], reward: { gold: 200, exp: 120 }, branch: 'A' },
@@ -297,15 +297,16 @@ const Campaign = {
   ],
 
   // Difficulty curve: enemy stat multiplier per chapter
+  // Improved: Chapter 1 starts harder (0.55 instead of 0.3) and progression is smoother
   CHAPTER_SCALING: {
-    1: { enemyScale: 0.3, desc: '教程难度' },
-    2: { enemyScale: 0.5, desc: '需要阵容搭配' },
-    3: { enemyScale: 0.8, desc: '需要装备强化' },
-    4: { enemyScale: 1.0, desc: '需要天赋投入' },
-    5: { enemyScale: 1.3, desc: '需要元素反应策略' },
-    6: { enemyScale: 1.6, desc: '终局·需要极限Build' },
-    7: { enemyScale: 1.8, desc: '以少胜多·智斗' },
-    8: { enemyScale: 2.0, desc: '城防攻坚战' },
+    1: { enemyScale: 0.55, desc: '初出茅庐·需要基本策略' },
+    2: { enemyScale: 0.75, desc: '需要阵容搭配' },
+    3: { enemyScale: 0.95, desc: '需要装备强化' },
+    4: { enemyScale: 1.15, desc: '需要天赋投入' },
+    5: { enemyScale: 1.4, desc: '需要元素反应策略' },
+    6: { enemyScale: 1.65, desc: '终局·需要极限Build' },
+    7: { enemyScale: 1.85, desc: '以少胜多·智斗' },
+    8: { enemyScale: 2.05, desc: '城防攻坚战' },
     9: { enemyScale: 2.3, desc: '山地极限战' },
     10: { enemyScale: 2.6, desc: '天下归一·最终决战' },
   },
