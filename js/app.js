@@ -2079,7 +2079,7 @@ const App = {
       terrain: floorData.terrain,
       weather: floorData.weather,
       _dungeonFloor: true,
-      _scaleMult: floorData.scaleMult,
+      _scaleMult: floorData.isBossFloor ? floorData.boss.scaleMult : floorData.scaleMult,
     };
     this.prepareBattle(this.currentStage);
     this.switchPage('battle');

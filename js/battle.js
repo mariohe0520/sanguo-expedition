@@ -789,7 +789,7 @@ const Battle = {
   doAttack(attacker, defender) {
     // DEFINITIVE DEAD-UNIT GUARD: both attacker AND defender must be alive
     if (!attacker?.alive || attacker.hp <= 0) return;
-    if (!defender?.alive) return;
+    if (!defender?.alive || defender.hp <= 0) return;
 
     // Dodge check from skill tree
     if (defender._specials) {
