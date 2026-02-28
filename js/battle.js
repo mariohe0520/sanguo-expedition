@@ -331,10 +331,10 @@ const Battle = {
         }
         // teleport: every 5 turns, boss swaps to lowest-HP player target
         if (this.bossEnhanced.teleport && this.state.turn % 5 === 0 && this.state.turn > 0) {
-          const playerAlive = this.state.player.filter(f => f?.alive);
+          const playerAlive = this.state.player.filter(f => f?.alive && f.hp > 0);
           if (playerAlive.length > 1) {
             const weakest = playerAlive.sort((a,b) => a.hp/a.maxHp - b.hp/b.maxHp)[0];
-            if (weakest && weakest.alive) {
+            if (weakest && weakest.alive && weakest.hp > 0) {
               const hit = Math.floor(this.getEffStat(bossUnit, 'atk') * 1.5);
               weakest.hp = Math.max(0, weakest.hp - hit);
               if (weakest.hp <= 0) { weakest.alive = false; this.vfx.push({ type: 'kill', target: `${weakest.side}-${weakest.pos}` }); }
@@ -345,10 +345,10 @@ const Battle = {
         }
         // mirror: on even turns, boss copies the highest-ATK player skill
         if (this.bossEnhanced.mirror && this.state.turn % 4 === 2) {
-          const playerAlive = this.state.player.filter(f => f?.alive && f.skill);
+          const playerAlive = this.state.player.filter(f => f?.alive && f.hp > 0 && f.skill);
           if (playerAlive.length > 0) {
             const strongest = playerAlive.sort((a,b) => (b.atk + b.int) - (a.atk + a.int))[0];
-            if (strongest && strongest.alive) {
+            if (strongest && strongest.alive && strongest.hp > 0) {
               const mirrorDmg = Math.floor((this.getEffStat(bossUnit, 'int') || this.getEffStat(bossUnit, 'atk')) * 1.2);
               strongest.hp = Math.max(0, strongest.hp - mirrorDmg);
               if (strongest.hp <= 0) { strongest.alive = false; this.vfx.push({ type: 'kill', target: `${strongest.side}-${strongest.pos}` }); }
@@ -384,12 +384,19 @@ const Battle = {
 
     // Strategy: Vanguard extra action at start of turn 1
     if (vanguardExtra && vanguardExtra.alive) {
-      const enemies = (vanguardExtra.side === 'player' ? this.state.enemy : this.state.player).filter(f => f?.alive);
-      if (enemies.length > 0) {
-        const target = enemies.sort((a, b) => a.pos - b.pos)[0];
-        this.doAttack(vanguardExtra, target);
-        if (this.onUpdate) this.onUpdate(this.state);
-        await this.wait(Math.floor(400 / speed));
+      const vgEnemies = (vanguardExtra.side === 'player' ? this.state.enemy : this.state.player).filter(f => f?.alive);
+      if (vgEnemies.length > 0) {
+        const vgTarget = vgEnemies.sort((a, b) => a.pos - b.pos)[0];
+        // Guard: vgTarget must be alive before attacking
+        if (vgTarget && vgTarget.alive && vgTarget.hp > 0) {
+          this.doAttack(vanguardExtra, vgTarget);
+          if (this.onUpdate) this.onUpdate(this.state);
+          await this.wait(Math.floor(400 / speed));
+          // Immediately check if all enemies are dead after vanguard attack
+          if (!this.state.player.some(f => f?.alive) || !this.state.enemy.some(f => f?.alive)) {
+            return; // Battle ended — abort the rest of the turn
+          }
+        }
       }
     }
 
@@ -446,10 +453,14 @@ const Battle = {
         // Attack own ally
         const allies = (fighter.side === 'player' ? this.state.player : this.state.enemy).filter(f => f?.alive && f !== fighter);
         if (allies.length > 0) {
-          const target = allies[Math.floor(Math.random() * allies.length)];
-          this.doAttack(fighter, target);
-          this.addLog(`${Visuals.heroTag(fighter.id)} ${fighter.name} 被魅惑，攻击了 ${target.name}！`);
+          const charmTarget = allies[Math.floor(Math.random() * allies.length)];
+          if (charmTarget && charmTarget.alive && charmTarget.hp > 0) {
+            this.doAttack(fighter, charmTarget);
+            this.addLog(`${Visuals.heroTag(fighter.id)} ${fighter.name} 被魅惑，攻击了 ${charmTarget.name}！`);
+          }
         }
+        // After charm attack: synchronously check if all fighters on one side are dead
+        if (!this.state.player.some(f => f?.alive) || !this.state.enemy.some(f => f?.alive)) break;
         continue;
       }
 
@@ -461,9 +472,11 @@ const Battle = {
       if (fighter.rage >= fighter.maxRage && fighter.skill) {
         this.useSkill(fighter);
         this.triggerDialogue(fighter, 'skill');
+        // Synchronous battle-end check after skill
+        if (!this.state.player.some(f => f?.alive) || !this.state.enemy.some(f => f?.alive)) break;
       } else {
         // Normal attack
-        let enemies = (fighter.side === 'player' ? this.state.enemy : this.state.player).filter(f => f?.alive);
+        let enemies = (fighter.side === 'player' ? this.state.enemy : this.state.player).filter(f => f?.alive && f.hp > 0);
         // Stealth: filter out stealthed targets (unless no other targets exist)
         const nonStealthEnemies = enemies.filter(f => !f._ultimateStealth);
         if (nonStealthEnemies.length > 0) enemies = nonStealthEnemies;
@@ -477,12 +490,14 @@ const Battle = {
         } else if (typeof Strategy !== 'undefined') {
           target = Strategy.getChainTarget(fighter, this.state);
         }
-        if (!target || !target.alive) {
-          // Target: front row first, then back — always re-check alive
-          target = enemies.filter(f => f?.alive).sort((a, b) => a.pos - b.pos)[0];
+        if (!target || !target.alive || target.hp <= 0) {
+          // Target: front row first, then back — always re-check alive AND hp > 0
+          target = enemies.filter(f => f?.alive && f.hp > 0).sort((a, b) => a.pos - b.pos)[0];
         }
-        if (!target || !target.alive) continue; // No valid target
+        if (!target || !target.alive || target.hp <= 0) continue; // No valid target
         this.doAttack(fighter, target);
+        // Synchronous battle-end check after attack
+        if (!this.state.player.some(f => f?.alive) || !this.state.enemy.some(f => f?.alive)) break;
       }
 
       if (this.onUpdate) this.onUpdate(this.state);

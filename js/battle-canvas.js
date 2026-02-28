@@ -27,7 +27,7 @@ const BattleCanvas = {
   animFrame: null,
   particles: [],
   floatingTexts: [],
-  screenShake: { x: 0, y: 0, intensity: 0, decay: 0.9 },
+  screenShake: { x: 0, y: 0, intensity: 0, decay: 0.82 },
   flashAlpha: 0,
   flashColor: '#fff',
   fighters: {},
@@ -37,6 +37,7 @@ const BattleCanvas = {
   // ── VFX Overhaul state ──
   slashTrails: [],
   impactWaves: [],
+  shockwaves: [],        // circular shockwave rings for skill activation
   cinematicActive: null,
   timeScale: 1,
   timeSlowFrames: 0,
@@ -47,9 +48,10 @@ const BattleCanvas = {
   defeatAnim: null,
 
   // ── Performance caps ──
-  MAX_PARTICLES: 200,
+  MAX_PARTICLES: 300,
   MAX_SLASH_TRAILS: 10,
-  MAX_IMPACT_WAVES: 5,
+  MAX_IMPACT_WAVES: 8,
+  MAX_SHOCKWAVES: 6,
 
   // ── Element color palettes ──
   ELEMENT_COLORS: {
@@ -734,6 +736,60 @@ const BattleCanvas = {
     });
   },
 
+  // Skill activation shockwave: large expanding ring from caster with thick leading edge
+  spawnShockwave(x, y, color, maxRadius, lineWidth) {
+    if (!this.shockwaves) this.shockwaves = [];
+    while (this.shockwaves.length >= this.MAX_SHOCKWAVES) this.shockwaves.shift();
+    this.shockwaves.push({
+      x, y,
+      color: color || '#c084fc',
+      maxRadius: maxRadius || 120,
+      radius: 0,
+      alpha: 1,
+      lineWidth: lineWidth || 8,
+    });
+  },
+
+  updateShockwaves() {
+    if (!this.shockwaves) { this.shockwaves = []; return; }
+    const ts = this.timeScale;
+    for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+      const sw = this.shockwaves[i];
+      sw.radius += (sw.maxRadius / 18) * ts;
+      sw.alpha = Math.pow(1 - sw.radius / sw.maxRadius, 0.5);
+      sw.lineWidth = Math.max(0.5, sw.lineWidth * (1 - sw.radius / sw.maxRadius * 0.6));
+      if (sw.alpha <= 0 || sw.radius >= sw.maxRadius) {
+        this.shockwaves.splice(i, 1);
+      }
+    }
+  },
+
+  drawShockwaves() {
+    if (!this.shockwaves || !this.shockwaves.length) return;
+    const ctx = this.ctx;
+    for (const sw of this.shockwaves) {
+      if (sw.alpha <= 0) continue;
+      ctx.save();
+      ctx.globalAlpha = sw.alpha;
+      ctx.strokeStyle = sw.color;
+      ctx.lineWidth = sw.lineWidth;
+      ctx.shadowColor = sw.color;
+      ctx.shadowBlur = 20 * sw.alpha;
+      ctx.beginPath();
+      ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+      ctx.stroke();
+      // Inner bright ring
+      ctx.globalAlpha = sw.alpha * 0.4;
+      ctx.lineWidth = sw.lineWidth * 0.4;
+      ctx.strokeStyle = '#ffffff';
+      ctx.shadowBlur = 0;
+      ctx.beginPath();
+      ctx.arc(sw.x, sw.y, sw.radius * 0.9, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  },
+
   updateImpactWaves() {
     const ts = this.timeScale;
     for (let i = this.impactWaves.length - 1; i >= 0; i--) {
@@ -772,27 +828,43 @@ const BattleCanvas = {
     const x = targetSprite.x;
     const y = targetSprite.y;
 
-    // Dramatic death: animate the sprite collapsing + fading
+    // Dramatic death: sprite collapses — scale shrinks to 0.5, opacity fades to 0 over 400ms
     targetSprite._deathAnim = {
       startTime: Date.now(),
-      durationMs: 600,
+      durationMs: 400,
     };
 
-    // Shatter fragments (20+ pieces flying outward with gravity)
-    for (let i = 0; i < 28; i++) {
+    // Massive shatter burst — 35 fragments in all directions
+    for (let i = 0; i < 35; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = 2.5 + Math.random() * 6;
+      const speed = 3.5 + Math.random() * 8;
       this.particles.push({
         x, y,
         vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 3,
+        vy: Math.sin(angle) * speed - 4,
         life: 1,
-        decay: 0.010 + Math.random() * 0.008,
-        size: 3 + Math.random() * 6,
-        color: ['#ff4444', '#ff6b6b', '#cc2222', '#ff8844', '#ffaa44'][Math.floor(Math.random() * 5)],
+        decay: 0.008 + Math.random() * 0.007,
+        size: 3 + Math.random() * 7,
+        color: ['#ff4444', '#ff6b6b', '#cc2222', '#ff8844', '#ffaa44', '#ffffff'][Math.floor(Math.random() * 6)],
         type: 'fragment',
         rotation: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.4,
+        rotSpeed: (Math.random() - 0.5) * 0.5,
+      });
+    }
+    // Extra ember sparks for impact energy
+    for (let i = 0; i < 20; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2 + Math.random() * 5;
+      this.particles.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 2,
+        life: 1,
+        decay: 0.018 + Math.random() * 0.012,
+        size: 2 + Math.random() * 3,
+        color: '#ffaa33',
+        type: 'ember',
+        flickerPhase: Math.random() * Math.PI * 2,
       });
     }
 
@@ -1124,19 +1196,21 @@ const BattleCanvas = {
     }
   },
 
-  // ═══ FLOATING TEXT — cinematic bounce + fade ═══
+  // ═══ FLOATING TEXT — cinematic bounce + scale pop + fade ═══
   addFloatingText(x, y, text, color, opts = {}) {
     this.floatingTexts.push({
       x, y, text, color,
       life: 1,
       decay: opts.decay || 0.014,
-      vy: opts.vy || -2.2,       // faster initial rise
-      vx: opts.vx || (Math.random() - 0.5) * 0.8, // slight horizontal drift
-      gy: 0.06,                   // gentle gravity — slows and reverses for bounce feel
+      vy: opts.vy || -2.2,
+      vx: opts.vx !== undefined ? opts.vx : (Math.random() - 0.5) * 0.8,
+      gy: 0.06,
       size: opts.size || 16,
       bold: opts.bold !== undefined ? opts.bold : true,
       outline: opts.outline !== undefined ? opts.outline : true,
       isCrit: opts.isCrit || false,
+      // Scale pop: starts at 1.5, settles to 1.0 in first 20% of lifetime
+      scalePop: 1.5,
       bounced: false,
     });
   },
@@ -1146,40 +1220,53 @@ const BattleCanvas = {
     const ts = this.timeScale;
     for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
       const t = this.floatingTexts[i];
-      // Physics: decelerate upward then slowly fall back
+      // Physics: decelerate upward then gently fall back
       t.vy += t.gy * ts;
       t.y += t.vy * ts;
       t.x += (t.vx || 0) * ts;
       t.life -= t.decay * ts;
       if (t.life <= 0) { this.floatingTexts.splice(i, 1); continue; }
 
-      // Crit text scale pops then shrinks
+      // ── Scale pop: 1.5 → 1.0 in first 20% of life, then stays at 1.0 and fades ──
       const lifeProgress = 1 - t.life; // 0→1 as text ages
-      const scaleMult = t.isCrit
-        ? (lifeProgress < 0.15 ? 1 + lifeProgress * 2.0 : 1.3 - lifeProgress * 0.3) // pop then shrink
-        : (1 + lifeProgress * 0.15); // normal: slight grow as it fades
+
+      let scaleMult;
+      if (lifeProgress < 0.20) {
+        // Pop phase: 1.5 → 1.0 with ease-out
+        const popT = lifeProgress / 0.20; // 0→1 within pop phase
+        const eased = 1 - Math.pow(1 - popT, 2); // ease-out
+        scaleMult = 1.5 - 0.5 * eased; // 1.5 → 1.0
+      } else if (t.isCrit) {
+        // Crit: stays large a bit then gradually shrinks
+        scaleMult = 1.0 + (1 - lifeProgress) * 0.15;
+      } else {
+        scaleMult = 1.0;
+      }
+
+      // Alpha: fully opaque for first 60% of life, then fades
+      const alpha = lifeProgress < 0.6 ? 1.0 : Math.max(0, (1 - lifeProgress) / 0.4);
 
       ctx.save();
-      ctx.globalAlpha = Math.min(1, t.life * 1.5); // fade out in last 1/3 of life
-      const fontSize = Math.floor(t.size * Math.max(0.8, scaleMult));
+      ctx.globalAlpha = alpha;
+      const fontSize = Math.floor(t.size * Math.max(0.7, scaleMult));
       ctx.font = (t.bold ? 'bold ' : '') + fontSize + 'px -apple-system, system-ui, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
       if (t.outline) {
-        ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-        ctx.lineWidth = t.isCrit ? 5 : 3;
+        ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+        ctx.lineWidth = t.isCrit ? 6 : 3.5;
         ctx.lineJoin = 'round';
         ctx.shadowColor = 'rgba(0,0,0,0.9)';
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = 10;
         ctx.strokeText(t.text, t.x, t.y);
         ctx.shadowBlur = 0;
       }
 
-      // Glow effect for crits
+      // Glow effect for crits — stronger glow
       if (t.isCrit) {
         ctx.shadowColor = t.color;
-        ctx.shadowBlur = 16;
+        ctx.shadowBlur = 20;
       }
       ctx.fillStyle = t.color;
       ctx.fillText(t.text, t.x, t.y);
@@ -1274,86 +1361,125 @@ const BattleCanvas = {
       const attacker = this.fighters[fx.attacker];
 
       if (fx.type === 'attack') {
-        // ── ATTACKER LUNGE ANIMATION ──
-        if (attacker && target && attacker.f.alive) {
-          const origX = attacker.baseX !== undefined ? attacker.baseX : attacker.x;
-          const origY = attacker.baseY !== undefined ? attacker.baseY : attacker.y;
-          if (attacker.baseX === undefined) { attacker.baseX = attacker.x; attacker.baseY = attacker.y; }
-          
-          // Calculate lunge direction (toward target, ~60% of distance)
-          const dx = target.x - origX;
-          const dy = target.y - origY;
-          const dist = Math.sqrt(dx*dx + dy*dy);
-          const lungeRatio = Math.min(0.6, 80 / (dist || 1)); // Lunge up to 60% or 80px
-          const lungeX = origX + dx * lungeRatio;
-          const lungeY = origY + dy * lungeRatio;
-          
-          // Animate: lunge forward (fast) → return (slower)
-          attacker._lungeAnim = {
-            phase: 'forward', // forward → hold → return
-            startX: origX, startY: origY,
-            targetX: lungeX, targetY: lungeY,
-            progress: 0,
-            startTime: Date.now(),
-            forwardMs: 80,  // 80ms rush forward
-            holdMs: 60,     // hold at contact for 60ms
-            returnMs: 200,  // 200ms ease back
-          };
-          
-          // Scale up slightly during attack (power feel)
-          attacker._attackScale = 1.15;
-          setTimeout(() => { if (attacker) attacker._attackScale = 1; }, 250);
+        // ── WIND-UP: Attacker scales up briefly before lunging ──
+        if (attacker && attacker.f.alive) {
+          // Brief wind-up scale pulse (feel of gathering power)
+          attacker.scale = 1.2;
+          setTimeout(() => { if (attacker && attacker.f.alive) attacker.scale = 1; }, 60);
         }
-        
+
+        // ── ATTACKER LUNGE ANIMATION (delayed slightly for wind-up) ──
+        const LUNGE_DELAY = 50; // 50ms wind-up before lunge
+        const doLunge = () => {
+          if (attacker && target && attacker.f.alive) {
+            const origX = attacker.baseX !== undefined ? attacker.baseX : attacker.x;
+            const origY = attacker.baseY !== undefined ? attacker.baseY : attacker.y;
+            if (attacker.baseX === undefined) { attacker.baseX = attacker.x; attacker.baseY = attacker.y; }
+
+            const dx = target.x - origX;
+            const dy = target.y - origY;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            // Lunge 30-40px toward target — feels aggressive without teleporting
+            const lungeAmount = Math.min(40, dist * 0.38);
+            const lungeRatio = lungeAmount / (dist || 1);
+            const lungeX = origX + dx * lungeRatio;
+            const lungeY = origY + dy * lungeRatio;
+
+            attacker._lungeAnim = {
+              phase: 'forward',
+              startX: origX, startY: origY,
+              targetX: lungeX, targetY: lungeY,
+              progress: 0,
+              startTime: Date.now(),
+              forwardMs: 90,   // 90ms aggressive rush
+              holdMs: 50,      // 50ms contact hold
+              returnMs: 240,   // 240ms ease back (weightier recovery)
+            };
+          }
+        };
+        setTimeout(doLunge, LUNGE_DELAY);
+
         if (target) {
-          // Hit shake (delayed to match lunge contact)
+          // ── IMPACT moment: delayed to match lunge contact ──
+          const IMPACT_DELAY = LUNGE_DELAY + 90; // matches forwardMs
+
           setTimeout(() => {
-            if (target) {
-              target.shakeX = (Math.random() - 0.5) * 14;
-              target.shakeY = (Math.random() - 0.5) * 10;
-              target.hitFlash = 1;
+            if (!target) return;
+
+            // Strong hit shake — more displacement for real game feel
+            const shakeStrength = fx.isCrit ? 18 : 10;
+            target.shakeX = (Math.random() - 0.5) * shakeStrength;
+            target.shakeY = (Math.random() - 0.5) * (shakeStrength * 0.7);
+            target.hitFlash = 1;
+
+            // Slash trail at impact point
+            const slashColor = fx.isCrit ? '#ffd700' : '#ffffff';
+            this.spawnSlashTrail(target.x, target.y, fx.isCrit, slashColor);
+
+            // ── Screen flash: brief white/red on EVERY hit, stronger on crits ──
+            if (fx.isCrit) {
+              this.triggerFlash('#ff3300', 0.28);   // red-orange flash on crit
+              this.chromaticFrames = 4;
+            } else {
+              this.triggerFlash('#ffffff', 0.10);   // subtle white flash on normal hit
             }
-          }, 80);
 
-          // ── Slash trail at target (delayed to match contact) ──
-          const slashColor = fx.isCrit ? '#ffd700' : '#ffffff';
-          setTimeout(() => this.spawnSlashTrail(target.x, target.y, fx.isCrit, slashColor), 80);
+            // ── Camera shake: crits get heavy shake, normal hits get light shake ──
+            if (fx.isCrit) {
+              this.triggerShake(9);
+              this.timeSlowFrames = 7;
+              this.timeScale = 0.25;
+              this.zoomPulse = 10;
+            } else {
+              this.triggerShake(4);
+            }
 
-          // ── Element-specific VFX ──
-          const attackerElement = attacker ? this.getHeroElement(attacker.f.id) : null;
-          if (attackerElement) {
-            this.spawnElementVFX(target.x, target.y, attackerElement, 'attack');
-          }
+            // ── Hit particles — 10-15 burst outward ──
+            const attackerElement = attacker ? this.getHeroElement(attacker.f.id) : null;
+            if (attackerElement) {
+              this.spawnElementVFX(target.x, target.y, attackerElement, 'attack');
+            }
 
-          // Base damage particles (kept from original)
-          this.spawnParticles(target.x, target.y, fx.isCrit ? '#ffd700' : '#ff6b6b', fx.isCrit ? 12 : 6, {
-            spread: fx.isCrit ? 6 : 3,
-            type: fx.isCrit ? 'star' : 'spark',
-            size: fx.isCrit ? 4 : 2,
-          });
+            // Base burst particles (always spawn, heavier on crit)
+            const particleCount = fx.isCrit ? 15 : 10;
+            this.spawnParticles(target.x, target.y, fx.isCrit ? '#ffd700' : '#ff6b6b', particleCount, {
+              spread: fx.isCrit ? 7 : 5,
+              type: fx.isCrit ? 'star' : 'spark',
+              size: fx.isCrit ? 4 : 3,
+            });
+            // White hot core sparks
+            this.spawnParticles(target.x, target.y, '#ffffff', fx.isCrit ? 8 : 4, {
+              spread: fx.isCrit ? 5 : 3,
+              type: 'spark',
+              size: fx.isCrit ? 3 : 2,
+            });
 
-          // Floating damage — cinematic bounce animation
-          this.addFloatingText(
-            target.x + (Math.random() - 0.5) * 16,
-            target.y - 22,
-            (fx.isCrit ? '暴击! ' : '-') + fx.dmg,
-            fx.isCrit ? '#ffd700' : '#ff7070',
-            { size: fx.isCrit ? 24 : 17, bold: true, outline: true, isCrit: fx.isCrit,
-              vy: fx.isCrit ? -3.5 : -2.2, decay: fx.isCrit ? 0.011 : 0.014 }
-          );
+            // ── Impact wave ──
+            if (fx.isCrit) {
+              this.spawnImpactWave(target.x, target.y, '#ffd700', 80);
+              this.spawnImpactWave(target.x, target.y, 'rgba(255,150,0,0.4)', 120);
+            } else {
+              this.spawnImpactWave(target.x, target.y, 'rgba(255,120,80,0.6)', 45);
+            }
 
-          // ── Impact wave ──
-          if (fx.isCrit) {
-            this.spawnImpactWave(target.x, target.y, '#ffd700', 60);
-            // Crit slow-mo: timeScale 0.3 for 8 frames
-            this.timeSlowFrames = 8;
-            this.timeScale = 0.3;
-            this.triggerShake(6);
-          } else {
-            this.spawnImpactWave(target.x, target.y, 'rgba(255,255,255,0.5)', 30);
-            this.triggerShake(2);
-          }
+            // ── Damage number: scale 1.5 → 1.0 pop then fade ──
+            this.addFloatingText(
+              target.x + (Math.random() - 0.5) * 18,
+              target.y - 24,
+              (fx.isCrit ? '暴击! ' : '-') + fx.dmg,
+              fx.isCrit ? '#ffd700' : '#ff7070',
+              {
+                size: fx.isCrit ? 26 : 18,
+                bold: true,
+                outline: true,
+                isCrit: fx.isCrit,  // triggers 1.5→1.0 scale pop in drawFloatingTexts
+                vy: fx.isCrit ? -3.8 : -2.4,
+                decay: fx.isCrit ? 0.010 : 0.013,
+              }
+            );
+          }, IMPACT_DELAY);
         }
+
         if (attacker) {
           attacker.attackAnim = 1;
         }
@@ -1373,33 +1499,53 @@ const BattleCanvas = {
             caster.x, caster.y - 35,
             '【' + fx.skillName + '】',
             '#c084fc',
-            { size: 14, bold: true, decay: 0.01, vy: -0.8, outline: true }
+            { size: 15, bold: true, decay: 0.009, vy: -1.0, outline: true }
           );
+
+          // ── CIRCULAR SHOCKWAVE RING expanding from caster (the new signature skill feel) ──
+          const skillColor = casterElement
+            ? (this.ELEMENT_COLORS[casterElement]?.primary || '#c084fc')
+            : '#c084fc';
+          this.spawnShockwave(caster.x, caster.y, skillColor, this.width * 0.55, 10);
+          // Second smaller inner ring for depth
+          setTimeout(() => {
+            this.spawnShockwave(caster.x, caster.y, '#ffffff', this.width * 0.3, 5);
+          }, 80);
 
           // ── Element-specific VFX at skill intensity ──
           if (casterElement) {
             this.spawnElementVFX(caster.x, caster.y, casterElement, 'skill');
           } else {
-            // Fallback: original purple particles
-            this.spawnParticles(caster.x, caster.y, '#c084fc', 20, {
-              spread: 5, type: 'star', size: 3, upward: true
+            // Fallback: heavy purple particle burst
+            this.spawnParticles(caster.x, caster.y, '#c084fc', 28, {
+              spread: 7, type: 'star', size: 4, upward: true
+            });
+            this.spawnParticles(caster.x, caster.y, '#ffffff', 10, {
+              spread: 4, type: 'spark', size: 2, upward: true
             });
           }
 
-          // Full-width impact wave for skills
-          this.spawnImpactWave(caster.x, caster.y, '#c084fc', this.width * 0.4);
+          // Full-width impact wave
+          this.spawnImpactWave(caster.x, caster.y, '#c084fc', this.width * 0.45);
 
-          this.triggerShake(4);
-          this.triggerFlash('#7c3aed', 0.15);
+          // Strong shake + flash on skill activation
+          this.triggerShake(7);
+          this.triggerFlash(skillColor, 0.22);
+          this.chromaticFrames = 3;
+          this.zoomPulse = 8;
         }
       }
 
       if (fx.type === 'kill') {
         if (target) {
-          // ── Premium kill effect ──
+          // ── Premium kill effect: screen flash + heavy shake + full particle burst ──
           this.spawnKillEffect(target);
-          this.triggerShake(10);
-          this.triggerFlash('#c04040', 0.25);
+          this.triggerShake(14);
+          this.triggerFlash('#ff2200', 0.35);   // intense red flash on death
+          this.chromaticFrames = 6;
+          this.zoomPulse = 14;
+          this.timeSlowFrames = 10;
+          this.timeScale = 0.2;  // dramatic slow-mo on kill
         }
       }
 
@@ -2049,23 +2195,27 @@ const BattleCanvas = {
       s.hitFlash *= Math.pow(0.92, ts);
       s.skillGlow *= Math.pow(0.97, ts);
 
-      // Death animation: collapse (tilt + sink) + fade to 0.3 over 600ms
+      // Death animation: dramatic collapse — scale shrinks to 0.5, opacity fades to 0 over 400ms
       if (s._deathAnim) {
         const elapsed = Date.now() - s._deathAnim.startTime;
         const t = Math.min(1, elapsed / s._deathAnim.durationMs);
-        // Sprite collapses: drops down, tilts, fades
-        s.shakeY += t * 18;  // sinks down
-        s.alpha = Math.max(0.3, 1 - t * 0.7);
-        s.scale = Math.max(0.7, 1 - t * 0.3);
+        // Ease-in: starts slow, accelerates toward end (dramatic collapse feel)
+        const eased = t * t;
+        s.shakeY = eased * 28;          // sinks rapidly downward
+        s.alpha = Math.max(0, 1 - eased);   // fades fully to 0
+        s.scale = Math.max(0.5, 1 - eased * 0.5); // shrinks to 0.5
         if (t >= 1) {
           s._deathAnim = null;
-          s.alpha = 0.3;
-          s.scale = 0.7;
+          s.alpha = 0;
+          s.scale = 0.5;
         }
       }
       
-      // Skip fully-dead fighters (death anim finished): no movement, no render
-      if (!s.f.alive && !s._deathAnim) continue;
+      // Skip fully-dead fighters (death anim finished): alpha is 0, no need to render
+      if (!s.f.alive && !s._deathAnim) {
+        s.alpha = 0;
+        continue;
+      }
 
       // ── Lunge animation (attacker charges toward target) ──
       if (s._lungeAnim) {
@@ -2125,6 +2275,10 @@ const BattleCanvas = {
     this.updateSlashTrails();
     this.drawSlashTrails();
 
+    // ── Shockwaves (skill activation rings) ──
+    this.updateShockwaves();
+    this.drawShockwaves();
+
     // ── Impact waves ──
     this.updateImpactWaves();
     this.drawImpactWaves();
@@ -2143,12 +2297,12 @@ const BattleCanvas = {
     this.drawVictoryAnim();
     this.drawDefeatAnim();
 
-    // Screen flash
-    if (this.flashAlpha > 0.01) {
+    // Screen flash — decay at 0.82 per frame (matches shake, more visible)
+    if (this.flashAlpha > 0.005) {
       ctx.fillStyle = this.flashColor;
       ctx.globalAlpha = this.flashAlpha;
       ctx.fillRect(-10, -10, this.width + 20, this.height + 20);
-      this.flashAlpha *= Math.pow(0.9, ts);
+      this.flashAlpha *= Math.pow(0.82, ts);
     }
 
     ctx.restore();
@@ -2206,6 +2360,7 @@ const BattleCanvas = {
     this.floatingTexts = [];
     this.slashTrails = [];
     this.impactWaves = [];
+    this.shockwaves = [];
     this.cinematicActive = null;
     this.victoryAnim = null;
     this.defeatAnim = null;
@@ -2214,7 +2369,7 @@ const BattleCanvas = {
     this.zoomPulse = 0;
     this.chromaticFrames = 0;
     this.lastFrameTime = performance.now();
-    this.screenShake = { x: 0, y: 0, intensity: 0, decay: 0.9 };
+    this.screenShake = { x: 0, y: 0, intensity: 0, decay: 0.82 };
     this.flashAlpha = 0;
     this.running = true;
     if (battleState) this.initFighters(battleState);
