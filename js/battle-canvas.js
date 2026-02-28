@@ -1275,7 +1275,7 @@ const BattleCanvas = {
 
       if (fx.type === 'attack') {
         // ── ATTACKER LUNGE ANIMATION ──
-        if (attacker && target) {
+        if (attacker && target && attacker.f.alive) {
           const origX = attacker.baseX !== undefined ? attacker.baseX : attacker.x;
           const origY = attacker.baseY !== undefined ? attacker.baseY : attacker.y;
           if (attacker.baseX === undefined) { attacker.baseX = attacker.x; attacker.baseY = attacker.y; }
@@ -2064,41 +2064,56 @@ const BattleCanvas = {
         }
       }
       
+      // Skip fully-dead fighters (death anim finished): no movement, no render
+      if (!s.f.alive && !s._deathAnim) continue;
+
       // ── Lunge animation (attacker charges toward target) ──
       if (s._lungeAnim) {
-        const la = s._lungeAnim;
-        const elapsed = Date.now() - la.startTime;
-        if (la.phase === 'forward') {
-          const t = Math.min(1, elapsed / la.forwardMs);
-          // Ease-out for aggressive rush
-          const eased = 1 - Math.pow(1 - t, 3);
-          s.x = la.startX + (la.targetX - la.startX) * eased;
-          s.y = la.startY + (la.targetY - la.startY) * eased;
-          s.scale = 1 + 0.15 * eased; // Scale up during charge
-          if (t >= 1) { la.phase = 'hold'; la.startTime = Date.now(); }
-        } else if (la.phase === 'hold') {
-          s.x = la.targetX;
-          s.y = la.targetY;
-          s.scale = 1.15;
-          if (elapsed >= la.holdMs) { la.phase = 'return'; la.startTime = Date.now(); }
-        } else if (la.phase === 'return') {
-          const t = Math.min(1, elapsed / la.returnMs);
-          // Ease-in-out for smooth return
-          const eased = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2;
-          s.x = la.targetX + (la.startX - la.targetX) * eased;
-          s.y = la.targetY + (la.startY - la.targetY) * eased;
-          s.scale = 1.15 - 0.15 * eased;
-          if (t >= 1) {
-            s.x = la.startX; s.y = la.startY; s.scale = 1;
-            s._lungeAnim = null;
+        // Cancel lunge if unit is dead
+        if (!s.f.alive) {
+          s._lungeAnim = null;
+          s.x = s.baseX;
+          s.y = s.baseY;
+        } else {
+          const la = s._lungeAnim;
+          const elapsed = Date.now() - la.startTime;
+          if (la.phase === 'forward') {
+            const t = Math.min(1, elapsed / la.forwardMs);
+            // Ease-out for aggressive rush
+            const eased = 1 - Math.pow(1 - t, 3);
+            s.x = la.startX + (la.targetX - la.startX) * eased;
+            s.y = la.startY + (la.targetY - la.startY) * eased;
+            s.scale = 1 + 0.15 * eased; // Scale up during charge
+            if (t >= 1) { la.phase = 'hold'; la.startTime = Date.now(); }
+          } else if (la.phase === 'hold') {
+            s.x = la.targetX;
+            s.y = la.targetY;
+            s.scale = 1.15;
+            if (elapsed >= la.holdMs) { la.phase = 'return'; la.startTime = Date.now(); }
+          } else if (la.phase === 'return') {
+            const t = Math.min(1, elapsed / la.returnMs);
+            // Ease-in-out for smooth return
+            const eased = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2;
+            s.x = la.targetX + (la.startX - la.targetX) * eased;
+            s.y = la.targetY + (la.startY - la.targetY) * eased;
+            s.scale = 1.15 - 0.15 * eased;
+            if (t >= 1) {
+              s.x = la.startX; s.y = la.startY; s.scale = 1;
+              s._lungeAnim = null;
+            }
           }
         }
       } else if (s.attackAnim > 0) {
-        // Legacy lunge (fallback)
-        s.attackAnim -= 0.04 * ts;
-        const lungeDir = s.facing;
-        const lungeAmount = Math.sin(s.attackAnim * Math.PI) * 25;
-        s.x = s.baseX + lungeDir * lungeAmount;
+        // Legacy lunge (fallback) — skip if dead
+        if (s.f.alive) {
+          s.attackAnim -= 0.04 * ts;
+          const lungeDir = s.facing;
+          const lungeAmount = Math.sin(s.attackAnim * Math.PI) * 25;
+          s.x = s.baseX + lungeDir * lungeAmount;
+        } else {
+          s.attackAnim = 0;
+          s.x = s.baseX;
+        }
       } else {
         s.y = s.baseY + Math.sin(Date.now() * 0.002 + s.f.pos * 1.5) * 1.5;
         s.x = s.baseX;
