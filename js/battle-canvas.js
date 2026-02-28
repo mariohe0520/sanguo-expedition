@@ -772,52 +772,75 @@ const BattleCanvas = {
     const x = targetSprite.x;
     const y = targetSprite.y;
 
+    // Dramatic death: animate the sprite collapsing + fading
+    targetSprite._deathAnim = {
+      startTime: Date.now(),
+      durationMs: 600,
+    };
+
     // Shatter fragments (20+ pieces flying outward with gravity)
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 28; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = 2 + Math.random() * 5;
+      const speed = 2.5 + Math.random() * 6;
       this.particles.push({
         x, y,
         vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 2,
+        vy: Math.sin(angle) * speed - 3,
         life: 1,
-        decay: 0.012 + Math.random() * 0.008,
-        size: 3 + Math.random() * 5,
-        color: ['#ff4444', '#ff6b6b', '#cc2222', '#ff8844'][Math.floor(Math.random() * 4)],
+        decay: 0.010 + Math.random() * 0.008,
+        size: 3 + Math.random() * 6,
+        color: ['#ff4444', '#ff6b6b', '#cc2222', '#ff8844', '#ffaa44'][Math.floor(Math.random() * 5)],
         type: 'fragment',
         rotation: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.3,
+        rotSpeed: (Math.random() - 0.5) * 0.4,
       });
     }
 
-    // Ghost/soul particles floating upward
-    for (let i = 0; i < 12; i++) {
+    // Ghost/soul particles floating upward (Three Kingdoms: the hero's spirit ascending)
+    for (let i = 0; i < 18; i++) {
       this.particles.push({
-        x: x + (Math.random() - 0.5) * 30,
+        x: x + (Math.random() - 0.5) * 40,
         y: y + (Math.random() - 0.5) * 20,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: -0.4 - Math.random() * 0.8,
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: -0.6 - Math.random() * 1.2,
         life: 1,
-        decay: 0.006 + Math.random() * 0.004,
-        size: 3 + Math.random() * 4,
+        decay: 0.004 + Math.random() * 0.004,
+        size: 3 + Math.random() * 5,
         color: '#ffffff',
         type: 'circle',
-        ghost: true, // ethereal flag for rendering
+        ghost: true,
+      });
+    }
+
+    // Blood red cloud burst
+    for (let i = 0; i < 10; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      this.particles.push({
+        x, y,
+        vx: Math.cos(angle) * (1 + Math.random() * 2),
+        vy: Math.sin(angle) * (1 + Math.random() * 2) - 1,
+        life: 1,
+        decay: 0.014,
+        size: 6 + Math.random() * 8,
+        color: 'rgba(180,20,20,0.6)',
+        type: 'circle',
+        ghost: false,
       });
     }
 
     // Zoom pulse (scale 1.02 → 1 over 10 frames)
-    this.zoomPulse = 10;
+    this.zoomPulse = 12;
 
-    // Chromatic aberration flash (3 frames)
-    this.chromaticFrames = 3;
+    // Chromatic aberration flash (5 frames — more dramatic for a kill)
+    this.chromaticFrames = 5;
 
-    // Impact wave
-    this.spawnImpactWave(x, y, '#ff4444', 70);
+    // Double impact wave — inner red, outer white
+    this.spawnImpactWave(x, y, '#ff2222', 80);
+    this.spawnImpactWave(x, y, 'rgba(255,100,100,0.4)', 120);
 
     // Large floating kill text
     this.addFloatingText(x, y - 30, '击 杀', '#ff4444', {
-      size: 24, bold: true, outline: true, decay: 0.008, vy: -1
+      size: 26, bold: true, outline: true, decay: 0.007, vy: -1.2, isCrit: true
     });
   },
 
@@ -1419,6 +1442,52 @@ const BattleCanvas = {
             '#87CEEB', { size: 24, bold: true, outline: true, decay: 0.008, vy: -0.5 });
         }
       }
+
+      // ── Battle Cry: general's opening quote shown on canvas ──
+      if (fx.type === 'battleCry') {
+        const hero = this.fighters[fx.hero];
+        const cx = hero ? hero.x : this.width / 2;
+        const cy = hero ? hero.y - 40 : this.height / 2 - 60;
+        // Show quote as large floating text with golden color
+        this.addFloatingText(cx, cy, '「' + fx.text + '」', '#f5d98a', {
+          size: 13, bold: true, outline: true, decay: 0.004, vy: -0.5, vx: 0
+        });
+        // Hero name label
+        this.addFloatingText(cx, cy + 20, '— ' + fx.heroName, '#d4a843', {
+          size: 10, bold: false, outline: true, decay: 0.004, vy: -0.4, vx: 0
+        });
+        this.triggerShake(1);
+        this.spawnParticles(cx, cy, '#d4a843', 8, { spread: 3, type: 'star', size: 2, upward: true });
+      }
+
+      // ── Bond Activate: show bond name + bonus when bond partners fight together ──
+      if (fx.type === 'bondActivate') {
+        // Show centered bond activation banner
+        this.addFloatingText(this.width / 2, this.height * 0.35, fx.bondIcon + ' 羁绊觉醒: ' + fx.bondName, '#c084fc', {
+          size: 16, bold: true, outline: true, decay: 0.005, vy: -0.6, vx: 0
+        });
+        this.addFloatingText(this.width / 2, this.height * 0.35 + 22, fx.bonusDesc, '#a855f7', {
+          size: 11, bold: false, outline: true, decay: 0.005, vy: -0.5, vx: 0
+        });
+        // Purple glow particles from center
+        this.spawnParticles(this.width / 2, this.height * 0.35, '#c084fc', 20, {
+          spread: 8, type: 'star', size: 3, upward: true
+        });
+        this.spawnImpactWave(this.width / 2, this.height * 0.35, '#c084fc', this.width * 0.4);
+        this.triggerFlash('#7c3aed', 0.12);
+      }
+
+      // ── Combo: multi-hit combo counter display ──
+      if (fx.type === 'attack' && fx.combo >= 2 && target) {
+        const comboColors = ['', '', '#ff9f43', '#ff6b6b', '#ee5a24', '#e84393', '#9b59b6'];
+        const color = comboColors[Math.min(fx.combo, comboColors.length - 1)] || '#e84393';
+        this.addFloatingText(
+          target.x + 20, target.y - 40,
+          'COMBO x' + fx.combo,
+          color,
+          { size: 18, bold: true, outline: true, isCrit: true, decay: 0.009, vy: -1.5 }
+        );
+      }
     }
   },
 
@@ -1576,11 +1645,65 @@ const BattleCanvas = {
     // Animated battle divider line — drawn separately for pulse effect
     this.drawBattleDivider();
 
-    // Weather effects (legacy)
+    // Weather effects (legacy + enhanced visual particles)
     if (!bfVisual) {
       if (weather === 'fog') {
         ctx.fillStyle = 'rgba(200,200,220,' + (0.03 + Math.sin(Date.now() * 0.001) * 0.02) + ')';
         ctx.fillRect(0, 0, w, h);
+        // Use BattlefieldParticles for richer fog if available
+        if (typeof BattlefieldParticles !== 'undefined') {
+          BattlefieldParticles.update('fog', w, h, 1);
+          BattlefieldParticles.draw(ctx, 'fog');
+        }
+      }
+      if (weather === 'rain' || weather === 'storm') {
+        // Dark rainy overlay
+        ctx.fillStyle = 'rgba(30,50,80,' + (weather === 'storm' ? 0.12 : 0.07) + ')';
+        ctx.fillRect(0, 0, w, h);
+        // Use BattlefieldParticles for rain drops
+        if (typeof BattlefieldParticles !== 'undefined') {
+          BattlefieldParticles.update('rain', w, h, 1);
+          BattlefieldParticles.draw(ctx, 'rain');
+          // Storm: add occasional lightning flash
+          if (weather === 'storm' && Math.random() < 0.015) {
+            this.triggerFlash('#fff', 0.12);
+          }
+        } else {
+          // Canvas-only rain fallback
+          const t = Date.now() * 0.001;
+          ctx.save();
+          ctx.globalAlpha = 0.25;
+          ctx.strokeStyle = 'rgba(180,210,255,0.6)';
+          ctx.lineWidth = 1;
+          for (let i = 0; i < 40; i++) {
+            const rx = ((i * 73 + t * 150) % (w + 40)) - 20;
+            const ry = ((i * 47 + t * 400) % (h + 20));
+            ctx.beginPath();
+            ctx.moveTo(rx, ry);
+            ctx.lineTo(rx - 5, ry + 14);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+      }
+      if (weather === 'snow') {
+        if (typeof BattlefieldParticles !== 'undefined') {
+          BattlefieldParticles.update('snow', w, h, 1);
+          BattlefieldParticles.draw(ctx, 'snow');
+        } else {
+          // Simple snow fallback
+          const t = Date.now() * 0.001;
+          ctx.save();
+          ctx.fillStyle = 'rgba(255,255,255,0.5)';
+          for (let i = 0; i < 25; i++) {
+            const sx = ((i * 61 + t * 30) % (w + 10));
+            const sy = ((i * 43 + t * 60) % (h + 10));
+            ctx.beginPath();
+            ctx.arc(sx, sy, 1.5 + (i % 3), 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
       }
       if (weather === 'wind') {
         const t = Date.now() * 0.002;
@@ -1596,6 +1719,11 @@ const BattleCanvas = {
           ctx.stroke();
         }
         ctx.restore();
+        // Add wind leaves from BattlefieldParticles
+        if (typeof BattlefieldParticles !== 'undefined') {
+          BattlefieldParticles.update('wind_leaves', w, h, 1);
+          BattlefieldParticles.draw(ctx, 'wind_leaves');
+        }
       }
       if (weather === 'fire') {
         const fireGrad = ctx.createLinearGradient(0, h, 0, h - 50);
@@ -1920,6 +2048,21 @@ const BattleCanvas = {
       s.shakeY *= Math.pow(0.85, ts);
       s.hitFlash *= Math.pow(0.92, ts);
       s.skillGlow *= Math.pow(0.97, ts);
+
+      // Death animation: collapse (tilt + sink) + fade to 0.3 over 600ms
+      if (s._deathAnim) {
+        const elapsed = Date.now() - s._deathAnim.startTime;
+        const t = Math.min(1, elapsed / s._deathAnim.durationMs);
+        // Sprite collapses: drops down, tilts, fades
+        s.shakeY += t * 18;  // sinks down
+        s.alpha = Math.max(0.3, 1 - t * 0.7);
+        s.scale = Math.max(0.7, 1 - t * 0.3);
+        if (t >= 1) {
+          s._deathAnim = null;
+          s.alpha = 0.3;
+          s.scale = 0.7;
+        }
+      }
       
       // ── Lunge animation (attacker charges toward target) ──
       if (s._lungeAnim) {
@@ -2078,8 +2221,42 @@ const BattleCanvas = {
   },
 
   // ═══ VICTORY / DEFEAT SCENE ═══
-  showVictory() {
+  showVictory(battleState) {
     this.triggerFlash('#ffd700', 0.35);
+
+    // Pick a triumphant Chinese phrase based on surviving generals
+    const VICTORY_PHRASES = [
+      '万胜！天命归汉！',
+      '吾军威武！所向披靡！',
+      '扬我国威，定鼎天下！',
+      '青史留名，英雄归来！',
+      '义之所在，无往不胜！',
+    ];
+
+    // Bond-specific victory phrases
+    let victoryPhrase = VICTORY_PHRASES[Math.floor(Math.random() * VICTORY_PHRASES.length)];
+    if (battleState) {
+      const survivors = battleState.player.filter(f => f?.alive);
+      const survivorIds = survivors.map(f => f.id);
+      if (survivorIds.includes('liubei') && survivorIds.includes('guanyu') && survivorIds.includes('zhangfei')) {
+        victoryPhrase = '桃园兄弟，义薄云天！天下大定！';
+      } else if (survivorIds.includes('zhaoyun')) {
+        victoryPhrase = '常山赵子龙，万夫莫敌！';
+      } else if (survivorIds.includes('guanyu')) {
+        victoryPhrase = '武圣关羽，义不容辞！大胜！';
+      } else if (survivorIds.includes('zhugeLiang')) {
+        victoryPhrase = '运筹帷幄，决胜千里！丞相神算！';
+      } else if (survivorIds.includes('lvbu')) {
+        victoryPhrase = '天下无敌！人中吕布！';
+      } else if (survivorIds.includes('caocao')) {
+        victoryPhrase = '宁教我负天下人！曹公大胜！';
+      }
+    }
+
+    // Show triumph phrase as large floating text
+    this.addFloatingText(this.width / 2, this.height / 2 + 35, victoryPhrase, '#ffd700', {
+      size: 15, bold: true, outline: true, decay: 0.004, vy: -0.5, vx: 0
+    });
 
     // Start victory animation state
     this.victoryAnim = { frame: 0 };
@@ -2097,6 +2274,18 @@ const BattleCanvas = {
 
   showDefeat() {
     this.triggerFlash('#c04040', 0.2);
+
+    // Show a final defeat phrase
+    const DEFEAT_PHRASES = [
+      '天意如此，再图后举...',
+      '胜败乃兵家常事，来日方长。',
+      '此战虽败，志未消也。',
+      '留得青山在，不怕没柴烧。',
+    ];
+    const phrase = DEFEAT_PHRASES[Math.floor(Math.random() * DEFEAT_PHRASES.length)];
+    this.addFloatingText(this.width / 2, this.height / 2 + 35, phrase, '#c04040', {
+      size: 13, bold: true, outline: true, decay: 0.004, vy: -0.4, vx: 0
+    });
 
     // Start defeat animation state
     this.defeatAnim = { frame: 0, cracks: null };

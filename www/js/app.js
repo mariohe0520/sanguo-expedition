@@ -3323,7 +3323,7 @@ App.startBattle = async function() {
   // Canvas victory/defeat effects
   try {
     if (typeof BattleCanvas !== 'undefined' && BattleCanvas.running) {
-      if (result === 'victory') BattleCanvas.showVictory();
+      if (result === 'victory') BattleCanvas.showVictory(Battle.state);
       else BattleCanvas.showDefeat();
     }
   } catch(e) {}

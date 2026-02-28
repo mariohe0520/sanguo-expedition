@@ -286,6 +286,9 @@ const Battle = {
   },
 
   async executeTurn(speed) {
+    // Reset combo tracker each turn
+    this._comboTracker = {};
+
     // Feature 6: Announce escalation at turn 31
     if (this.state.turn === 31) {
       this.addLog('<span class="log-ultimate">天地之力涌动！伤害开始逐回合递增！</span>');
@@ -396,13 +399,26 @@ const Battle = {
       if (alivePlayers.length > 0) {
         const speaker = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
         this.triggerDialogue(speaker, 'battleStart');
-        // Bond meeting dialogues
+
+        // Push battle cry VFX for the leading general (shown prominently on canvas)
+        const battleCryLine = HeroPersonality.getLine(speaker.id, 'battleStart');
+        if (battleCryLine) {
+          this.vfx.push({ type: 'battleCry', hero: `${speaker.side}-${speaker.pos}`, text: battleCryLine, heroName: speaker.name });
+        }
+
+        // Bond meeting dialogues + visual bond banner
+        const activeBondIds = [];
         for (const f of alivePlayers) {
           const bonds = HeroPersonality.getHeroBonds(f.id);
           for (const bond of bonds) {
             const partners = bond.heroes.filter(h => h !== f.id && alivePlayers.some(p => p.id === h));
             if (partners.length > 0) {
               this.triggerDialogue(f, 'bondMet', { partnerId: partners[0] });
+              if (!activeBondIds.includes(bond.id)) {
+                activeBondIds.push(bond.id);
+                // Push bond activation VFX
+                this.vfx.push({ type: 'bondActivate', bondId: bond.id, bondName: bond.name, bondIcon: bond.icon, bonusDesc: bond.bonusDesc });
+              }
               break;
             }
           }
@@ -771,6 +787,8 @@ const Battle = {
 
   // ===== COMBAT MECHANICS =====
   doAttack(attacker, defender) {
+    // DEFINITIVE DEAD-UNIT GUARD: both attacker AND defender must be alive
+    if (!attacker?.alive || attacker.hp <= 0) return;
     if (!defender?.alive) return;
 
     // Dodge check from skill tree
@@ -970,8 +988,21 @@ const Battle = {
     attacker.rage = Math.min(attacker.maxRage, attacker.rage + atkRageGain);
     defender.rage = Math.min(defender.maxRage, (defender.rage || 0) + defRageGain);
 
+    // Combo tracking: hits on same target within same turn = combo
+    const comboKey = `${attacker.side}-${attacker.pos}`;
+    if (!this._comboTracker) this._comboTracker = {};
+    if (!this._comboTracker[comboKey]) this._comboTracker[comboKey] = { target: null, count: 0, turn: -1 };
+    const ct = this._comboTracker[comboKey];
+    const targetKey = `${defender.side}-${defender.pos}`;
+    if (ct.target === targetKey && ct.turn === this.state.turn) {
+      ct.count++;
+    } else {
+      ct.target = targetKey; ct.count = 1; ct.turn = this.state.turn;
+    }
+    const comboCount = ct.count;
+
     // Queue visual effects for UI layer
-    this.vfx.push({ type: 'attack', attacker: `${attacker.side}-${attacker.pos}`, target: `${defender.side}-${defender.pos}`, dmg, isCrit: this._lastCrit || false });
+    this.vfx.push({ type: 'attack', attacker: `${attacker.side}-${attacker.pos}`, target: `${defender.side}-${defender.pos}`, dmg, isCrit: this._lastCrit || false, combo: comboCount > 1 ? comboCount : 0 });
 
     // Skill tree specials: lifesteal
     if (attacker.alive && attacker._specials) {
@@ -1118,6 +1149,8 @@ const Battle = {
   useSkill(fighter) {
     const s = fighter.skill;
     if (!s) return;
+    // DEFINITIVE DEAD-UNIT GUARD: dead fighters cannot cast skills
+    if (!fighter.alive || fighter.hp <= 0) return;
     fighter.rage = 0;
     const enemies = (fighter.side === 'player' ? this.state.enemy : this.state.player).filter(f => f?.alive);
     const allies = (fighter.side === 'player' ? this.state.player : this.state.enemy).filter(f => f?.alive);
@@ -1264,17 +1297,21 @@ const Battle = {
           const shuffled = enemies.slice().sort(() => Math.random() - 0.5);
           targets = shuffled.slice(0, Math.min(2, shuffled.length));
           if (s.effect === 'confuse' && targets.length >= 2) {
-            // Make them deal damage to each other
+            // Make them deal damage to each other — re-check alive before each hit
             this.addLog(`  ⚙ 庞统连环计：${targets.map(t=>t.name).join('、')} 互相攻击！`);
             const [t1, t2] = targets;
-            const dmg1 = Math.floor(this.calcDamage(t1, t2) * 0.8);
-            const dmg2 = Math.floor(this.calcDamage(t2, t1) * 0.8);
-            t2.hp = Math.max(0, t2.hp - dmg1);
-            if (t2.hp <= 0) t2.alive = false;
-            this.addLog(`  → ${Visuals.heroTag(t1.id)} ${t1.name} 攻击 ${t2.name} ${dmg1}伤害`);
-            t1.hp = Math.max(0, t1.hp - dmg2);
-            if (t1.hp <= 0) t1.alive = false;
-            this.addLog(`  → ${Visuals.heroTag(t2.id)} ${t2.name} 攻击 ${t1.name} ${dmg2}伤害`);
+            if (t1.alive && t2.alive) {
+              const dmg1 = Math.floor(this.calcDamage(t1, t2) * 0.8);
+              t2.hp = Math.max(0, t2.hp - dmg1);
+              if (t2.hp <= 0) { t2.alive = false; this.vfx.push({ type: 'kill', target: `${t2.side}-${t2.pos}` }); }
+              this.addLog(`  → ${Visuals.heroTag(t1.id)} ${t1.name} 攻击 ${t2.name} ${dmg1}伤害`);
+            }
+            if (t1.alive && t2.alive) {
+              const dmg2 = Math.floor(this.calcDamage(t2, t1) * 0.8);
+              t1.hp = Math.max(0, t1.hp - dmg2);
+              if (t1.hp <= 0) { t1.alive = false; this.vfx.push({ type: 'kill', target: `${t1.side}-${t1.pos}` }); }
+              this.addLog(`  → ${Visuals.heroTag(t2.id)} ${t2.name} 攻击 ${t1.name} ${dmg2}伤害`);
+            }
             break;
           }
         }
@@ -1326,15 +1363,15 @@ const Battle = {
           const dmgWithBonus = Math.floor(copyDmg * (1 + skillDmgBonus / 100));
           strongest.hp = Math.max(0, strongest.hp - dmgWithBonus);
           this.addLog(`  → ${Visuals.heroTag(strongest.id)} ${strongest.name} -${dmgWithBonus} ${copiedSkill.type === 'magic' ? '法伤' : '伤害'}`);
-          if (strongest.hp <= 0) strongest.alive = false;
+          if (strongest.hp <= 0) { strongest.alive = false; this.vfx.push({ type: 'kill', target: `${strongest.side}-${strongest.pos}` }); }
         } else {
           // Fallback: deal INT-based damage
           const fallbackDmg = Math.floor(this.getEffStat(fighter, 'int') * 2.0);
           const target = enemies[0];
-          if (target) {
+          if (target && target.alive) {
             target.hp = Math.max(0, target.hp - fallbackDmg);
             this.addLog(`  → ${Visuals.heroTag(target.id)} ${target.name} -${fallbackDmg} 法伤`);
-            if (target.hp <= 0) target.alive = false;
+            if (target.hp <= 0) { target.alive = false; this.vfx.push({ type: 'kill', target: `${target.side}-${target.pos}` }); }
           }
         }
         break;
