@@ -40,11 +40,13 @@ const Battle = {
   createFighter(heroId, side, pos, enemyScale) {
     const hero = typeof heroId === 'string' ? HEROES[heroId] : heroId;
     if (!hero) return null;
+    // Block mystery/locked placeholder heroes from entering battle
+    if (hero.mystery || hero.locked) return null;
     const level = side === 'player' ? (Storage?.getHeroLevel?.(hero.id) || 1) : 1;
     const stars = side === 'player' ? (Storage?.getHeroStars?.(hero.id) || hero.rarity || 1) : (hero.rarity || 1);
     let mult = (1 + (level - 1) * 0.08) * (1 + (stars - 1) * 0.15);
-    // Scale enemy fighters for dungeon/arena/raid
-    if (side === 'enemy' && enemyScale > 1) mult *= enemyScale;
+    // Scale enemy fighters by chapter/dungeon/arena difficulty
+    if (side === 'enemy' && enemyScale && enemyScale !== 1) mult *= enemyScale;
 
     let eqHP=0, eqATK=0, eqDEF=0, eqSPD=0, eqINT=0;
     let equipEffects = { crit_pct:0, skill_dmg_pct:0, reflect_pct:0 };
@@ -409,12 +411,16 @@ const Battle = {
     }
 
     for (const fighter of order) {
-      if (!fighter.alive) continue;
+      // STRICT DEATH CHECK: skip dead fighters (they may have died earlier this turn)
+      if (!fighter || !fighter.alive) continue;
 
       // Early-exit: check if the battle is already over (all enemies or all players dead)
       const playerStillAlive = this.state.player.some(f => f?.alive);
       const enemyStillAlive = this.state.enemy.some(f => f?.alive);
       if (!playerStillAlive || !enemyStillAlive) break;
+
+      // Sanity-check HP: if hp somehow <= 0 but alive flag not cleared, clear it now
+      if (fighter.hp <= 0) { fighter.hp = 0; fighter.alive = false; continue; }
 
       if (fighter.effects.some(e => e.type === 'stun')) {
         this.addLog(`${Visuals.heroTag(fighter.id)} ${fighter.name} 被眩晕，无法行动！`);
@@ -824,7 +830,14 @@ const Battle = {
     dmg = Math.floor(dmg * this.getTerrainMult(attacker.unit, this.state.terrain));
 
     // Weather effect
-    dmg = Math.floor(dmg * this.getWeatherMult(attacker, this.state.weather));
+    const weatherMult = this.getWeatherMult(attacker, this.state.weather);
+    if (weatherMult === 0) {
+      // Fog miss: attack completely whiffs, give attacker small rage gain and return
+      attacker.rage = Math.min(attacker.maxRage, attacker.rage + 5);
+      this.vfx.push({ type: 'miss', target: `${defender.side}-${defender.pos}` });
+      return;
+    }
+    dmg = Math.floor(dmg * weatherMult);
 
     // Dynamic Battlefield damage modifier (weather + terrain + time of day)
     if (typeof DynamicBattlefield !== 'undefined') {
@@ -907,14 +920,17 @@ const Battle = {
     }
 
     // Equipment set: 玄甲 reflect damage
-    if (defender.alive && defender.equipEffects?.reflect_pct > 0) {
+    if (defender.alive && attacker.alive && defender.equipEffects?.reflect_pct > 0) {
       const reflectDmg = Math.floor(dmg * defender.equipEffects.reflect_pct / 100);
       if (reflectDmg > 0) {
         attacker.hp = Math.max(0, attacker.hp - reflectDmg);
         this.addLog(`${Visuals.heroTag(defender.id)} ${defender.name} 玄甲反弹 ${reflectDmg}伤害！`);
-        if (attacker.hp <= 0) { attacker.alive = false; }
+        if (attacker.hp <= 0) { attacker.alive = false; this.vfx.push({ type: 'kill', target: `${attacker.side}-${attacker.pos}` }); }
       }
     }
+
+    // Early return if attacker died from equipment reflect
+    if (!attacker.alive) return;
 
     // Ultimate reflect damage (from self_tank ultimates like changban_bridge)
     if (defender.alive && attacker.alive && defender._ultimateReflect && defender._ultimateReflect.pct > 0) {
@@ -922,7 +938,7 @@ const Battle = {
       if (ultReflect > 0) {
         attacker.hp = Math.max(0, attacker.hp - ultReflect);
         this.addLog(`${Visuals.heroTag(defender.id)} ${defender.name} 终结技反弹 ${ultReflect}伤害！`);
-        if (attacker.hp <= 0) { attacker.alive = false; }
+        if (attacker.hp <= 0) { attacker.alive = false; this.vfx.push({ type: 'kill', target: `${attacker.side}-${attacker.pos}` }); }
       }
     }
 
@@ -931,10 +947,10 @@ const Battle = {
       const counterDmg = Math.floor(this.calcDamage(defender, attacker) * 1.5); // Guaranteed crit counter
       attacker.hp = Math.max(0, attacker.hp - counterDmg);
       this.addLog(`${Visuals.heroTag(defender.id)} ${defender.name} 磐石反击！${counterDmg}伤害(暴击)`);
-      if (attacker.hp <= 0) { attacker.alive = false; }
+      if (attacker.hp <= 0) { attacker.alive = false; this.vfx.push({ type: 'kill', target: `${attacker.side}-${attacker.pos}` }); }
     }
 
-    // Early return if attacker died from reflect
+    // Early return if attacker died from reflect/counter
     if (!attacker.alive) return;
 
     // Element reaction check
@@ -975,30 +991,30 @@ const Battle = {
           this.addLog(`${Visuals.heroTag(defender.id)} ${defender.name} 被眩晕！`);
         }
       }
-      // Double strike
-      if (!defender.alive) return;
-      if (defender.alive && (attacker._specials.includes('double_strike') || attacker._specials.includes('double_strike_20'))) {
+      // Double strike — only if both attacker AND defender are still alive
+      if (!attacker.alive || !defender.alive) return;
+      if (attacker._specials.includes('double_strike') || attacker._specials.includes('double_strike_20')) {
         if (Math.random() * 100 < 20) {
           const extraDmg = Math.floor(dmg * 0.5);
           defender.hp = Math.max(0, defender.hp - extraDmg);
           this.addLog(`${Visuals.heroTag(attacker.id)} ${attacker.name} 连击！额外 ${extraDmg} 伤害`);
-          if (defender.hp <= 0) { defender.alive = false; }
+          if (defender.hp <= 0) { defender.alive = false; this.vfx.push({ type: 'kill', target: `${defender.side}-${defender.pos}` }); }
         }
       }
     }
 
-    // Check counter-attack passive
-    if (!attacker.alive) return;
-    if (defender.alive && defender.passive?.condition === 'on_hit' && Math.random() * 100 < (defender.passive.chance || 0)) {
+    // Check counter-attack passive — only if BOTH units are alive
+    if (!attacker.alive || !defender.alive) return;
+    if (defender.passive?.condition === 'on_hit' && Math.random() * 100 < (defender.passive.chance || 0)) {
       const counterDmg = Math.floor(this.calcDamage(defender, attacker) * (defender.passive.value || 0.5));
       attacker.hp = Math.max(0, attacker.hp - counterDmg);
       this.addLog(`${Visuals.heroTag(defender.id)} ${defender.name} 反击！${counterDmg}伤害`);
-      if (attacker.hp <= 0) attacker.alive = false;
+      if (attacker.hp <= 0) { attacker.alive = false; this.vfx.push({ type: 'kill', target: `${attacker.side}-${attacker.pos}` }); }
     }
 
-    // Skill tree specials: counter on defend
-    if (!attacker.alive) return;
-    if (defender.alive && defender._specials) {
+    // Skill tree specials: counter on defend — only if BOTH units are alive
+    if (!attacker.alive || !defender.alive) return;
+    if (defender._specials) {
       const counterChance =
         defender._specials.includes('counter_50') ? 50 :
         defender._specials.includes('counter_40') ? 40 :
@@ -1007,7 +1023,7 @@ const Battle = {
         const counterDmg = Math.floor(this.calcDamage(defender, attacker) * 0.8);
         attacker.hp = Math.max(0, attacker.hp - counterDmg);
         this.addLog(`${Visuals.heroTag(defender.id)} ${defender.name} 天赋反击！${counterDmg}伤害`);
-        if (attacker.hp <= 0) attacker.alive = false;
+        if (attacker.hp <= 0) { attacker.alive = false; this.vfx.push({ type: 'kill', target: `${attacker.side}-${attacker.pos}` }); }
       }
     }
   },

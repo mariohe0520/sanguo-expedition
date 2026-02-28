@@ -85,7 +85,7 @@ const BattleCanvas = {
     this.canvas.height = this.height * dpr;
     this.canvas.style.width = this.width + 'px';
     this.canvas.style.height = this.height + 'px';
-    this.ctx.scale(dpr, dpr);
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   },
 
   // ═══ HELPER: Get hero element ═══
@@ -213,6 +213,26 @@ const BattleCanvas = {
     const rarityColors = { 1: '#6c757d', 2: '#22c55e', 3: '#3b82f6', 4: '#a855f7', 5: '#d4a843' };
     const r = hero?.rarity || 1;
 
+    // ── SOLDIER UNIT EMOJI CARDS ──
+    // Unit types without hero portraits get a premium emoji-styled card
+    const SOLDIER_CARDS = {
+      // key: heroId → { emoji, grad1, grad2, borderColor }
+      // Soldier units (no portrait URL)
+      soldier:        { emoji: '⚔️', g1: '#4a3520', g2: '#2a1e10', border: '#8b6d3a' },
+      archer_recruit: { emoji: '🏹', g1: '#1a3a20', g2: '#0e2210', border: '#3a8b4a' },
+      shield_militia: { emoji: '🛡️', g1: '#2a2a3a', g2: '#1a1a28', border: '#7a6a5a' },
+      mage_acolyte:   { emoji: '🔮', g1: '#2a1040', g2: '#180a28', border: '#8a4acd' },
+      elite_cavalry:  { emoji: '🐴', g1: '#3a1010', g2: '#220808', border: '#cd3030' },
+      elite_spear:    { emoji: '🗡️', g1: '#1a2a3a', g2: '#0e1a26', border: '#4a7acd' },
+      navy_soldier:   { emoji: '⚓', g1: '#0a1e3a', g2: '#061228', border: '#2a6acd' },
+      fire_archer:    { emoji: '🔥', g1: '#3a1808', g2: '#220e04', border: '#cd5a1a' },
+      fire_soldier:   { emoji: '🔥', g1: '#3a1808', g2: '#220e04', border: '#cd5a1a' },
+      strategist:     { emoji: '📜', g1: '#3a2a10', g2: '#221808', border: '#cd9a2a' },
+      crossbow_corps: { emoji: '🏹', g1: '#1a3a20', g2: '#0e2210', border: '#3a8b4a' },
+      supply_guard:   { emoji: '🛒', g1: '#2a2a1a', g2: '#1a1a10', border: '#7a7a3a' },
+    };
+    const soldierCard = SOLDIER_CARDS[f.id];
+
     if (portraitImg && portraitImg.complete && portraitImg.naturalWidth > 0) {
       ctx.save();
       ctx.beginPath();
@@ -220,6 +240,33 @@ const BattleCanvas = {
       ctx.clip();
       ctx.drawImage(portraitImg, x - halfSize, y - halfSize, size, size);
       ctx.restore();
+    } else if (soldierCard) {
+      // Premium emoji card for soldier units
+      ctx.save();
+      // Clipping circle
+      ctx.beginPath();
+      ctx.arc(x, y, halfSize, 0, Math.PI * 2);
+      ctx.clip();
+      // Gradient background
+      const cardGrad = ctx.createRadialGradient(x, y - halfSize * 0.3, 0, x, y, halfSize);
+      cardGrad.addColorStop(0, soldierCard.g1);
+      cardGrad.addColorStop(1, soldierCard.g2);
+      ctx.fillStyle = cardGrad;
+      ctx.fillRect(x - halfSize, y - halfSize, size, size);
+      // Inner highlight
+      ctx.fillStyle = 'rgba(255,255,255,0.06)';
+      ctx.beginPath();
+      ctx.ellipse(x, y - halfSize * 0.2, halfSize * 0.7, halfSize * 0.4, 0, 0, Math.PI);
+      ctx.fill();
+      ctx.restore();
+      // Large emoji as portrait
+      ctx.font = Math.floor(size * 0.52) + 'px -apple-system, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0,0,0,0.7)';
+      ctx.shadowBlur = 6;
+      ctx.fillText(soldierCard.emoji, x, y + 2);
+      ctx.shadowBlur = 0;
     } else {
       const grad = ctx.createLinearGradient(x - halfSize, y - halfSize, x + halfSize, y + halfSize);
       grad.addColorStop(0, vd.c1);
@@ -239,8 +286,9 @@ const BattleCanvas = {
       ctx.shadowBlur = 0;
     }
 
-    // Rarity border
-    ctx.strokeStyle = rarityColors[r] || '#6c757d';
+    // Rarity border — use soldierCard border color when available
+    const borderColor = (soldierCard && r <= 2) ? soldierCard.border : (rarityColors[r] || '#6c757d');
+    ctx.strokeStyle = borderColor;
     ctx.lineWidth = r >= 4 ? 3 : 2;
     ctx.beginPath();
     ctx.arc(x, y, halfSize, 0, Math.PI * 2);
@@ -1053,16 +1101,20 @@ const BattleCanvas = {
     }
   },
 
-  // ═══ FLOATING TEXT (unchanged) ═══
+  // ═══ FLOATING TEXT — cinematic bounce + fade ═══
   addFloatingText(x, y, text, color, opts = {}) {
     this.floatingTexts.push({
       x, y, text, color,
       life: 1,
-      decay: opts.decay || 0.015,
-      vy: opts.vy || -1.5,
+      decay: opts.decay || 0.014,
+      vy: opts.vy || -2.2,       // faster initial rise
+      vx: opts.vx || (Math.random() - 0.5) * 0.8, // slight horizontal drift
+      gy: 0.06,                   // gentle gravity — slows and reverses for bounce feel
       size: opts.size || 16,
-      bold: opts.bold || false,
-      outline: opts.outline || false,
+      bold: opts.bold !== undefined ? opts.bold : true,
+      outline: opts.outline !== undefined ? opts.outline : true,
+      isCrit: opts.isCrit || false,
+      bounced: false,
     });
   },
 
@@ -1071,24 +1123,42 @@ const BattleCanvas = {
     const ts = this.timeScale;
     for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
       const t = this.floatingTexts[i];
+      // Physics: decelerate upward then slowly fall back
+      t.vy += t.gy * ts;
       t.y += t.vy * ts;
+      t.x += (t.vx || 0) * ts;
       t.life -= t.decay * ts;
       if (t.life <= 0) { this.floatingTexts.splice(i, 1); continue; }
 
+      // Crit text scale pops then shrinks
+      const lifeProgress = 1 - t.life; // 0→1 as text ages
+      const scaleMult = t.isCrit
+        ? (lifeProgress < 0.15 ? 1 + lifeProgress * 2.0 : 1.3 - lifeProgress * 0.3) // pop then shrink
+        : (1 + lifeProgress * 0.15); // normal: slight grow as it fades
+
       ctx.save();
-      ctx.globalAlpha = t.life;
-      ctx.font = (t.bold ? 'bold ' : '') + Math.floor(t.size * (1 + (1 - t.life) * 0.3)) + 'px -apple-system, system-ui, sans-serif';
+      ctx.globalAlpha = Math.min(1, t.life * 1.5); // fade out in last 1/3 of life
+      const fontSize = Math.floor(t.size * Math.max(0.8, scaleMult));
+      ctx.font = (t.bold ? 'bold ' : '') + fontSize + 'px -apple-system, system-ui, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
       if (t.outline) {
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+        ctx.lineWidth = t.isCrit ? 5 : 3;
+        ctx.lineJoin = 'round';
+        ctx.shadowColor = 'rgba(0,0,0,0.9)';
+        ctx.shadowBlur = 8;
         ctx.strokeText(t.text, t.x, t.y);
+        ctx.shadowBlur = 0;
+      }
+
+      // Glow effect for crits
+      if (t.isCrit) {
+        ctx.shadowColor = t.color;
+        ctx.shadowBlur = 16;
       }
       ctx.fillStyle = t.color;
-      ctx.shadowColor = 'rgba(0,0,0,0.6)';
-      ctx.shadowBlur = 4;
       ctx.fillText(t.text, t.x, t.y);
       ctx.restore();
     }
@@ -1104,7 +1174,7 @@ const BattleCanvas = {
     this.flashAlpha = alpha || 0.4;
   },
 
-  // ═══ ATTACK LINE (legacy, kept for compatibility) ═══
+  // ═══ ATTACK LINE — pulsing animated battle line ═══
   drawAttackLine(fromKey, toKey) {
     const from = this.fighters[fromKey];
     const to = this.fighters[toKey];
@@ -1114,19 +1184,60 @@ const BattleCanvas = {
     const progress = from.attackAnim;
     if (progress <= 0) return;
 
+    const now = Date.now();
+    const pulse = 0.5 + 0.5 * Math.sin(now * 0.015); // 0–1 pulsing factor
+    const alpha = Math.max(0, (1 - progress) * (0.6 + pulse * 0.4));
+
     const midX = from.x + (to.x - from.x) * Math.min(progress * 2, 1);
     const midY = from.y + (to.y - from.y) * Math.min(progress * 2, 1);
 
     ctx.save();
-    ctx.globalAlpha = Math.max(0, 1 - progress);
-    ctx.strokeStyle = '#f5d98a';
-    ctx.lineWidth = 3;
+    ctx.globalAlpha = alpha;
+
+    // Outer glow line
+    ctx.strokeStyle = 'rgba(212,168,67,' + (0.3 + pulse * 0.3) + ')';
+    ctx.lineWidth = 8 + pulse * 4;
+    ctx.lineCap = 'round';
     ctx.shadowColor = '#d4a843';
-    ctx.shadowBlur = 8;
+    ctx.shadowBlur = 12 + pulse * 8;
     ctx.beginPath();
     ctx.moveTo(from.x, from.y);
     ctx.lineTo(midX, midY);
     ctx.stroke();
+
+    // Core bright line
+    ctx.strokeStyle = '#f5d98a';
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = '#fff';
+    ctx.shadowBlur = 4;
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(midX, midY);
+    ctx.stroke();
+
+    ctx.restore();
+  },
+
+  // ═══ BATTLE DIVIDER LINE — persistent pulsing line between armies ═══
+  drawBattleDivider() {
+    const ctx = this.ctx;
+    const w = this.width;
+    const h = this.height;
+    const midX = w / 2;
+    const now = Date.now();
+    const pulse = 0.4 + 0.3 * Math.sin(now * 0.002);
+
+    ctx.save();
+    ctx.globalAlpha = pulse;
+    ctx.strokeStyle = 'rgba(212,168,67,0.25)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 8]);
+    ctx.lineDashOffset = -(now * 0.02 % 12);
+    ctx.beginPath();
+    ctx.moveTo(midX, 20);
+    ctx.lineTo(midX, h - 20);
+    ctx.stroke();
+    ctx.setLineDash([]);
     ctx.restore();
   },
 
@@ -1198,13 +1309,14 @@ const BattleCanvas = {
             size: fx.isCrit ? 4 : 2,
           });
 
-          // Floating damage
+          // Floating damage — cinematic bounce animation
           this.addFloatingText(
-            target.x + (Math.random() - 0.5) * 20,
-            target.y - 25,
+            target.x + (Math.random() - 0.5) * 16,
+            target.y - 22,
             (fx.isCrit ? '暴击! ' : '-') + fx.dmg,
-            fx.isCrit ? '#ffd700' : '#ff6b6b',
-            { size: fx.isCrit ? 22 : 16, bold: true, outline: true }
+            fx.isCrit ? '#ffd700' : '#ff7070',
+            { size: fx.isCrit ? 24 : 17, bold: true, outline: true, isCrit: fx.isCrit,
+              vy: fx.isCrit ? -3.5 : -2.2, decay: fx.isCrit ? 0.011 : 0.014 }
           );
 
           // ── Impact wave ──
@@ -1321,32 +1433,42 @@ const BattleCanvas = {
       ? DynamicBattlefield.getVisualState() : null;
 
     const terrainGrads = {
-      plains:   ['#0a1628', '#142840'],
-      mountain: ['#0f1520', '#1a2535'],
-      river:    ['#081828', '#0f2840'],
-      water:    ['#081828', '#0f2840'],
-      forest:   ['#081a10', '#102818'],
-      castle:   ['#100c18', '#1a1428'],
-      desert:   ['#1a1408', '#2a2010'],
-      swamp:    ['#080f08', '#0a1a0a'],
-      charred:  ['#0a0808', '#1a1210'],
+      plains:   ['#081428', '#0d2040', '#1a3a15'],   // deep blue sky → dark green ground
+      mountain: ['#0c1220', '#1a2535', '#2a2a30'],   // slate dusk sky
+      river:    ['#060e1e', '#0f2440', '#082838'],   // dark blue water at dusk
+      water:    ['#060e1e', '#0f2440', '#082838'],
+      forest:   ['#060f08', '#0c1f0e', '#142a0a'],   // dark dense forest
+      castle:   ['#0c0818', '#1a1030', '#2a1828'],   // purple-tinted citadel night
+      desert:   ['#1a1008', '#2a1c0a', '#180c04'],   // scorched orange dusk
+      swamp:    ['#060c06', '#0a180a', '#081208'],   // murky swamp
+      charred:  ['#080404', '#180e0a', '#1a0e08'],   // ash and embers
     };
     // Use DynamicBattlefield terrain if available
     const effectiveTerrain = bfVisual ? bfVisual.terrainKey : terrain;
     const colors = terrainGrads[effectiveTerrain] || terrainGrads.plains;
 
-    // Sky color from time of day
+    // Sky → ground gradient — vivid cinematic backgrounds
     if (bfVisual && bfVisual.skyColor) {
       const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
       bgGrad.addColorStop(0, bfVisual.skyColor);
-      bgGrad.addColorStop(1, colors[1]);
+      bgGrad.addColorStop(0.6, colors[1] || colors[0]);
+      bgGrad.addColorStop(1, colors[2] || colors[1] || colors[0]);
       ctx.fillStyle = bgGrad;
     } else {
       const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
       bgGrad.addColorStop(0, colors[0]);
-      bgGrad.addColorStop(1, colors[1]);
+      bgGrad.addColorStop(0.55, colors[1]);
+      bgGrad.addColorStop(1, colors[2] || colors[1]);
       ctx.fillStyle = bgGrad;
     }
+    ctx.fillRect(0, 0, w, h);
+
+    // Subtle ambient glow at horizon mid-point for depth
+    const horizonY = h * 0.55;
+    const horizonGrad = ctx.createRadialGradient(w * 0.5, horizonY, 0, w * 0.5, horizonY, w * 0.6);
+    horizonGrad.addColorStop(0, 'rgba(212,168,67,0.04)');
+    horizonGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = horizonGrad;
     ctx.fillRect(0, 0, w, h);
 
     // Ground with terrain-specific color
@@ -1451,27 +1573,8 @@ const BattleCanvas = {
       }
     }
 
-    // VS divider
-    ctx.save();
-    const vsGrad = ctx.createLinearGradient(w/2, 15, w/2, h - 15);
-    vsGrad.addColorStop(0, 'rgba(212,168,67,0)');
-    vsGrad.addColorStop(0.3, 'rgba(212,168,67,0.08)');
-    vsGrad.addColorStop(0.5, 'rgba(212,168,67,0.12)');
-    vsGrad.addColorStop(0.7, 'rgba(212,168,67,0.08)');
-    vsGrad.addColorStop(1, 'rgba(212,168,67,0)');
-    ctx.strokeStyle = vsGrad;
-    ctx.lineWidth = 1;
-    ctx.setLineDash([6, 4]);
-    ctx.beginPath();
-    ctx.moveTo(w / 2, 15);
-    ctx.lineTo(w / 2, h - 15);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.font = 'bold 12px -apple-system, system-ui, sans-serif';
-    ctx.fillStyle = 'rgba(212,168,67,0.15)';
-    ctx.textAlign = 'center';
-    ctx.fillText('VS', w / 2, h / 2);
-    ctx.restore();
+    // Animated battle divider line — drawn separately for pulse effect
+    this.drawBattleDivider();
 
     // Weather effects (legacy)
     if (!bfVisual) {

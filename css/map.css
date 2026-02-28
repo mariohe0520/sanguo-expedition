@@ -4,12 +4,15 @@
    Quality Target: miHoYo / Total War: Three Kingdoms
    ═══════════════════════════════════════════════════════════════════ */
 
-/* ─── §1  MAP CONTAINER — Aged Parchment ─────────────────────────── */
+/* ─── §1  MAP CONTAINER — Aged Parchment, scrollable ─────────────── */
+/* The SVG is 160:200 aspect ratio. We render it full-width and let the
+   container scroll vertically so nodes never overlap on any screen. */
 #kingdom-map-container {
   position: relative;
   width: 100%;
+  /* Height = width * (200/160) = width * 1.25  →  use padding-bottom trick */
   height: 0;
-  padding-bottom: 110%; /* Much taller — gives room for all territories */
+  padding-bottom: 125%;   /* 125% = 200/160 aspect ratio */
   border-radius: var(--r-lg, 16px);
   overflow: hidden;
   border: 1px solid rgba(212,168,67,.25);
@@ -18,15 +21,24 @@
     0 0 60px rgba(212,168,67,.08),
     inset 0 0 80px rgba(0,0,0,.3),
     inset 0 1px 0 rgba(212,168,67,.12);
-  /* Multi-layer ancient map background — BRIGHTER for visibility */
+  /* Multi-layer ancient map background */
   background:
-    /* Parchment grain */
     radial-gradient(ellipse 120% 80% at 30% 20%, rgba(212,168,67,.1), transparent),
     radial-gradient(ellipse 100% 60% at 70% 80%, rgba(212,168,67,.08), transparent),
-    /* Lighter vignette for better visibility */
     radial-gradient(ellipse 85% 75% at 50% 50%, transparent 50%, rgba(0,0,0,.25) 100%),
-    /* Base — significantly brighter parchment */
     linear-gradient(165deg, #252018 0%, #1e1a14 30%, #252018 60%, #1a1610 100%);
+}
+
+/* On tall phones (portrait) the map will be ~488px tall on a 390px wide device.
+   Wrap the container in a scroll wrapper so users can pan down. */
+#kingdom-map-scroll-wrap {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  border-radius: var(--r-lg, 16px);
+  /* Show a subtle scroll hint shadow at bottom */
+  background: linear-gradient(to bottom, transparent 90%, rgba(0,0,0,.3) 100%);
 }
 
 /* Noise texture overlay for parchment feel */
@@ -631,22 +643,22 @@
 
 /* ─── §7  RESPONSIVE ─────────────────────────────────────────────── */
 
-/* Larger map on wider screens */
-@media (min-width: 420px) {
+/* All phones: keep exact 160:200 ratio */
+@media (max-width: 480px) {
   #kingdom-map-container {
-    padding-bottom: 120%; /* Even taller on wider screens */
+    padding-bottom: 125%; /* always 160:200 */
   }
 }
 
 @media (min-width: 600px) {
   #kingdom-map-container {
-    padding-bottom: 90%; /* Wider aspect on tablets */
+    padding-bottom: 100%; /* Slightly shorter on tablets */
   }
 }
 
 @media (max-width: 360px) {
   #kingdom-map-container {
-    padding-bottom: 120%; /* Tall on small phones */
+    padding-bottom: 125%;
   }
 
   .map-info-name {

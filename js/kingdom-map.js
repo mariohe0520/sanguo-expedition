@@ -2,27 +2,29 @@
 const KingdomMap = {
 
   // ===== TERRITORY DATA =====
+  // Coordinates are in a 160x200 SVG viewBox — large canvas for mobile scrolling
+  // Minimum ~18 units between any two nodes to prevent tap target overlap
   TERRITORIES: {
-    luoyang:  { name: '洛阳', desc: '天子所在，中原之心', x: 50, y: 35, connections: ['changan','xuchang','hulao'], faction: 'neutral', level: 1, icon: '🏯' },
-    changan:  { name: '长安', desc: '西都长安，关中沃野', x: 25, y: 30, connections: ['luoyang','hanzhong','xiliang','wuzhang'], faction: 'neutral', level: 2, icon: '🏰' },
-    xuchang:  { name: '许昌', desc: '曹操根据地', x: 60, y: 40, connections: ['luoyang','guandu','xiapi','hefei'], faction: 'wei', level: 3, icon: '🏰' },
-    hulao:    { name: '虎牢关', desc: '天下第一雄关', x: 48, y: 26, connections: ['luoyang','yecheng'], faction: 'neutral', level: 2, icon: '⛩️' },
-    guandu:   { name: '官渡', desc: '曹袁决战之地', x: 65, y: 28, connections: ['xuchang','yecheng'], faction: 'wei', level: 4, icon: '⚔️' },
-    yecheng:  { name: '邺城', desc: '袁绍都城', x: 58, y: 17, connections: ['hulao','guandu'], faction: 'qun', level: 5, icon: '🏰' },
-    xiapi:    { name: '下邳', desc: '吕布末路之地', x: 72, y: 42, connections: ['xuchang','jianye'], faction: 'qun', level: 3, icon: '🏰' },
-    jianye:   { name: '建业', desc: '东吴都城', x: 78, y: 55, connections: ['xiapi','chaisang','hefei'], faction: 'wu', level: 5, icon: '🏯' },
-    chaisang: { name: '柴桑', desc: '周瑜大都督府', x: 70, y: 62, connections: ['jianye','chibi'], faction: 'wu', level: 4, icon: '🏰' },
-    chibi:    { name: '赤壁', desc: '火烧连环船', x: 60, y: 64, connections: ['chaisang','jingzhou'], faction: 'neutral', level: 6, icon: '🔥' },
-    jingzhou: { name: '荆州', desc: '兵家必争之地', x: 52, y: 58, connections: ['chibi','changsha','yiling'], faction: 'neutral', level: 4, icon: '🏰' },
-    changsha: { name: '长沙', desc: '黄忠老将之地', x: 56, y: 72, connections: ['jingzhou'], faction: 'neutral', level: 3, icon: '🏰' },
-    yiling:   { name: '夷陵', desc: '刘备惨败之地', x: 44, y: 62, connections: ['jingzhou','chengdu'], faction: 'shu', level: 5, icon: '⚔️' },
-    hanzhong: { name: '汉中', desc: '蜀魏争夺要地', x: 33, y: 50, connections: ['changan','chengdu','dingjun','wuzhang'], faction: 'shu', level: 5, icon: '🏰' },
-    dingjun:  { name: '定军山', desc: '黄忠斩夏侯渊', x: 36, y: 58, connections: ['hanzhong'], faction: 'shu', level: 6, icon: '⛰️' },
-    chengdu:  { name: '成都', desc: '蜀汉都城，天府之国', x: 26, y: 64, connections: ['hanzhong','yiling','nanzhong'], faction: 'shu', level: 7, icon: '🏯' },
-    nanzhong: { name: '南中', desc: '孟获七擒之地', x: 24, y: 78, connections: ['chengdu'], faction: 'qun', level: 4, icon: '🌴' },
-    xiliang:  { name: '西凉', desc: '马超铁骑故乡', x: 10, y: 25, connections: ['changan'], faction: 'qun', level: 5, icon: '🐴' },
-    hefei:    { name: '合肥', desc: '张辽威震逍遥津', x: 75, y: 44, connections: ['jianye','xuchang'], faction: 'wei', level: 6, icon: '🏰' },
-    wuzhang:  { name: '五丈原', desc: '诸葛亮星落之地', x: 30, y: 40, connections: ['changan','hanzhong'], faction: 'neutral', level: 8, icon: '⭐' },
+    xiliang:  { name: '西凉', desc: '马超铁骑故乡', x: 12, y: 22, connections: ['changan'], faction: 'qun', level: 5, icon: '🐴' },
+    changan:  { name: '长安', desc: '西都长安，关中沃野', x: 34, y: 32, connections: ['xiliang','luoyang','hanzhong','wuzhang'], faction: 'neutral', level: 2, icon: '🏰' },
+    wuzhang:  { name: '五丈原', desc: '诸葛亮星落之地', x: 40, y: 48, connections: ['changan','hanzhong'], faction: 'neutral', level: 8, icon: '⭐' },
+    hulao:    { name: '虎牢关', desc: '天下第一雄关', x: 58, y: 26, connections: ['luoyang','yecheng'], faction: 'neutral', level: 2, icon: '⛩️' },
+    luoyang:  { name: '洛阳', desc: '天子所在，中原之心', x: 72, y: 38, connections: ['changan','xuchang','hulao'], faction: 'neutral', level: 1, icon: '🏯' },
+    yecheng:  { name: '邺城', desc: '袁绍都城', x: 88, y: 16, connections: ['hulao','guandu'], faction: 'qun', level: 5, icon: '🏰' },
+    guandu:   { name: '官渡', desc: '曹袁决战之地', x: 100, y: 32, connections: ['xuchang','yecheng'], faction: 'wei', level: 4, icon: '⚔️' },
+    xuchang:  { name: '许昌', desc: '曹操根据地', x: 96, y: 52, connections: ['luoyang','guandu','xiapi','hefei'], faction: 'wei', level: 3, icon: '🏰' },
+    xiapi:    { name: '下邳', desc: '吕布末路之地', x: 118, y: 58, connections: ['xuchang','jianye'], faction: 'qun', level: 3, icon: '🏰' },
+    hefei:    { name: '合肥', desc: '张辽威震逍遥津', x: 122, y: 76, connections: ['jianye','xuchang'], faction: 'wei', level: 6, icon: '🏰' },
+    jianye:   { name: '建业', desc: '东吴都城', x: 136, y: 92, connections: ['xiapi','chaisang','hefei'], faction: 'wu', level: 5, icon: '🏯' },
+    chaisang: { name: '柴桑', desc: '周瑜大都督府', x: 116, y: 108, connections: ['jianye','chibi'], faction: 'wu', level: 4, icon: '🏰' },
+    chibi:    { name: '赤壁', desc: '火烧连环船', x: 96, y: 118, connections: ['chaisang','jingzhou'], faction: 'neutral', level: 6, icon: '🔥' },
+    jingzhou: { name: '荆州', desc: '兵家必争之地', x: 78, y: 106, connections: ['chibi','changsha','yiling'], faction: 'neutral', level: 4, icon: '🏰' },
+    changsha: { name: '长沙', desc: '黄忠老将之地', x: 92, y: 138, connections: ['jingzhou'], faction: 'neutral', level: 3, icon: '🏰' },
+    yiling:   { name: '夷陵', desc: '刘备惨败之地', x: 60, y: 114, connections: ['jingzhou','chengdu'], faction: 'shu', level: 5, icon: '⚔️' },
+    hanzhong: { name: '汉中', desc: '蜀魏争夺要地', x: 46, y: 78, connections: ['changan','chengdu','dingjun','wuzhang'], faction: 'shu', level: 5, icon: '🏰' },
+    dingjun:  { name: '定军山', desc: '黄忠斩夏侯渊', x: 52, y: 96, connections: ['hanzhong'], faction: 'shu', level: 6, icon: '⛰️' },
+    chengdu:  { name: '成都', desc: '蜀汉都城，天府之国', x: 34, y: 118, connections: ['hanzhong','yiling','nanzhong'], faction: 'shu', level: 7, icon: '🏯' },
+    nanzhong: { name: '南中', desc: '孟获七擒之地', x: 28, y: 148, connections: ['chengdu'], faction: 'qun', level: 4, icon: '🌴' },
   },
 
   // Faction colors & names
@@ -355,6 +357,13 @@ const KingdomMap = {
   },
 
   // ===== SVG MAP RENDERING =====
+  // Map uses a 160x200 viewBox — tall enough for all territories with good spacing
+  MAP_VB_W: 160,
+  MAP_VB_H: 200,
+  // Node visual sizes (in SVG units)
+  NODE_R: 8,        // circle radius (~52px diameter on 390px wide screen)
+  HIT_R: 11,        // invisible tap target radius (min 44px equivalent)
+
   renderMap(svgEl, onTerritoryClick) {
     if (!svgEl) return;
     const state = this.getState() || this.initState();
@@ -364,18 +373,18 @@ const KingdomMap = {
     const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
     defs.innerHTML = `
       <filter id="map-glow">
-        <feGaussianBlur stdDeviation="1.5" result="blur"/>
-        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-      <filter id="map-shadow">
-        <feDropShadow dx="0" dy="0.6" stdDeviation="1.0" flood-color="#000" flood-opacity="0.5"/>
-      </filter>
-      <filter id="map-node-glow">
         <feGaussianBlur stdDeviation="2" result="blur"/>
         <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
-      <pattern id="map-grid" width="5" height="5" patternUnits="userSpaceOnUse">
-        <path d="M 5 0 L 0 0 0 5" fill="none" stroke="rgba(212,168,67,0.06)" stroke-width="0.15"/>
+      <filter id="map-shadow">
+        <feDropShadow dx="0" dy="0.8" stdDeviation="1.2" flood-color="#000" flood-opacity="0.5"/>
+      </filter>
+      <filter id="map-node-glow">
+        <feGaussianBlur stdDeviation="3" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <pattern id="map-grid" width="8" height="8" patternUnits="userSpaceOnUse">
+        <path d="M 8 0 L 0 0 0 8" fill="none" stroke="rgba(212,168,67,0.05)" stroke-width="0.2"/>
       </pattern>
       <radialGradient id="territory-pulse" cx="50%" cy="50%" r="50%">
         <stop offset="0%" stop-color="#e8c050" stop-opacity="0.5">
@@ -388,30 +397,30 @@ const KingdomMap = {
 
     // Background grid
     const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    bgRect.setAttribute('width', '100');
-    bgRect.setAttribute('height', '100');
+    bgRect.setAttribute('width', this.MAP_VB_W);
+    bgRect.setAttribute('height', this.MAP_VB_H);
     bgRect.setAttribute('fill', 'url(#map-grid)');
     svgEl.appendChild(bgRect);
 
     // Map border decorations
     const mapBorder = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    mapBorder.setAttribute('x', '1');
-    mapBorder.setAttribute('y', '1');
-    mapBorder.setAttribute('width', '98');
-    mapBorder.setAttribute('height', '98');
-    mapBorder.setAttribute('rx', '2');
+    mapBorder.setAttribute('x', '1.5');
+    mapBorder.setAttribute('y', '1.5');
+    mapBorder.setAttribute('width', this.MAP_VB_W - 3);
+    mapBorder.setAttribute('height', this.MAP_VB_H - 3);
+    mapBorder.setAttribute('rx', '3');
     mapBorder.setAttribute('fill', 'none');
     mapBorder.setAttribute('stroke', 'rgba(212,168,67,0.15)');
-    mapBorder.setAttribute('stroke-width', '0.4');
+    mapBorder.setAttribute('stroke-width', '0.5');
     svgEl.appendChild(mapBorder);
 
     // Title text
     const titleText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    titleText.setAttribute('x', '50');
-    titleText.setAttribute('y', '6');
+    titleText.setAttribute('x', this.MAP_VB_W / 2);
+    titleText.setAttribute('y', '8');
     titleText.setAttribute('text-anchor', 'middle');
     titleText.setAttribute('fill', 'rgba(212,168,67,0.35)');
-    titleText.setAttribute('font-size', '3');
+    titleText.setAttribute('font-size', '4.5');
     titleText.setAttribute('font-weight', '700');
     titleText.textContent = '三 国 疆 域 图';
     svgEl.appendChild(titleText);
@@ -461,114 +470,117 @@ const KingdomMap = {
       g.style.cursor = isLocked ? 'default' : 'pointer';
       g.setAttribute('pointer-events', isLocked ? 'none' : 'all');
 
-      // Pulse for available territories — LARGER
+      const NR = this.NODE_R;
+      const HR = this.HIT_R;
+
+      // Pulse ring for available territories
       if (isAvailable) {
         const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         pulse.setAttribute('cx', t.x);
         pulse.setAttribute('cy', t.y);
-        pulse.setAttribute('r', '9');
+        pulse.setAttribute('r', NR + 5);
         pulse.setAttribute('fill', 'url(#territory-pulse)');
         g.appendChild(pulse);
       }
 
-      // Outer glow for current territory — LARGER & BRIGHTER
+      // Animated glow ring for current territory
       if (isCurrent) {
         const glow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         glow.setAttribute('cx', t.x);
         glow.setAttribute('cy', t.y);
-        glow.setAttribute('r', '9.5');
+        glow.setAttribute('r', NR + 2);
         glow.setAttribute('fill', 'none');
         glow.setAttribute('stroke', '#e8c050');
-        glow.setAttribute('stroke-width', '0.5');
-        glow.setAttribute('opacity', '0.8');
+        glow.setAttribute('stroke-width', '0.8');
+        glow.setAttribute('opacity', '0.9');
         const animR = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
         animR.setAttribute('attributeName', 'r');
-        animR.setAttribute('values', '9.5;11.5;9.5');
+        animR.setAttribute('values', (NR + 2) + ';' + (NR + 5) + ';' + (NR + 2));
         animR.setAttribute('dur', '2s');
         animR.setAttribute('repeatCount', 'indefinite');
         glow.appendChild(animR);
         g.appendChild(glow);
       }
 
-      // Invisible larger hit area for mobile tap (minimum 44px equivalent) — BIGGER
+      // Invisible hit area — minimum 44px tap target (HR units wide)
       const hitArea = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       hitArea.setAttribute('cx', t.x);
       hitArea.setAttribute('cy', t.y);
-      hitArea.setAttribute('r', '10');
+      hitArea.setAttribute('r', HR);
       hitArea.setAttribute('fill', 'rgba(0,0,0,0.001)');
       hitArea.setAttribute('stroke', 'none');
       hitArea.setAttribute('pointer-events', 'all');
       g.appendChild(hitArea);
 
-      // Territory circle background — 40% LARGER for visibility
+      // Territory circle background
       const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       circle.setAttribute('cx', t.x);
       circle.setAttribute('cy', t.y);
-      circle.setAttribute('r', '7');
+      circle.setAttribute('r', NR);
       circle.setAttribute('fill', isLocked ? 'rgba(60,55,48,0.9)' : faction.fill);
       circle.setAttribute('stroke', isLocked ? 'rgba(176,164,144,0.5)' : isConquered ? '#e8c050' : faction.color);
-      circle.setAttribute('stroke-width', isCurrent ? '0.8' : isLocked ? '0.4' : '0.5');
+      circle.setAttribute('stroke-width', isCurrent ? '1.2' : isLocked ? '0.5' : '0.8');
       if (!isLocked) circle.setAttribute('filter', 'url(#map-node-glow)');
       g.appendChild(circle);
 
-      // Territory icon — BIGGER
+      // Territory icon (emoji) — rendered as text inside circle
       const iconText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       iconText.setAttribute('x', t.x);
-      iconText.setAttribute('y', t.y + 0.8);
+      iconText.setAttribute('y', t.y + 1);
       iconText.setAttribute('text-anchor', 'middle');
       iconText.setAttribute('dominant-baseline', 'middle');
-      iconText.setAttribute('font-size', '5.5');
+      iconText.setAttribute('font-size', '7');
       iconText.setAttribute('opacity', isLocked ? '0.45' : '1');
       iconText.textContent = isConquered ? '🚩' : t.icon;
       g.appendChild(iconText);
 
-      // Territory name label — BIGGER & BRIGHTER
+      // Territory name label — below the circle, clear separation
       const nameText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       nameText.setAttribute('x', t.x);
-      nameText.setAttribute('y', t.y + 9.5);
+      nameText.setAttribute('y', t.y + NR + 4.5);
       nameText.setAttribute('text-anchor', 'middle');
       nameText.setAttribute('fill', isLocked ? 'rgba(176,164,144,0.55)' : isConquered ? '#e8c050' : '#f5ece0');
-      nameText.setAttribute('font-size', '3.2');
+      nameText.setAttribute('font-size', '4');
       nameText.setAttribute('font-weight', '700');
       nameText.setAttribute('filter', isLocked ? '' : 'url(#map-shadow)');
       nameText.textContent = t.name;
       g.appendChild(nameText);
 
-      // Level indicator — BIGGER
+      // Level indicator — below name
       if (!isLocked) {
         const lvlText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         lvlText.setAttribute('x', t.x);
-        lvlText.setAttribute('y', t.y + 12);
+        lvlText.setAttribute('y', t.y + NR + 9);
         lvlText.setAttribute('text-anchor', 'middle');
         lvlText.setAttribute('fill', isConquered ? 'rgba(232,192,80,0.6)' : 'rgba(176,164,144,0.65)');
-        lvlText.setAttribute('font-size', '2');
+        lvlText.setAttribute('font-size', '2.8');
         lvlText.setAttribute('font-weight', '600');
         lvlText.textContent = isConquered ? '已占领' : 'Lv.' + t.level;
         g.appendChild(lvlText);
       }
 
-      // Faction label for unlocked non-player territories
+      // Faction label — above circle
       if (!isLocked && !isConquered && t.faction !== 'neutral') {
         const facText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         facText.setAttribute('x', t.x);
-        facText.setAttribute('y', t.y - 8.5);
+        facText.setAttribute('y', t.y - NR - 4);
         facText.setAttribute('text-anchor', 'middle');
         facText.setAttribute('fill', faction.color);
-        facText.setAttribute('font-size', '1.8');
+        facText.setAttribute('font-size', '2.5');
         facText.setAttribute('font-weight', '700');
-        facText.setAttribute('opacity', '0.7');
+        facText.setAttribute('opacity', '0.8');
         facText.textContent = this.FACTIONS[t.faction]?.name || '';
         g.appendChild(facText);
       }
 
-      // Stage progress dots (for in-battle territories) — BIGGER
+      // Stage progress dots — above circle
       if (tState.status === 'in_battle' || isAvailable) {
         const cleared = tState.stagesCleared || 0;
         for (let i = 0; i < 3; i++) {
           const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-          dot.setAttribute('cx', t.x - 2.5 + i * 2.5);
-          dot.setAttribute('cy', t.y - 8.5);
-          dot.setAttribute('r', '1');
+          dot.setAttribute('cx', t.x - 3.5 + i * 3.5);
+          dot.setAttribute('cy', t.y - NR - 2.5);
+          dot.setAttribute('r', '1.5');
           dot.setAttribute('fill', i < cleared ? '#e8c050' : 'rgba(176,164,144,0.35)');
           if (i < cleared) dot.setAttribute('filter', 'url(#map-glow)');
           g.appendChild(dot);
@@ -583,19 +595,20 @@ const KingdomMap = {
       svgEl.appendChild(g);
     }
 
-    // Player position marker — BIGGER & MORE VISIBLE
+    // Player position marker — floating above current territory
     if (state.currentTerritory && this.TERRITORIES[state.currentTerritory]) {
       const ct = this.TERRITORIES[state.currentTerritory];
+      const NR = this.NODE_R;
       const marker = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      marker.setAttribute('x', ct.x + 5);
-      marker.setAttribute('y', ct.y - 3);
-      marker.setAttribute('font-size', '4');
+      marker.setAttribute('x', ct.x + NR - 1);
+      marker.setAttribute('y', ct.y - NR + 1);
+      marker.setAttribute('font-size', '6');
       marker.setAttribute('filter', 'url(#map-glow)');
       marker.textContent = '⚔️';
+      const baseY = ct.y - NR + 1;
       const animY = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
       animY.setAttribute('attributeName', 'y');
-      const baseY = ct.y - 3;
-      animY.setAttribute('values', (baseY) + ';' + (baseY - 1.5) + ';' + (baseY));
+      animY.setAttribute('values', baseY + ';' + (baseY - 2) + ';' + baseY);
       animY.setAttribute('dur', '1.5s');
       animY.setAttribute('repeatCount', 'indefinite');
       marker.appendChild(animY);

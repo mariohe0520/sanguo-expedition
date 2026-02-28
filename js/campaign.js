@@ -297,18 +297,19 @@ const Campaign = {
   ],
 
   // Difficulty curve: enemy stat multiplier per chapter
-  // Improved: Chapter 1 starts harder (0.55 instead of 0.3) and progression is smoother
+  // Target: ~85% win rate on main campaign, ~15% challenge on boss/elite stages
+  // Calibrated so a team at recommended power level wins comfortably; over-leveled = easy
   CHAPTER_SCALING: {
-    1: { enemyScale: 0.55, desc: '初出茅庐·需要基本策略' },
-    2: { enemyScale: 0.75, desc: '需要阵容搭配' },
-    3: { enemyScale: 0.95, desc: '需要装备强化' },
-    4: { enemyScale: 1.15, desc: '需要天赋投入' },
-    5: { enemyScale: 1.4, desc: '需要元素反应策略' },
-    6: { enemyScale: 1.65, desc: '终局·需要极限Build' },
-    7: { enemyScale: 1.85, desc: '以少胜多·智斗' },
-    8: { enemyScale: 2.05, desc: '城防攻坚战' },
-    9: { enemyScale: 2.3, desc: '山地极限战' },
-    10: { enemyScale: 2.6, desc: '天下归一·最终决战' },
+    1: { enemyScale: 0.45, desc: '初出茅庐·新手友好' },
+    2: { enemyScale: 0.62, desc: '需要阵容搭配' },
+    3: { enemyScale: 0.80, desc: '需要装备强化' },
+    4: { enemyScale: 1.00, desc: '需要天赋投入' },
+    5: { enemyScale: 1.20, desc: '需要元素反应策略' },
+    6: { enemyScale: 1.42, desc: '终局·需要Build规划' },
+    7: { enemyScale: 1.62, desc: '以少胜多·智斗' },
+    8: { enemyScale: 1.82, desc: '城防攻坚战' },
+    9: { enemyScale: 2.05, desc: '山地极限战' },
+    10: { enemyScale: 2.30, desc: '天下归一·最终决战' },
   },
 
   getEnemyScale(chapterId, difficulty) {

@@ -6,9 +6,9 @@ const Campaign = {
       desc: '苍天已死，黄天当立。乱世之始。',
       stages: [
         { id: 1, name: '颍川遭遇', enemies: ['soldier','soldier','archer_recruit'], reward: { gold: 100, exp: 50 }, tutorial: 'basic' },
-        { id: 2, name: '黄巾先锋', enemies: ['soldier','soldier','soldier'], reward: { gold: 120, exp: 60 }, tutorial: 'counter' },
-        { id: 3, name: '广宗之围', enemies: ['soldier','archer_recruit','soldier','archer_recruit'], reward: { gold: 150, exp: 80 } },
-        { id: 4, name: '精锐小队', enemies: ['soldier','soldier','archer_recruit','soldier'], reward: { gold: 180, exp: 100 }, elite: true },
+        { id: 2, name: '黄巾先锋', enemies: ['soldier','archer_recruit','soldier'], reward: { gold: 120, exp: 60 }, tutorial: 'counter' },
+        { id: 3, name: '广宗之围', enemies: ['soldier','archer_recruit','shield_militia','soldier'], reward: { gold: 150, exp: 80 } },
+        { id: 4, name: '精锐小队', enemies: ['elite_spear','soldier','archer_recruit','shield_militia'], reward: { gold: 180, exp: 100 }, elite: true },
         { id: 5, name: '张角降临', enemies: ['soldier','soldier','zhangjiao','soldier','archer_recruit'], boss: true, reward: { gold: 300, exp: 200, hero_shard: 'zhangjiao' } },
         // --- 天命抉择 #1: 救卢植？---
         { id: 6, name: '南阳追击', enemies: ['soldier','soldier','soldier','archer_recruit','soldier'], reward: { gold: 200, exp: 120 }, branch: 'A' },
@@ -163,14 +163,14 @@ const Campaign = {
         { id: 1, name: '司马昭之心', enemies: ['strategist','elite_cavalry','crossbow_corps','elite_spear','shield_militia'], reward: { gold: 15000, exp: 9000 } },
         { id: 2, name: '铁骑南下', enemies: ['elite_cavalry','elite_cavalry','crossbow_corps','strategist','fire_archer'], reward: { gold: 16000, exp: 9500 } },
         { id: 3, name: '三路合围', enemies: ['elite_spear','navy_soldier','fire_archer','crossbow_corps','elite_cavalry'], reward: { gold: 17000, exp: 10000 } },
-        { id: 4, name: '最后的抵抗', enemies: ['strategist','crossbow_corps','elite_cavalry','fire_archer','supply_guard','shield_militia'], reward: { gold: 18000, exp: 11000 }, elite: true },
+        { id: 4, name: '最后的抵抗', enemies: ['strategist','crossbow_corps','elite_cavalry','fire_archer','supply_guard'], reward: { gold: 18000, exp: 11000 }, elite: true },
         { id: 5, name: '司马昭出阵', enemies: ['elite_cavalry','strategist','simazhao','crossbow_corps','elite_spear'], boss: true, reward: { gold: 20000, exp: 12000 } },
         // --- 天命抉择 #10: 兴复汉室 vs 顺应天命 ---
         { id: 6, name: '复汉旗帜', enemies: ['elite_cavalry','fire_archer','strategist','crossbow_corps','elite_spear'], reward: { gold: 20000, exp: 12500 }, branch: 'A' },
-        { id: 7, name: '光复之战', enemies: ['elite_spear','crossbow_corps','elite_cavalry','strategist','fire_archer','navy_soldier'], reward: { gold: 22000, exp: 13500 }, branch: 'A' },
+        { id: 7, name: '光复之战', enemies: ['elite_spear','crossbow_corps','elite_cavalry','strategist','fire_archer'], reward: { gold: 22000, exp: 13500 }, branch: 'A' },
         { id: 8, name: '顺天应命', enemies: ['strategist','elite_cavalry','crossbow_corps','shield_militia','supply_guard'], reward: { gold: 20000, exp: 12500 }, branch: 'B' },
-        { id: 9, name: '新朝之序', enemies: ['elite_cavalry','strategist','crossbow_corps','fire_archer','elite_spear','shield_militia'], reward: { gold: 22000, exp: 13500 }, branch: 'B' },
-        { id: 10, name: '天命终章', enemies: ['elite_cavalry','strategist','simazhao','crossbow_corps','fire_archer','elite_spear'], boss: true, reward: { gold: 25000, exp: 15000, hero_shard: 'simayi' }, boss_enhanced: { phases: 3, mirror: true, teleport: true, enrage: true } },
+        { id: 9, name: '新朝之序', enemies: ['elite_cavalry','strategist','crossbow_corps','fire_archer','elite_spear'], reward: { gold: 22000, exp: 13500 }, branch: 'B' },
+        { id: 10, name: '天命终章', enemies: ['elite_cavalry','strategist','simazhao','crossbow_corps','fire_archer'], boss: true, reward: { gold: 25000, exp: 15000, hero_shard: 'simayi' }, boss_enhanced: { phases: 3, mirror: true, teleport: true, enrage: true } },
       ]
     }
   ],
@@ -297,17 +297,19 @@ const Campaign = {
   ],
 
   // Difficulty curve: enemy stat multiplier per chapter
+  // Target: ~85% win rate on main campaign, ~15% challenge on boss/elite stages
+  // Calibrated so a team at recommended power level wins comfortably; over-leveled = easy
   CHAPTER_SCALING: {
-    1: { enemyScale: 0.3, desc: '教程难度' },
-    2: { enemyScale: 0.5, desc: '需要阵容搭配' },
-    3: { enemyScale: 0.8, desc: '需要装备强化' },
-    4: { enemyScale: 1.0, desc: '需要天赋投入' },
-    5: { enemyScale: 1.3, desc: '需要元素反应策略' },
-    6: { enemyScale: 1.6, desc: '终局·需要极限Build' },
-    7: { enemyScale: 1.8, desc: '以少胜多·智斗' },
-    8: { enemyScale: 2.0, desc: '城防攻坚战' },
-    9: { enemyScale: 2.3, desc: '山地极限战' },
-    10: { enemyScale: 2.6, desc: '天下归一·最终决战' },
+    1: { enemyScale: 0.45, desc: '初出茅庐·新手友好' },
+    2: { enemyScale: 0.62, desc: '需要阵容搭配' },
+    3: { enemyScale: 0.80, desc: '需要装备强化' },
+    4: { enemyScale: 1.00, desc: '需要天赋投入' },
+    5: { enemyScale: 1.20, desc: '需要元素反应策略' },
+    6: { enemyScale: 1.42, desc: '终局·需要Build规划' },
+    7: { enemyScale: 1.62, desc: '以少胜多·智斗' },
+    8: { enemyScale: 1.82, desc: '城防攻坚战' },
+    9: { enemyScale: 2.05, desc: '山地极限战' },
+    10: { enemyScale: 2.30, desc: '天下归一·最终决战' },
   },
 
   getEnemyScale(chapterId, difficulty) {
