@@ -1,4 +1,4 @@
-const CACHE = 'sanguo-v14';
+const CACHE = 'sanguo-v15';
 const ASSETS = [
   '.',
   'index.html',
@@ -21,6 +21,7 @@ const ASSETS = [
   'js/portraits.js',
   'js/battle-canvas.js',
   'js/app.js',
+  'js/premium-upgrade.js',
   'manifest.json'
 ];
 
