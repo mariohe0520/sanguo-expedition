@@ -1038,27 +1038,50 @@ const App = {
     } catch(e) { console.error('[battle-team-preview]', e); }
 
     // Use stage-specific terrain/weather, fall back to chapter defaults
-    const chapter = stage._chapter || Campaign.getCurrentChapter();
+    let chapter;
+    try { chapter = stage._chapter || Campaign.getCurrentChapter(); } catch(e) { chapter = { terrain: 'plains', weather: 'clear' }; }
     const terrain = stage.terrain || stage._terrain || chapter.terrain || 'plains';
     const weather = stage.weather || stage._weather || chapter.weather || 'clear';
     const enemyScale = stage._scaleMult || 1;
     // Pass territory ID for DynamicBattlefield terrain mapping
     const territoryId = stage._territoryId || null;
     const bossEnhanced = stage.boss_enhanced || null;
-    const warContext = (typeof WarDirector !== 'undefined')
-      ? WarDirector.rollScenario(stage, chapter)
-      : null;
-    stage._warContext = warContext;
-    Battle.init(team, stage.enemies, terrain, weather, enemyScale, territoryId, bossEnhanced, warContext);
-    if (warContext && typeof Battle !== 'undefined') {
-      Battle.addLog(`🎯 战争导演：${warContext.name} · ${warContext.desc}`);
-      const battleLog = document.getElementById('battle-log');
-      if (battleLog) {
-        const warPreview =
-          '<div class="log-entry" style="color:#fbbf24">🎯 战略态势：' + warContext.name + '</div>' +
-          '<div class="log-entry" style="color:#93c5fd">' + warContext.desc + '</div>';
-        battleLog.innerHTML = warPreview + battleLog.innerHTML;
+
+    // WarDirector scenario — safely wrapped so a crash never blocks battle
+    let warContext = null;
+    try {
+      if (typeof WarDirector !== 'undefined') {
+        warContext = WarDirector.rollScenario(stage, chapter);
       }
+    } catch(e) { console.error('[WarDirector rollScenario]', e); }
+    stage._warContext = warContext;
+
+    // Initialize battle state — safely wrapped so a crash never blocks rendering
+    try {
+      Battle.init(team, stage.enemies, terrain, weather, enemyScale, territoryId, bossEnhanced, warContext);
+    } catch(e) {
+      console.error('[Battle.init CRASH]', e);
+      // Emergency fallback: create minimal battle state so rendering can proceed
+      if (!Battle.state) {
+        Battle.state = {
+          turn: 0, phase: 'ready', terrain: terrain, weather: weather,
+          player: team.map((h, i) => { try { return Battle.createFighter(h, 'player', i); } catch(e2) { return null; } }).filter(Boolean),
+          enemy: (stage.enemies || []).map((h, i) => { try { return Battle.createFighter(h, 'enemy', i, enemyScale); } catch(e2) { return null; } }).filter(Boolean),
+        };
+      }
+    }
+
+    if (warContext && typeof Battle !== 'undefined' && Battle.state) {
+      try {
+        Battle.addLog(`🎯 战争导演：${warContext.name} · ${warContext.desc}`);
+        const battleLog = document.getElementById('battle-log');
+        if (battleLog) {
+          const warPreview =
+            '<div class="log-entry" style="color:#fbbf24">🎯 战略态势：' + warContext.name + '</div>' +
+            '<div class="log-entry" style="color:#93c5fd">' + warContext.desc + '</div>';
+          battleLog.innerHTML = warPreview + battleLog.innerHTML;
+        }
+      } catch(e) { console.error('[WarDirector log]', e); }
     }
 
     // Reset bond display for new battle
@@ -1073,14 +1096,16 @@ const App = {
       if (typeof BattleUI !== 'undefined') BattleUI.destroy();
     } catch(e) {}
 
+    // Ensure bui-active class is removed so canvas wrap is visible
+    try {
+      const battlePage = document.getElementById('page-battle');
+      if (battlePage) battlePage.classList.remove('bui-active');
+    } catch(e) {}
+
     // Initialize canvas renderer (background layer for particles)
     try {
       const canvasEl = document.getElementById('battle-canvas');
       if (canvasEl && typeof BattleCanvas !== 'undefined') {
-        // Ensure bui-active class is removed so canvas wrap is visible
-        const battlePage = document.getElementById('page-battle');
-        if (battlePage) battlePage.classList.remove('bui-active');
-
         BattleCanvas.init(canvasEl);
         BattleCanvas.setupFighters(Battle.state);
         BattleCanvas.start();
@@ -1109,7 +1134,7 @@ const App = {
     const bfEl = document.getElementById('battle-field');
     if (bfEl) bfEl.classList.add('active');
 
-    this.renderBattleField();
+    try { this.renderBattleField(); } catch(e) { console.error('[renderBattleField]', e); }
   },
 
   renderBattleField() {
@@ -1118,6 +1143,7 @@ const App = {
 
     const renderTeam = (fighters, containerId) => {
       const c = document.getElementById(containerId);
+      if (!c) return;
       c.innerHTML = '';
       for (const f of fighters) {
         if (!f) continue;

@@ -42,10 +42,10 @@ const Battle = {
         this.state.weather = DynamicBattlefield.state.weather;
       }
     }
-    // Apply passives
-    this.applyBattleStartPassives();
-    // Apply hero personality effects (mood, bonds, loyalty)
-    this.applyPersonalityEffects();
+    // Apply passives — wrapped so a crash never breaks battle init
+    try { this.applyBattleStartPassives(); } catch(e) { console.error('[Battle applyPassives]', e); }
+    // Apply hero personality effects (mood, bonds, loyalty) — wrapped for safety
+    try { this.applyPersonalityEffects(); } catch(e) { console.error('[Battle applyPersonality]', e); }
     // Apply war-director battlefield modifiers
     if (typeof WarDirector !== 'undefined') {
       try { WarDirector.applyBattleModifiers(this.state, warContext); } catch (e) { console.error('[WarDirector battle init]', e); }

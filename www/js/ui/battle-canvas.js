@@ -67,17 +67,24 @@ const BattleCanvas = {
   // ═══ INIT ═══
   init(canvasOrId) {
     this.canvas = typeof canvasOrId === 'string' ? document.getElementById(canvasOrId) : canvasOrId;
-    if (!this.canvas) return;
+    if (!this.canvas) { console.error('[BattleCanvas] canvas element not found'); return; }
     this.ctx = this.canvas.getContext('2d');
+    if (!this.ctx) { console.error('[BattleCanvas] getContext 2d returned null'); return; }
     this.resize();
     // Paint an immediate visible background so canvas is never blank while RAF loop starts
     try {
       const bg = this.ctx.createLinearGradient(0, 0, 0, this.height);
-      bg.addColorStop(0, '#1a3050');
-      bg.addColorStop(1, '#0e2030');
+      bg.addColorStop(0, '#1a3a6a');
+      bg.addColorStop(0.6, '#2a5090');
+      bg.addColorStop(1, '#1e6632');
       this.ctx.fillStyle = bg;
       this.ctx.fillRect(0, 0, this.width, this.height);
-    } catch(e) {}
+      // Show loading text so user knows canvas is alive
+      this.ctx.font = '600 14px -apple-system, system-ui, sans-serif';
+      this.ctx.fillStyle = 'rgba(212,168,67,0.5)';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText('准备战斗...', this.width / 2, this.height / 2);
+    } catch(e) { console.error('[BattleCanvas init paint]', e); }
     // Store handler reference so we can remove it in stop()
     if (this._resizeHandler) {
       window.removeEventListener('resize', this._resizeHandler);
@@ -1683,7 +1690,7 @@ const BattleCanvas = {
       river:    ['#0e2040', '#1a3a60', '#0e4858'],   // blue water at dusk
       water:    ['#0e2040', '#1a3a60', '#0e4858'],
       forest:   ['#0c2010', '#163a18', '#204412'],   // dense green forest
-      castle:   ['#180c28', '#2a1848', '#3c2440'],   // purple-tinted citadel night
+      castle:   ['#2a1848', '#3a2860', '#4a3068'],   // purple-tinted citadel (brighter)
       desert:   ['#3a2210', '#503018', '#381808'],   // scorched orange dusk
       swamp:    ['#0c1e0c', '#163016', '#102410'],   // murky swamp
       charred:  ['#1a0808', '#2e1810', '#321810'],   // ash and embers
