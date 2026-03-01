@@ -48,7 +48,7 @@ const DynamicBattlefield = {
     dawn:  { name: '拂晓', icon: '🌅', brightness: 0.7, skyColor: '#2a1a3a', effect: { surprise_bonus: 0.15 } },
     day:   { name: '白日', icon: '☀️', brightness: 1.0, skyColor: '#1a2440', effect: {} },
     dusk:  { name: '黄昏', icon: '🌇', brightness: 0.75, skyColor: '#3a2010', effect: { fire_visual: 1.3 } },
-    night: { name: '夜晚', icon: '🌙', brightness: 0.4, skyColor: '#0a0a15', effect: { miss_chance: 0.1, ambush_bonus: 0.2 } },
+    night: { name: '夜晚', icon: '🌙', brightness: 0.4, skyColor: '#0c1535', effect: { miss_chance: 0.1, ambush_bonus: 0.2 } },
   },
 
   // ═══════════════════════════════════════════

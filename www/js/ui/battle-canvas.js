@@ -70,6 +70,14 @@ const BattleCanvas = {
     if (!this.canvas) return;
     this.ctx = this.canvas.getContext('2d');
     this.resize();
+    // Paint an immediate visible background so canvas is never blank while RAF loop starts
+    try {
+      const bg = this.ctx.createLinearGradient(0, 0, 0, this.height);
+      bg.addColorStop(0, '#1a3050');
+      bg.addColorStop(1, '#0e2030');
+      this.ctx.fillStyle = bg;
+      this.ctx.fillRect(0, 0, this.width, this.height);
+    } catch(e) {}
     // Store handler reference so we can remove it in stop()
     if (this._resizeHandler) {
       window.removeEventListener('resize', this._resizeHandler);

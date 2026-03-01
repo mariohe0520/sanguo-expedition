@@ -1105,6 +1105,10 @@ const App = {
       }
     } catch(e) { console.error('[BattleCanvas init]', e); }
 
+    // Show DOM fighter display (always visible, guaranteed to work)
+    const bfEl = document.getElementById('battle-field');
+    if (bfEl) bfEl.classList.add('active');
+
     this.renderBattleField();
   },
 
