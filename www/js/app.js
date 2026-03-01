@@ -1068,26 +1068,10 @@ const App = {
       if (typeof HeroPersonality !== 'undefined') HeroPersonality.clearAllBubbles();
     } catch(e) {}
 
-    // Feature 3: Re-enabled premium BattleUI renderer with stability safeguards
+    // Clean up any previous BattleUI state (canvas renderer is used instead)
     try {
-      if (typeof BattleUI !== 'undefined') {
-        BattleUI.destroy(); // Clean up previous
-        // Verify required DOM elements exist before initializing
-        const battlePage = document.getElementById('page-battle');
-        if (battlePage && Battle.state && Battle.state.player && Battle.state.enemy) {
-          try {
-            BattleUI.init(Battle.state);
-            // BattleUI renderer active
-          } catch(initErr) {
-            console.warn('[BattleUI] Init failed, falling back to simple renderer:', initErr.message);
-            // Ensure cleanup on failure so simple renderer still works
-            try { BattleUI.destroy(); } catch(e2) {}
-          }
-        } else {
-          // Simple DOM renderer fallback
-        }
-      }
-    } catch(e) { console.error('[BattleUI init]', e); }
+      if (typeof BattleUI !== 'undefined') BattleUI.destroy();
+    } catch(e) {}
 
     // Initialize canvas renderer (background layer for particles)
     try {
