@@ -1002,6 +1002,76 @@ const App = {
     modal.classList.remove('hidden');
   },
 
+  // ===== GUARANTEED FIGHTER OVERLAY (nuclear fix) =====
+  _injectBattleOverlay(playerTeam, battleState) {
+    try {
+      const wrap = document.getElementById('battle-canvas-wrap');
+      if (!wrap) return;
+
+      // Remove any existing overlay
+      const existing = wrap.querySelector('.battle-overlay');
+      if (existing) existing.remove();
+
+      // Build fighter data from battleState, fallback to HEROES
+      const playerFighters = [];
+      if (battleState && battleState.player) {
+        battleState.player.forEach(f => {
+          if (f) playerFighters.push({ id: f.id, name: f.name, rarity: f.rarity || (HEROES[f.id] ? HEROES[f.id].rarity : 1) });
+        });
+      } else if (playerTeam && playerTeam.length) {
+        playerTeam.forEach(id => {
+          const h = HEROES[id];
+          if (h) playerFighters.push({ id: id, name: h.name, rarity: h.rarity });
+        });
+      }
+
+      const enemyFighters = [];
+      if (battleState && battleState.enemy) {
+        battleState.enemy.forEach(f => {
+          if (f) enemyFighters.push({ id: f.id, name: f.name, rarity: f.rarity || (HEROES[f.id] ? HEROES[f.id].rarity : 1) });
+        });
+      }
+
+      // Build card HTML for a fighter
+      const cardHTML = (f) => {
+        let portrait = '';
+        try { portrait = Visuals.heroPortrait(f.id, 'xs', f.rarity); } catch(e) { portrait = '<div style="width:24px;height:24px;background:#333;border-radius:50%"></div>'; }
+        return '<div style="display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.6);border-radius:8px;padding:4px 8px;border:1px solid rgba(212,168,67,0.2)">' +
+          portrait +
+          '<div>' +
+            '<div style="font-size:10px;font-weight:600;color:#f0e6d3">' + (f.name || f.id) + '</div>' +
+            '<div style="width:40px;height:3px;background:rgba(255,255,255,0.2);border-radius:2px;margin-top:2px">' +
+              '<div style="width:100%;height:100%;background:#22c55e;border-radius:2px"></div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      };
+
+      // Player column
+      let playerHTML = '<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">';
+      playerFighters.forEach(f => { playerHTML += cardHTML(f); });
+      playerHTML += '</div>';
+
+      // Enemy column
+      let enemyHTML = '<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">';
+      enemyFighters.forEach(f => { enemyHTML += cardHTML(f); });
+      enemyHTML += '</div>';
+
+      // VS divider
+      const vsHTML = '<div style="font-size:18px;color:#d4a843;font-weight:900">VS</div>';
+
+      // Create overlay
+      const overlay = document.createElement('div');
+      overlay.className = 'battle-overlay';
+      overlay.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:8px 12px;pointer-events:none;z-index:5';
+      overlay.innerHTML = playerHTML + vsHTML + enemyHTML;
+
+      wrap.appendChild(overlay);
+    } catch(e) {
+      console.error('[_injectBattleOverlay]', e);
+    }
+  },
+
   // ===== BATTLE =====
   prepareBattle(stage) {
     const team = Storage.getTeam().filter(id => id);
@@ -1070,6 +1140,9 @@ const App = {
         };
       }
     }
+
+    // Nuclear fix: inject guaranteed HTML fighter overlay on top of canvas
+    try { this._injectBattleOverlay(team, Battle.state); } catch(e) { console.error('[_injectBattleOverlay call]', e); }
 
     if (warContext && typeof Battle !== 'undefined' && Battle.state) {
       try {
@@ -3677,6 +3750,13 @@ App.goNextStage = function() {
 // Show emergency button 15s after battle starts
 const _startBattleBeforeEmergency = App.startBattle;
 App.startBattle = async function() {
+  // Remove pre-battle fighter overlay
+  try {
+    const wrap = document.getElementById('battle-canvas-wrap');
+    const overlay = wrap?.querySelector('.battle-overlay');
+    if (overlay) overlay.remove();
+  } catch(e) {}
+
   // Show emergency return button after 15s in case battle freezes
   const skipBtn = document.getElementById('btn-battle-skip');
   if (skipBtn) {
