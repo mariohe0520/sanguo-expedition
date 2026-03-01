@@ -245,18 +245,7 @@
   100% { transform: scale(1); }
 }
 
-.bui-fighter.hit {
-  animation: bui-hit-shake .35s ease-out;
-}
-@keyframes bui-hit-shake {
-  0% { transform: translateX(0); }
-  15% { transform: translateX(-6px); }
-  30% { transform: translateX(5px); }
-  45% { transform: translateX(-4px); }
-  60% { transform: translateX(3px); }
-  75% { transform: translateX(-2px); }
-  100% { transform: translateX(0); }
-}
+/* ── Hit animation — see enhanced version in dramatic effects section below ── */
 
 .bui-fighter.dead {
   filter: grayscale(1) brightness(.35);
@@ -343,33 +332,10 @@
   to { stroke-dashoffset: 0; }
 }
 
-/* ── Damage Number ── */
-.bui-damage {
-  position: absolute;
-  z-index: 70;
-  font-weight: 900;
-  font-size: 22px;
-  color: #ff6b6b;
-  text-shadow: 0 2px 6px rgba(0,0,0,.6), 0 0 12px rgba(255,107,107,.3);
-  pointer-events: none;
-  animation: bui-damage-pop .8s ease-out forwards;
-  white-space: nowrap;
-  font-family: -apple-system, system-ui, sans-serif;
-}
-.bui-damage.crit {
-  font-size: 30px;
-  color: #ffd700;
-  text-shadow: 0 2px 8px rgba(0,0,0,.7), 0 0 16px rgba(255,215,0,.4);
-}
+/* ── Damage Number — see enhanced version in dramatic effects section below ── */
 .bui-damage.heal {
   color: #4ade80;
   text-shadow: 0 2px 6px rgba(0,0,0,.6), 0 0 12px rgba(74,222,128,.3);
-}
-@keyframes bui-damage-pop {
-  0% { transform: translateY(0) scale(.5); opacity: 0; }
-  15% { transform: translateY(-8px) scale(1.15); opacity: 1; }
-  30% { transform: translateY(-16px) scale(1); opacity: 1; }
-  100% { transform: translateY(-40px) scale(.9); opacity: 0; }
 }
 
 /* ── Crit Flash ── */
@@ -669,6 +635,273 @@
 @keyframes bui-fog-drift {
   0% { transform: translateX(-10px); }
   100% { transform: translateX(10px); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   DRAMATIC BATTLE EFFECTS — Screen Shake, Particles, Combos
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Screen Shake ── */
+.bui-shake-heavy {
+  animation: bui-shake-heavy-anim .4s ease-out !important;
+}
+@keyframes bui-shake-heavy-anim {
+  0% { transform: translate(0,0); }
+  10% { transform: translate(-8px, 5px); }
+  20% { transform: translate(7px, -8px); }
+  30% { transform: translate(-6px, 3px); }
+  40% { transform: translate(5px, -5px); }
+  50% { transform: translate(-3px, 6px); }
+  60% { transform: translate(3px, -2px); }
+  80% { transform: translate(-1px, 2px); }
+  100% { transform: translate(0,0); }
+}
+.bui-shake-light {
+  animation: bui-shake-light-anim .25s ease-out !important;
+}
+@keyframes bui-shake-light-anim {
+  0% { transform: translate(0,0); }
+  25% { transform: translate(-3px, 2px); }
+  50% { transform: translate(3px, -3px); }
+  75% { transform: translate(-2px, 1px); }
+  100% { transform: translate(0,0); }
+}
+
+/* ── Impact Flash (white overlay on portrait) ── */
+.bui-impact-flash {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,.7);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 5;
+  animation: bui-impact-flash-anim .2s ease-out forwards;
+}
+@keyframes bui-impact-flash-anim {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ── Hit Particles ── */
+.bui-hit-particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 75;
+  animation: bui-hit-particle-fly .5s ease-out forwards;
+  box-shadow: 0 0 4px currentColor;
+}
+@keyframes bui-hit-particle-fly {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--dx, 30px), var(--dy, -30px)) scale(0); opacity: 0; }
+}
+
+/* ── Death Particles (bigger burst) ── */
+.bui-death-particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 75;
+  animation: bui-death-particle-fly .6s ease-out forwards;
+  box-shadow: 0 0 6px currentColor;
+}
+@keyframes bui-death-particle-fly {
+  0% { transform: translate(0, 0) scale(1.2); opacity: 1; }
+  50% { opacity: 0.8; }
+  100% { transform: translate(var(--dx, 40px), var(--dy, -40px)) scale(0); opacity: 0; }
+}
+
+/* ── Kill Flash (red screen overlay) ── */
+.bui-kill-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  background: radial-gradient(circle at center, rgba(239,68,68,.35) 0%, rgba(153,27,27,.15) 60%, transparent 100%);
+  animation: bui-kill-flash-anim .3s ease-out forwards;
+}
+@keyframes bui-kill-flash-anim {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ── Combo Counter ── */
+.bui-combo-text {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  animation: bui-combo-appear .6s cubic-bezier(.17,.67,.35,1.5) forwards;
+}
+.bui-combo-num {
+  font-size: 36px;
+  font-weight: 900;
+  font-family: -apple-system, system-ui, sans-serif;
+  color: #ffd700;
+  text-shadow: 0 2px 8px rgba(0,0,0,.8), 0 0 20px rgba(255,215,0,.4);
+  line-height: 1;
+}
+.bui-combo-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,215,0,.7);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-shadow: 0 1px 4px rgba(0,0,0,.6);
+}
+@keyframes bui-combo-appear {
+  0% { transform: scale(2) translateY(-10px); opacity: 0; }
+  25% { transform: scale(1) translateY(0); opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: scale(.9); }
+}
+
+/* ── Battle Start Overlay ── */
+.bui-battle-start-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.75);
+  pointer-events: none;
+  animation: bui-battle-start-flash .3s ease-out;
+}
+.bui-battle-start-text {
+  font-size: 42px;
+  font-weight: 900;
+  color: #ffd700;
+  text-shadow: 0 4px 16px rgba(0,0,0,.9), 0 0 40px rgba(255,215,0,.3);
+  font-family: 'Noto Serif SC', serif;
+  letter-spacing: 12px;
+  animation: bui-battle-start-slam .8s cubic-bezier(.17,.67,.35,1.2) forwards;
+}
+.bui-battle-start-sub {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,215,0,.5);
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  margin-top: 8px;
+  animation: bui-battle-start-fade .8s .3s ease-out both;
+}
+@keyframes bui-battle-start-slam {
+  0% { transform: scale(3); opacity: 0; }
+  30% { transform: scale(1); opacity: 1; }
+  80% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.05); opacity: 0.8; }
+}
+@keyframes bui-battle-start-fade {
+  0% { opacity: 0; transform: translateY(10px); }
+  50% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 1; }
+}
+@keyframes bui-battle-start-flash {
+  0% { background: rgba(255,215,0,.15); }
+  100% { background: rgba(0,0,0,.75); }
+}
+
+/* ── Victory Flash ── */
+.bui-victory-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 79;
+  pointer-events: none;
+  background: radial-gradient(circle at center, rgba(255,215,0,.4) 0%, rgba(255,215,0,.1) 50%, transparent 100%);
+  animation: bui-victory-flash-anim .5s ease-out forwards;
+}
+@keyframes bui-victory-flash-anim {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ── Victory Sub Text ── */
+.bui-victory-sub {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255,215,0,.5);
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  margin-top: 6px;
+  animation: bui-victory-sub-fade .8s .4s ease-out both;
+}
+@keyframes bui-victory-sub-fade {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Victory Light Rays ── */
+.bui-victory-ray {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 150%;
+  background: linear-gradient(180deg, rgba(255,215,0,.3) 0%, transparent 100%);
+  transform-origin: center top;
+  pointer-events: none;
+  z-index: 78;
+  animation: bui-victory-ray-anim 1.5s ease-out forwards;
+}
+@keyframes bui-victory-ray-anim {
+  0% { opacity: 0; height: 0; }
+  30% { opacity: .4; height: 150%; }
+  100% { opacity: 0; height: 150%; }
+}
+
+/* ── Enhanced Damage Number with 3D pop ── */
+.bui-damage {
+  position: absolute;
+  z-index: 70;
+  font-weight: 900;
+  font-size: 24px;
+  color: #ff6b6b;
+  text-shadow:
+    0 2px 6px rgba(0,0,0,.7),
+    0 0 12px rgba(255,107,107,.4),
+    0 0 2px #000;
+  pointer-events: none;
+  animation: bui-damage-pop-enhanced .85s ease-out forwards;
+  white-space: nowrap;
+  font-family: -apple-system, system-ui, sans-serif;
+  -webkit-text-stroke: 1px rgba(0,0,0,.3);
+}
+.bui-damage.crit {
+  font-size: 34px;
+  color: #ffd700;
+  text-shadow:
+    0 2px 8px rgba(0,0,0,.8),
+    0 0 20px rgba(255,215,0,.5),
+    0 0 40px rgba(255,215,0,.2);
+  -webkit-text-stroke: 1px rgba(100,50,0,.3);
+}
+@keyframes bui-damage-pop-enhanced {
+  0% { transform: translateY(0) scale(.3); opacity: 0; }
+  12% { transform: translateY(-12px) scale(1.3); opacity: 1; }
+  25% { transform: translateY(-20px) scale(1); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translateY(-50px) scale(.85); opacity: 0; }
+}
+
+/* ── Enhanced Hit Shake with directional emphasis ── */
+@keyframes bui-hit-shake-enhanced {
+  0% { transform: translateX(0) scale(1); }
+  10% { transform: translateX(-8px) scale(.97); }
+  20% { transform: translateX(7px) scale(.98); }
+  30% { transform: translateX(-5px) scale(.99); }
+  40% { transform: translateX(4px); }
+  50% { transform: translateX(-3px); }
+  60% { transform: translateX(2px); }
+  100% { transform: translateX(0) scale(1); }
+}
+.bui-fighter.hit {
+  animation: bui-hit-shake-enhanced .4s ease-out !important;
 }
 
 /* ── Hide canvas when BattleUI is active ── */

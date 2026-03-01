@@ -20,7 +20,7 @@ const Leaderboard = {
   generateRivals() {
     const week = this.getWeekNumber();
     const rng = this.seededRandom(week * 7919);
-    const heroIds = Object.keys(HEROES).filter(id => HEROES[id].rarity >= 2);
+    const heroIds = Object.keys(HEROES).filter(id => HEROES[id].rarity >= 2 && !HEROES[id].mystery && !HEROES[id].locked);
 
     return this.RIVAL_NAMES.map((name, i) => {
       const basePower = 1500 + i * 500;
@@ -179,7 +179,7 @@ const FormationAdvisor = {
     const scored = heroIds.map(id => {
       const hero = HEROES[id];
       const data = roster[id];
-      if (!hero) return null;
+      if (!hero || hero.mystery || hero.locked) return null;
 
       let score = 0;
       const reasons = [];
@@ -457,25 +457,112 @@ const App = {
           const progress = Storage.getCampaignProgress();
           const drop = Equipment.generateDrop(progress.chapter || 1, false);
           if (drop) {
-            Storage.addEquipment(drop);
-            const tmpl = Equipment.TEMPLATES[drop.templateId];
-            lootMsg += ' ' + (tmpl?.name || '装备');
+            const added = Storage.addEquipment(drop);
+            if (added === false) { lootMsg += '装备库已满'; }
+            else { const tmpl = Equipment.TEMPLATES[drop.templateId]; lootMsg += (tmpl?.name || '装备'); }
           }
         } catch(e) { console.error('[idle loot]', e); }
       }
     }
-    // Feature 4: Show shard drops
-    let shardMsg = '';
-    if (result.shardDrops && result.shardDrops.length > 0) {
-      shardMsg = ' 碎片: ' + result.shardDrops.map(s => s.heroName + 'x' + s.amount).join(', ');
+
+    // Show ceremony modal
+    this._pendingOfflineResult = result;
+    this._pendingOfflineLoot = lootMsg;
+    const modal = document.getElementById('offline-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      // Duration text
+      const mins = Idle.getTimeSinceCollect ? Idle.getTimeSinceCollect() : 0;
+      const hours = (mins / 60).toFixed(1);
+      const durationEl = document.getElementById('offline-duration');
+      if (durationEl) durationEl.textContent = mins >= 60 ? hours + '小时' : mins + '分钟';
+      // Animate counting
+      this._animateCount(document.getElementById('offline-gold-val'), result.gold, 1200);
+      this._animateCount(document.getElementById('offline-exp-val'), result.exp, 1000);
+      // Loot row
+      const lootRow = document.getElementById('offline-loot-row');
+      if (lootMsg && lootRow) {
+        lootRow.classList.remove('hidden');
+        document.getElementById('offline-loot-val').textContent = lootMsg;
+      } else if (lootRow) {
+        lootRow.classList.add('hidden');
+      }
+      // Coin shower
+      this._startCoinShower(document.getElementById('coin-shower'), Math.min(Math.floor(result.gold / 50), 15));
+    } else {
+      // Fallback to toast if modal element not found
+      this.toast('领取 ' + result.gold + '金币 + ' + result.exp + '经验！');
     }
-    let expedMsg = '';
-    if (result.expeditionHeroes && result.expeditionHeroes.length > 0) {
-      expedMsg = ' [远征' + result.expeditionHeroes.length + '人加成]';
-    }
-    this.toast('领取 ' + result.gold + '金币 + ' + result.exp + '经验！' + expedMsg + (lootMsg ? ' 获得:' + lootMsg : '') + shardMsg);
     document.getElementById('idle-card').classList.add('hidden');
+  },
+
+  confirmOfflineRewards() {
+    const modal = document.getElementById('offline-modal');
+    if (modal) modal.classList.add('hidden');
+    // Show gold gain float
+    this.showGoldGain(this._pendingOfflineResult?.gold || 0);
+    this._pendingOfflineResult = null;
+    this._pendingOfflineLoot = '';
     this.renderHome();
+  },
+
+  // 金币雨动画
+  _startCoinShower(container, count) {
+    if (!container) return;
+    container.innerHTML = '';
+    const emojis = ['\u{1FA99}', '\u{1F4B0}', '\u2728'];
+    for (let i = 0; i < Math.max(count, 5); i++) {
+      setTimeout(() => {
+        const coin = document.createElement('div');
+        coin.className = 'coin-particle';
+        coin.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        coin.style.left = Math.random() * 100 + '%';
+        coin.style.animationDuration = (0.8 + Math.random() * 0.8) + 's';
+        container.appendChild(coin);
+        setTimeout(() => coin.remove(), 2000);
+      }, i * 80);
+    }
+  },
+
+  // 数字滚动动画
+  _animateCount(el, targetValue, duration) {
+    if (!el) return;
+    duration = duration || 1000;
+    const start = Date.now();
+    const timer = setInterval(() => {
+      const elapsed = Date.now() - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.floor(targetValue * eased).toLocaleString();
+      if (progress >= 1) clearInterval(timer);
+    }, 16);
+  },
+
+  // 显示出战台词（战斗开始后1.5秒）
+  _showBattleQuote(heroId) {
+    const quotes = (window.HERO_QUOTES || {})[heroId] || (window.HERO_QUOTES || {})._default;
+    if (!quotes) return;
+    setTimeout(() => {
+      this.toast('「' + quotes.battle + '」', 2500);
+    }, 1500);
+  },
+
+  // 金币获取飘字动画
+  showGoldGain(amount, sourceEl) {
+    if (!amount || amount <= 0) return;
+    const el = document.createElement('div');
+    el.className = 'gold-gain-float';
+    el.textContent = '+' + amount.toLocaleString() + ' \u{1FA99}';
+    if (sourceEl) {
+      const rect = sourceEl.getBoundingClientRect();
+      el.style.left = rect.left + rect.width / 2 + 'px';
+      el.style.top = rect.top + 'px';
+    } else {
+      el.style.right = '20px';
+      el.style.bottom = '100px';
+    }
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1500);
   },
 
   // ===== CAMPAIGN =====
@@ -877,6 +964,36 @@ const App = {
         Campaign.makeDestinyChoice(chapterId, opt.id);
         modal.classList.add('hidden');
         if (opt.reward.gold) Storage.addGold(opt.reward.gold);
+        // loyalty: increase sincerity for target hero in gacha system
+        if (opt.reward.loyalty) {
+          try {
+            const gachaState = Storage.getGachaState();
+            // Apply loyalty as a general sincerity boost across all visitable heroes
+            // If hero_hint is also present, focus the boost on that hero
+            const targetHero = opt.reward.hero_hint || null;
+            if (targetHero && gachaState.visits) {
+              if (!gachaState.visits[targetHero]) {
+                gachaState.visits[targetHero] = { sincerity: 0, dialogueIdx: 0, attempts: 0, failedVisits: 0 };
+              }
+              gachaState.visits[targetHero].sincerity = Math.min(
+                (gachaState.visits[targetHero].sincerity || 0) + Math.floor(opt.reward.loyalty / 5),
+                100
+              );
+              Storage.saveGachaState(gachaState);
+            }
+          } catch(e) { console.error('[Destiny loyalty]', e); }
+        }
+        // hero_hint: show a hint to visit a specific hero in gacha
+        if (opt.reward.hero_hint) {
+          const hintHero = HEROES[opt.reward.hero_hint];
+          if (hintHero) {
+            setTimeout(() => this.toast('天命提示：前往求贤馆拜访' + hintHero.name + '！', 4000), 1000);
+          }
+        }
+        // troops: convert troops to gold (10:1 ratio)
+        if (opt.reward.troops) {
+          Storage.addGold(opt.reward.troops * 10);
+        }
         this.toast('天命已定：' + opt.text);
         this.renderCampaign();
       };
@@ -928,7 +1045,21 @@ const App = {
     // Pass territory ID for DynamicBattlefield terrain mapping
     const territoryId = stage._territoryId || null;
     const bossEnhanced = stage.boss_enhanced || null;
-    Battle.init(team, stage.enemies, terrain, weather, enemyScale, territoryId, bossEnhanced);
+    const warContext = (typeof WarDirector !== 'undefined')
+      ? WarDirector.rollScenario(stage, chapter)
+      : null;
+    stage._warContext = warContext;
+    Battle.init(team, stage.enemies, terrain, weather, enemyScale, territoryId, bossEnhanced, warContext);
+    if (warContext && typeof Battle !== 'undefined') {
+      Battle.addLog(`🎯 战争导演：${warContext.name} · ${warContext.desc}`);
+      const battleLog = document.getElementById('battle-log');
+      if (battleLog) {
+        const warPreview =
+          '<div class="log-entry" style="color:#fbbf24">🎯 战略态势：' + warContext.name + '</div>' +
+          '<div class="log-entry" style="color:#93c5fd">' + warContext.desc + '</div>';
+        battleLog.innerHTML = warPreview + battleLog.innerHTML;
+      }
+    }
 
     // Reset bond display for new battle
     try {
@@ -946,14 +1077,14 @@ const App = {
         if (battlePage && Battle.state && Battle.state.player && Battle.state.enemy) {
           try {
             BattleUI.init(Battle.state);
-            console.log('[Battle] Premium BattleUI renderer active');
+            // BattleUI renderer active
           } catch(initErr) {
             console.warn('[BattleUI] Init failed, falling back to simple renderer:', initErr.message);
             // Ensure cleanup on failure so simple renderer still works
             try { BattleUI.destroy(); } catch(e2) {}
           }
         } else {
-          console.log('[Battle] Using simple DOM renderer (missing DOM elements)');
+          // Simple DOM renderer fallback
         }
       }
     } catch(e) { console.error('[BattleUI init]', e); }
@@ -1115,6 +1246,12 @@ const App = {
       logEl.scrollTop = logEl.scrollHeight;
     };
 
+    // Show leader battle quote
+    const team = Storage.getTeam().filter(Boolean);
+    if (team.length > 0) {
+      this._showBattleQuote(team[0]);
+    }
+
     // Show speed controls during battle
     this._battleSpeed = this._battleSpeed || 1;
     const spdBar = document.getElementById('battle-speed-bar');
@@ -1147,6 +1284,8 @@ const App = {
       const expReward = Math.floor((stratReducedLoot ? Math.floor(stage.reward.exp * 0.5) : stage.reward.exp) * replayMult);
       Storage.addGold(goldReward);
       Storage.addExp(expReward);
+      // Gold gain float animation
+      if (goldReward > 0) this.showGoldGain(goldReward);
       const shardCount = alreadyCleared ? 0 : (stratReducedLoot ? 1 : 3);
       if (stage.reward.hero_shard && shardCount > 0) Storage.addShards(stage.reward.hero_shard, shardCount);
       Campaign.completeStage(stage.id, stageChapterId);
@@ -1158,10 +1297,14 @@ const App = {
         const chapter = Campaign.getCurrentChapter();
         const drop = Equipment.generateDrop(chapter.id, !!stage.boss);
         if (drop) {
-          Storage.addEquipment(drop);
-          const tmpl = Equipment.TEMPLATES[drop.templateId];
-          const rarInfo = Equipment.RARITIES[tmpl?.rarity || 1];
-          resultText += '\n获得装备: ' + (tmpl?.emoji || '') + ' ' + (tmpl?.name || '???') + ' (' + rarInfo.label + ')';
+          const added = Storage.addEquipment(drop);
+          if (added === false) {
+            resultText += '\n装备库已满(上限500)，请先分解旧装备！';
+          } else {
+            const tmpl = Equipment.TEMPLATES[drop.templateId];
+            const rarInfo = Equipment.RARITIES[tmpl?.rarity || 1];
+            resultText += '\n获得装备: ' + (tmpl?.emoji || '') + ' ' + (tmpl?.name || '???') + ' (' + rarInfo.label + ')';
+          }
         }
       }
 
@@ -1209,7 +1352,10 @@ const App = {
       const stars = data.stars || hero.rarity;
       const div = document.createElement('div');
       div.className = 'hero-card rarity-' + hero.rarity;
-      div.innerHTML = '<div class="hero-emoji">' + Visuals.heroPortrait(id, 'sm', hero.rarity) + '</div>' +
+      div.setAttribute('data-rarity', String(hero.rarity));
+      const rarityLabels = {1:'N',2:'R',3:'SR',4:'SSR',5:'UR'};
+      div.innerHTML = '<span class="hero-rarity-badge rarity-' + (rarityLabels[hero.rarity]||hero.rarity) + '">' + (rarityLabels[hero.rarity]||'') + '</span>' +
+        '<div class="hero-emoji">' + Visuals.heroPortrait(id, 'sm', hero.rarity) + '</div>' +
         '<div class="hero-info">' +
           '<div class="hero-name">' + hero.name + (hero.title ? ' · ' + hero.title : '') + '</div>' +
           '<div class="hero-sub">Lv.' + data.level + ' · ' + Visuals.unitIcon(hero.unit) + ' ' + (UNIT_TYPES[hero.unit]?.name || '') + ' · ' + Visuals.factionIcon(hero.faction) + ' ' + (FACTIONS[hero.faction]?.name || '') + '</div>' +
@@ -1364,17 +1510,21 @@ const App = {
       const hero = heroId ? HEROES[heroId] : null;
       const div = document.createElement('div');
       const isSelected = this.selectedSlot === i;
-      div.className = 'hero-card' + (hero ? ' rarity-' + hero.rarity : '') + (isSelected ? ' slot-selected' : '');
+      div.className = 'hero-card' + (hero ? ' rarity-' + hero.rarity : '') + (isSelected ? ' slot-selected' : '') + (i < 2 ? ' team-slot front-row' : ' team-slot back-row') + (hero ? ' has-hero' : '');
+      if (hero) div.setAttribute('data-rarity', String(hero.rarity));
       if (isSelected) div.style.cssText = 'border:2px solid var(--gold);box-shadow:0 0 12px rgba(212,168,67,.5)';
 
+      const rowLabel = i < 2 ? '<span class="row-label front">前排</span> ' : '<span class="row-label back">后排</span> ';
       if (hero) {
-        div.innerHTML = '<div class="hero-emoji">' + Visuals.heroPortrait(heroId, 'sm', hero.rarity) + '</div>' +
-          '<div class="hero-info"><div class="hero-name">' + labels[i] + ': ' + hero.name + '</div>' +
+        const rarityLabels = {1:'N',2:'R',3:'SR',4:'SSR',5:'UR'};
+        div.innerHTML = '<span class="hero-rarity-badge rarity-' + (rarityLabels[hero.rarity]||hero.rarity) + '">' + (rarityLabels[hero.rarity]||'') + '</span>' +
+          '<div class="hero-emoji">' + Visuals.heroPortrait(heroId, 'sm', hero.rarity) + '</div>' +
+          '<div class="hero-info"><div class="hero-name">' + rowLabel + labels[i] + ': ' + hero.name + '</div>' +
           '<div class="hero-sub">' + (UNIT_TYPES[hero.unit]?.name || '') + ' · ' + (FACTIONS[hero.faction]?.name || '') +
           ' <span style="color:var(--dim);font-size:11px">(点击选中换将)</span></div></div>';
       } else {
         div.innerHTML = '<div class="hero-emoji" style="opacity:.5;font-size:28px;color:var(--gold)">+</div>' +
-          '<div class="hero-info"><div class="hero-name" style="color:var(--gold)">' + labels[i] + ': ' +
+          '<div class="hero-info"><div class="hero-name" style="color:var(--gold)">' + rowLabel + labels[i] + ': ' +
           (isSelected ? '👆 选择下方武将' : '点击添加') + '</div></div>';
       }
       // Both empty and occupied slots are clickable — select slot for assignment
@@ -1429,8 +1579,11 @@ const App = {
       const hero = HEROES[id];
       const div = document.createElement('div');
       div.className = 'hero-card rarity-' + hero.rarity;
+      div.setAttribute('data-rarity', String(hero.rarity));
       div.style.cursor = 'pointer';
-      div.innerHTML = '<div class="hero-emoji">' + Visuals.heroPortrait(id, 'sm', hero.rarity) + '</div>' +
+      const rarityLabels = {1:'N',2:'R',3:'SR',4:'SSR',5:'UR'};
+      div.innerHTML = '<span class="hero-rarity-badge rarity-' + (rarityLabels[hero.rarity]||hero.rarity) + '">' + (rarityLabels[hero.rarity]||'') + '</span>' +
+        '<div class="hero-emoji">' + Visuals.heroPortrait(id, 'sm', hero.rarity) + '</div>' +
         '<div class="hero-info"><div class="hero-name">' + hero.name + '</div>' +
         '<div class="hero-sub">' + (UNIT_TYPES[hero.unit]?.name || '') + ' · ' + (FACTIONS[hero.faction]?.name || '') + '</div></div>';
       div.onclick = () => {
@@ -1446,6 +1599,12 @@ const App = {
         this.selectedSlot = -1;
         this.renderTeam();
         this.toast(hero.name + ' → ' + labels[targetSlot]);
+        // Soft formation constraint warning
+        if (hero.unit === 'mage' && targetSlot < 2) {
+          setTimeout(() => this.toast('提示：法师/术士放后排(位3-5)更安全', 3500), 800);
+        } else if (hero.unit === 'shield' && targetSlot >= 2) {
+          setTimeout(() => this.toast('提示：盾兵放前排(位1-2)更能发挥作用', 3500), 800);
+        }
       };
       avail.appendChild(div);
     }
@@ -1540,11 +1699,14 @@ const App = {
 
       const div = document.createElement('div');
       div.className = 'hero-card rarity-' + hero.rarity;
+      div.setAttribute('data-rarity', String(hero.rarity));
       // Feature 5: Show pity progress indicator
       const pityInfo = status.failedVisits > 0
         ? ' · <span style="color:' + (status.pityGuaranteed ? 'var(--gold)' : 'var(--dim)') + '">诚意' + status.failedVisits + '/' + status.pityThreshold + (status.pityGuaranteed ? ' 必成!' : '') + '</span>'
         : '';
-      div.innerHTML = '<div class="hero-emoji">' + Visuals.heroPortrait(id, 'sm', hero.rarity) + '</div>' +
+      const rarityLabelsG = {1:'N',2:'R',3:'SR',4:'SSR',5:'UR'};
+      div.innerHTML = '<span class="hero-rarity-badge rarity-' + (rarityLabelsG[hero.rarity]||hero.rarity) + '">' + (rarityLabelsG[hero.rarity]||'') + '</span>' +
+        '<div class="hero-emoji">' + Visuals.heroPortrait(id, 'sm', hero.rarity) + '</div>' +
         '<div class="hero-info">' +
           '<div class="hero-name">' + hero.name + ' · ' + hero.title +
             (owned ? ' <span style="color:var(--shu)">已有</span>' : '') +
@@ -2079,7 +2241,7 @@ const App = {
       terrain: floorData.terrain,
       weather: floorData.weather,
       _dungeonFloor: true,
-      _scaleMult: floorData.scaleMult,
+      _scaleMult: floorData.isBossFloor ? floorData.boss.scaleMult : floorData.scaleMult,
     };
     this.prepareBattle(this.currentStage);
     this.switchPage('battle');
@@ -2214,7 +2376,7 @@ const App = {
       'raid_wuzhang': 'simayi',
       'raid_hulao': 'lvbu',
       'raid_nanman': 'zhangjiao',  // Use Zhang Jiao as tanky mage stand-in
-      'raid_yiling': 'luXun',
+      'raid_yiling': 'luxun',
       'raid_sima': 'simayi',
     };
     const bossHeroId = bossHeroMap[boss.id] || 'lvbu';
@@ -3088,8 +3250,11 @@ App.startBattle = async function() {
       const alreadyCleared2 = !stage._isMapBattle && !stage._dungeonFloor && !stage._dailyDungeon && !stage._arenaFight && !stage._raidBoss &&
         (stageChapterId2 < progress2.chapter || (stageChapterId2 === progress2.chapter && stage.id < progress2.stage));
       const replayMult2 = alreadyCleared2 ? 0.1 : 1;
-      const adjGold = Math.floor((stage.reward?.gold || 0) * replayMult2);
-      const adjExp = Math.floor((stage.reward?.exp || 0) * replayMult2);
+      const warMult = (typeof WarDirector !== 'undefined')
+        ? WarDirector.getRewardMultiplier(stage._warContext)
+        : { gold: 1, exp: 1 };
+      const adjGold = Math.floor((stage.reward?.gold || 0) * replayMult2 * (warMult.gold || 1));
+      const adjExp = Math.floor((stage.reward?.exp || 0) * replayMult2 * (warMult.exp || 1));
 
       try { Storage.addGold(adjGold); } catch(e) { console.error('[addGold]', e); }
       try { Storage.addExp(adjExp); } catch(e) { console.error('[addExp]', e); }
@@ -3130,10 +3295,9 @@ App.startBattle = async function() {
               const lvl = KingdomMap.TERRITORIES[tId]?.level || 1;
               const drop = Equipment.generateDrop(Math.min(lvl, 10), !!stage.boss);
               if (drop) {
-                Storage.addEquipment(drop);
-                const tmpl = Equipment.TEMPLATES[drop.templateId];
-                const rarInfo = Equipment.RARITIES[tmpl?.rarity || 1];
-                detailText += '\n获得: ' + (tmpl?.name || '???') + ' (' + (rarInfo?.label || '') + ')';
+                const added = Storage.addEquipment(drop);
+                if (added === false) { detailText += '\n装备库已满(上限500)，请先分解旧装备！'; }
+                else { const tmpl = Equipment.TEMPLATES[drop.templateId]; const rarInfo = Equipment.RARITIES[tmpl?.rarity || 1]; detailText += '\n获得: ' + (tmpl?.name || '???') + ' (' + (rarInfo?.label || '') + ')'; }
               }
             } catch(e) { console.error('[Equipment drop]', e); }
           }
@@ -3145,10 +3309,9 @@ App.startBattle = async function() {
           if (stage._dailyDungeon === 'material' && typeof Equipment !== 'undefined') {
             const drop = Equipment.generateDrop(3, false);
             if (drop) {
-              Storage.addEquipment(drop);
-              const tmpl = Equipment.TEMPLATES[drop.templateId];
-              const rarInfo = Equipment.RARITIES[tmpl?.rarity || 1];
-              detailText += '\n获得: ' + (tmpl?.name || '???') + ' (' + (rarInfo?.label || '') + ')';
+              const added = Storage.addEquipment(drop);
+              if (added === false) { detailText += '\n装备库已满(上限500)，请先分解旧装备！'; }
+              else { const tmpl = Equipment.TEMPLATES[drop.templateId]; const rarInfo = Equipment.RARITIES[tmpl?.rarity || 1]; detailText += '\n获得: ' + (tmpl?.name || '???') + ' (' + (rarInfo?.label || '') + ')'; }
             }
           }
           if (typeof Seasonal !== 'undefined') Seasonal.addPassXP(50);
@@ -3173,19 +3336,26 @@ App.startBattle = async function() {
             try {
               const drop = Equipment.generateDrop(chapter.id, !!stage.boss);
               if (drop) {
-                Storage.addEquipment(drop);
-                const tmpl = Equipment.TEMPLATES[drop.templateId];
-                const rarInfo = Equipment.RARITIES[tmpl?.rarity || 1];
-                detailText += '\n获得: ' + (tmpl?.name || '???') + ' (' + (rarInfo?.label || '') + ')';
+                const added = Storage.addEquipment(drop);
+                if (added === false) { detailText += '\n装备库已满(上限500)，请先分解旧装备！'; }
+                else { const tmpl = Equipment.TEMPLATES[drop.templateId]; const rarInfo = Equipment.RARITIES[tmpl?.rarity || 1]; detailText += '\n获得: ' + (tmpl?.name || '???') + ' (' + (rarInfo?.label || '') + ')'; }
               }
             } catch(e) { console.error('[Equipment drop]', e); }
           }
         }
       } catch(e) { console.error('[Mode handling]', e); }
 
-      document.getElementById('result-detail').innerHTML = detailText.replace(/\n/g, '<br>');
+      const resultDetailEl = document.getElementById('result-detail');
+      if (resultDetailEl) resultDetailEl.innerHTML = detailText.replace(/\n/g, '<br>');
 
-      try { Storage.recordWin(); } catch(e) {}
+      try { Storage.recordWin(); } catch(e) { console.warn('[recordWin]', e); }
+      try {
+        if (typeof WarDirector !== 'undefined') {
+          const warRes = WarDirector.onBattleComplete('victory', stage._warContext || null);
+          if (warRes) detailText += '\n⚔️ 战争演算 +'+ warRes.gainedPoints + '（连胜 ' + warRes.streak + '）';
+        }
+      } catch (e) { console.error('[WarDirector victory]', e); }
+      if (resultDetailEl) resultDetailEl.innerHTML = detailText.replace(/\n/g, '<br>');
       // Hero Personality: post-battle mood/loyalty update
       try {
         if (typeof HeroPersonality !== 'undefined') {
@@ -3197,9 +3367,9 @@ App.startBattle = async function() {
           }
         }
       } catch(e) { console.error('[Personality victory]', e); }
-      try { DailyMissions.trackProgress('stages'); } catch(e) {}
+      try { DailyMissions.trackProgress('stages'); } catch(e) { console.warn('[trackProgress stages]', e); }
       if (stage.boss) {
-        try { Storage.recordBossWin(); DailyMissions.trackProgress('boss'); } catch(e) {}
+        try { Storage.recordBossWin(); DailyMissions.trackProgress('boss'); } catch(e) { console.warn('[recordBossWin]', e); }
       }
       try {
         if (typeof Achievements !== 'undefined') {
@@ -3236,7 +3406,14 @@ App.startBattle = async function() {
         console.error('[Defeat handling]', e);
       }
 
-      try { Storage.recordLoss(); } catch(e) {}
+      try { Storage.recordLoss(); } catch(e) { console.warn('[recordLoss]', e); }
+      try {
+        if (typeof WarDirector !== 'undefined') {
+          const warRes = WarDirector.onBattleComplete('defeat', stage._warContext || null);
+          const detEl = document.getElementById('result-detail');
+          if (warRes && detEl) detEl.textContent += ' · 战争演算 +' + warRes.gainedPoints;
+        }
+      } catch (e) { console.error('[WarDirector defeat]', e); }
       // Hero Personality: post-battle mood/loyalty update (defeat)
       try {
         if (typeof HeroPersonality !== 'undefined') {
@@ -3468,9 +3645,8 @@ App.goNextStage = function() {
   }
 };
 
-// Show emergency button 10s after battle starts
-const _origStartBattle2 = App.startBattle;
-const _wrappedStart = App.startBattle;
+// Show emergency button 15s after battle starts
+const _startBattleBeforeEmergency = App.startBattle;
 App.startBattle = async function() {
   // Show emergency return button after 15s in case battle freezes
   const skipBtn = document.getElementById('btn-battle-skip');
@@ -3478,7 +3654,7 @@ App.startBattle = async function() {
     skipBtn.style.display = 'none';
     setTimeout(() => { if (skipBtn) skipBtn.style.display = 'block'; }, 15000);
   }
-  return _wrappedStart.call(this);
+  return _startBattleBeforeEmergency.call(this);
 };
 
 // ===== BUTTON RIPPLE EFFECT =====
@@ -3753,14 +3929,79 @@ App._showDefectionEvent = function(defectedIds) {
 };
 
 // Hero Personality: daily decay check on init
-App._origInit = App.init;
+// Note: App.init is already wrapped at line ~3404 for tutorial/playtime.
+// Instead of re-wrapping (creating fragile chains), extend the existing wrapper.
+App._personalityInitDone = false;
+const _initForPersonality = App.init;
 App.init = function() {
-  this._origInit();
+  _initForPersonality.call(this);
+  if (!App._personalityInitDone) {
+    App._personalityInitDone = true;
+    try {
+      if (typeof HeroPersonality !== 'undefined') {
+        HeroPersonality.dailyLoyaltyDecay();
+      }
+    } catch(e) { console.error('[Personality daily]', e); }
+  }
+};
+
+App.upgradeDoctrine = function(path) {
   try {
-    if (typeof HeroPersonality !== 'undefined') {
-      HeroPersonality.dailyLoyaltyDecay();
+    if (typeof WarDirector === 'undefined') return;
+    const labels = { aggression: '进攻', resilience: '守御', command: '统御' };
+    const res = WarDirector.upgradeDoctrine(path);
+    if (!res || !res.ok) {
+      this.toast(res?.msg || '无法升级');
+      return;
     }
-  } catch(e) { console.error('[Personality daily]', e); }
+    this.toast(`⚔️ ${labels[path] || path}学派提升至 Lv.${res.level}`);
+    this.renderHome();
+  } catch (e) {
+    console.error('[upgradeDoctrine]', e);
+    this.toast('升级失败，请重试');
+  }
+};
+
+// War Director: inject long-term progression card into home page
+App._renderHomeWithWarDirector = App.renderHome;
+App.renderHome = function() {
+  App._renderHomeWithWarDirector.call(this);
+  try {
+    if (typeof WarDirector === 'undefined') return;
+    const homePage = document.getElementById('page-home');
+    if (!homePage) return;
+    const summary = WarDirector.getHomeSummary();
+    let card = document.getElementById('war-director-card');
+    if (!card) {
+      card = document.createElement('div');
+      card.id = 'war-director-card';
+      card.className = 'card';
+      homePage.appendChild(card);
+    }
+    card.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+      '<div style="font-size:15px;font-weight:700;color:var(--gold)">⚔️ 战争导演系统</div>' +
+      '<div style="font-size:12px;color:var(--dim)">连胜 ' + summary.streak + ' · ' + summary.momentumTitle + '</div>' +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--dim);margin-bottom:8px">' + summary.bonusText + '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px;font-size:11px;color:var(--dim)">' +
+      '<div class="card" style="padding:6px;background:var(--card2)">魏势 ' + (summary.momentum.wei >= 0 ? '+' : '') + summary.momentum.wei + '</div>' +
+      '<div class="card" style="padding:6px;background:var(--card2)">蜀势 ' + (summary.momentum.shu >= 0 ? '+' : '') + summary.momentum.shu + '</div>' +
+      '<div class="card" style="padding:6px;background:var(--card2)">吴势 ' + (summary.momentum.wu >= 0 ? '+' : '') + summary.momentum.wu + '</div>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:12px">' +
+      '<div class="card" style="padding:8px;background:var(--card2)">进攻学派 Lv.' + (summary.doctrines.aggression || 0) + '</div>' +
+      '<div class="card" style="padding:8px;background:var(--card2)">守御学派 Lv.' + (summary.doctrines.resilience || 0) + '</div>' +
+      '<div class="card" style="padding:8px;background:var(--card2)">统御学派 Lv.' + (summary.doctrines.command || 0) + '</div>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">' +
+      '<button class="btn btn-sm" onclick="App.upgradeDoctrine(\'aggression\')">进攻+1</button>' +
+      '<button class="btn btn-sm" onclick="App.upgradeDoctrine(\'resilience\')">守御+1</button>' +
+      '<button class="btn btn-sm" onclick="App.upgradeDoctrine(\'command\')">统御+1</button>' +
+      '</div>' +
+      '<div style="margin-top:10px;font-size:12px;color:var(--text)">战争积分: <b style="color:var(--gold)">' + summary.points +
+      '</b> · 可分配军略点: <b style="color:#22c55e">' + summary.doctrinePoints + '</b></div>';
+  } catch (e) { console.error('[WarDirector home card]', e); }
 };
 
 // Boot

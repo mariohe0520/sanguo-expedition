@@ -1,6 +1,11 @@
 /**
- * battle-pixi.js — PixiJS WebGL Battle Renderer
- * Overrides the Canvas2D BattleCanvas with GPU-accelerated rendering.
+ * battle-pixi.js — PixiJS WebGL Battle Renderer (DISABLED)
+ *
+ * This entire file is intentionally disabled (early return on line 15).
+ * The Canvas2D renderer + SVG cut-in system provides better cross-device
+ * compatibility. This code is preserved for potential future re-enablement
+ * if PixiJS mobile rendering issues are resolved.
+ *
  * Requires PIXI (v7.3.2) to be loaded before this script.
  */
 (function () {
@@ -1392,6 +1397,6 @@
 
   /* ── Install ────────────────────────────────────────────── */
   window.BattleCanvas = PixiBattle;
-  console.log('[battle-pixi] PixiJS WebGL renderer installed');
+  // PixiJS WebGL renderer installed
 
 })();

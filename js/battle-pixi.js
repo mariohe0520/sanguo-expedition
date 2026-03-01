@@ -1397,6 +1397,6 @@
 
   /* ── Install ────────────────────────────────────────────── */
   window.BattleCanvas = PixiBattle;
-  console.log('[battle-pixi] PixiJS WebGL renderer installed');
+  // PixiJS WebGL renderer installed
 
 })();

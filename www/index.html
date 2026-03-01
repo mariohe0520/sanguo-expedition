@@ -507,6 +507,33 @@
 <!-- ===== DESTINY CHOICE OVERLAY ===== -->
 <div id="destiny-choice-overlay" class="hidden"></div>
 
+<!-- ===== OFFLINE REWARDS MODAL ===== -->
+<div id="offline-modal" class="destiny-modal hidden">
+  <div class="offline-modal-content">
+    <div class="offline-title">&#9876;&#65039; 将士归来</div>
+    <div class="offline-subtitle">离线 <span id="offline-duration">0</span>，带回了：</div>
+    <div class="offline-rewards">
+      <div class="offline-reward-item">
+        <span class="reward-icon">&#129689;</span>
+        <span class="reward-label">金币</span>
+        <span id="offline-gold-val" class="reward-value reward-counting">0</span>
+      </div>
+      <div class="offline-reward-item" id="offline-exp-row">
+        <span class="reward-icon">&#11088;</span>
+        <span class="reward-label">经验</span>
+        <span id="offline-exp-val" class="reward-value reward-counting">0</span>
+      </div>
+      <div class="offline-reward-item hidden" id="offline-loot-row">
+        <span class="reward-icon">&#128188;</span>
+        <span class="reward-label">装备</span>
+        <span id="offline-loot-val" class="reward-value" style="font-size:14px;color:#a78bfa">-</span>
+      </div>
+    </div>
+    <div class="offline-coin-shower" id="coin-shower" style="position:absolute;inset:0;pointer-events:none;overflow:hidden"></div>
+    <button class="btn-collect" onclick="App.confirmOfflineRewards()">领取</button>
+  </div>
+</div>
+
 <!-- ===== TOAST ===== -->
 <div id="toast" class="toast hidden"></div>
 
@@ -532,42 +559,56 @@
 }
 </script>
 
-<script src="js/heroes.js?v=3"></script>
-<script src="js/visuals.js?v=3"></script>
-<script src="js/storage.js"></script>
-<script src="js/battle.js"></script>
-<script src="js/battle-sound.js"></script>
-<script src="js/bgm-ui-sound.js"></script>
-<script src="js/opening-cinematic.js"></script>
-<script src="js/campaign.js"></script>
-<script src="js/kingdom-map.js?v=2"></script>
-<script src="js/gacha.js"></script>
-<script src="js/idle.js"></script>
-<script src="js/equipment.js"></script>
-<script src="js/dungeon.js"></script>
-<script src="js/city.js"></script>
-<script src="js/arena.js"></script>
-<script src="js/seasonal.js"></script>
-<script src="js/skilltree.js"></script>
-<script src="js/portraits.js?v=2"></script>
-<script src="js/skill-cutin.js"></script>
-<script src="js/strategy.js"></script>
-<script src="js/hero-personality.js"></script>
-<script src="js/destiny.js"></script>
-<script src="js/narrative.js"></script>
-<script src="js/dynamic-battlefield.js"></script>
+<!-- ===== Configuration Data (load first) ===== -->
+<script src="js/config/game-balance.js"></script>
+<script src="js/config/heroes-data.js"></script>
+<script src="js/config/levels-data.js"></script>
+<script src="js/config/equipment-data.js"></script>
+
+<!-- ===== Core Systems ===== -->
+<script src="js/core/storage.js"></script>
+<script src="js/core/idle.js"></script>
+<script src="js/core/battle.js"></script>
+
+<!-- ===== Game Systems ===== -->
+<script src="js/systems/heroes.js?v=3"></script>
+<script src="js/systems/campaign.js"></script>
+<script src="js/systems/gacha.js"></script>
+<script src="js/systems/arena.js"></script>
+<script src="js/systems/dungeon.js"></script>
+<script src="js/systems/equipment.js"></script>
+<script src="js/systems/destiny.js"></script>
+<script src="js/systems/city.js"></script>
+<script src="js/systems/seasonal.js"></script>
+<script src="js/systems/skilltree.js"></script>
+<script src="js/systems/strategy.js"></script>
+
+<!-- ===== Extras ===== -->
+<script src="js/extras/hero-personality.js"></script>
+<script src="js/extras/narrative.js"></script>
+<script src="js/extras/kingdom-map.js?v=2"></script>
+<script src="js/extras/premium-upgrade.js?v=1"></script>
+
+<!-- ===== UI / Rendering ===== -->
+<script src="js/ui/visuals.js?v=3"></script>
+<script src="js/ui/portraits.js?v=2"></script>
+<script src="js/ui/battle-sound.js"></script>
+<script src="js/ui/bgm-ui-sound.js"></script>
+<script src="js/ui/opening-cinematic.js"></script>
+<script src="js/ui/skill-cutin.js"></script>
+<script src="js/ui/dynamic-battlefield.js"></script>
+<script src="js/ui/war-director.js?v=1"></script>
 
 <!-- 3D Battle System - DISABLED -->
 <!-- <script type="module" src="js/battle3d/battle-scene.js"></script> -->
 <!-- <script src="js/battle3d/launcher.js"></script> -->
-<!-- PixiJS CDN removed: not used, was loading unconditionally -->
-<!-- <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.3.2/dist/pixi.min.js"></script> -->
-<script src="js/battle-ui.js?v=1"></script>
-<script src="js/battle-canvas.js"></script>
-<script src="js/battle-pixi.js"></script>
-<script src="js/battle-svg-vfx.js"></script>
+<script src="js/ui/battle-ui.js?v=1"></script>
+<script src="js/ui/battle-canvas.js"></script>
+<!-- battle-pixi.js removed: PixiJS CDN not loaded, file is disabled (early return) -->
+<script src="js/ui/battle-svg-vfx.js"></script>
+
+<!-- ===== Main Entry Point (load last) ===== -->
 <script src="js/app.js?v=3"></script>
-<script src="js/premium-upgrade.js?v=1"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
 </body>
 </html>

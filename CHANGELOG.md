@@ -1,5 +1,46 @@
 # 三国·天命 — 修复清单
 
+## [v2.0.0] — 2026-03-01
+
+### Bug 修复（P0/P1）
+- fix: 移除 battle-pixi.js 的失效 script 标签，防止 PixiJS 引用错误
+- fix: 装备库上限 500 件，防止 LocalStorage 配额超出
+- fix: 离线收益防时间篡改：时间倒退时 elapsed=0，>48h 截断为24h
+- fix: 天命抉择奖励 loyalty/hero_hint/troops 字段现在正确执行
+- fix: 赛季 Banner 移除 comingSoon 武将
+- fix: 陆逊 ID 统一为 luxun（全小写），修复10处引用
+- feat: 编队前后排软约束提示（放错位置时友好提醒）
+
+### 工程重构
+- refactor: JS 文件按职责分层到 core/ systems/ ui/ extras/ config/
+- refactor: 武将/关卡/装备数据抽取为独立数据文件（heroes-data.js 等）
+- refactor: 所有数值常量集中在 game-balance.js（战斗/经济/抽卡参数）
+- refactor: 核心函数添加 JSDoc 注释
+- chore: Service Worker 缓存升级至 sanguo-v17
+
+### 品质提升
+- feat: 武将卡片品质边框系统（N灰/R蓝/SR紫/SSR金发光/UR红）
+- feat: 品质角标徽章（右上角显示 N/R/SR/SSR/UR）
+- feat: 离线收益弹窗"仪式感"升级（金币雨 + 数字滚动动画）
+- feat: 战斗伤害数字飘出 DOM overlay（暴击加大加红，治疗绿色）
+- feat: 武将出战台词系统（HERO_QUOTES 全局 + 战斗开始显示领队台词）
+- feat: 天命抉择弹窗史诗感改造（切角边框 + 进场特效 + 悬停动画）
+- feat: 编队界面前排/后排视觉区分（红色/蓝色色调 + 行标签）
+- feat: 资源获取金币飘出正反馈动画（showGoldGain）
+- fix: iPhone 安全区域适配（safe-area-inset, 100svh）
+- fix: 弹窗内容不超出屏幕，支持滚动
+
+### 文件变更
+| 文件 | 变更 |
+|------|------|
+| `css/style.css` | 品质边框、离线弹窗、伤害飘字、金币飘出、安全区域、天命重量感、编队改进 |
+| `index.html` | 新增离线收益仪式感弹窗 |
+| `js/app.js` | data-rarity属性、品质角标、离线弹窗逻辑、金币雨/数字滚动动画、出战台词、金币飘出 |
+| `js/ui/battle-canvas.js` | 新增 showDamageNumber DOM overlay 方法 |
+| `js/extras/hero-personality.js` | 导出 window.HERO_QUOTES 全局快捷访问 |
+
+---
+
 ## v1.1.0 — 2026-02-18 紧急修复
 
 ### 🔴 Bug #1: 战役推进不了下一关（已修复）

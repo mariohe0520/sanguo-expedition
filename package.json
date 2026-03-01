@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "rsync -a --delete --exclude='node_modules' --exclude='ios' --exclude='www' --exclude='.git' --exclude='package.json' --exclude='package-lock.json' --exclude='capacitor.config.json' --exclude='audio_work' --exclude='backup_v1' --exclude='design' --exclude='docs' --exclude='plan' --exclude='standards' --exclude='*.py' --exclude='*.sh' --exclude='*.md' ./ www/",
+    "regression:battle": "node scripts/battle-regression.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

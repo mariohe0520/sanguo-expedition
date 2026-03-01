@@ -354,3 +354,322 @@ body { font-family:-apple-system,system-ui,sans-serif; background:var(--bg); col
 @keyframes idlePulse { 0%,100%{box-shadow:0 0 20px rgba(240,180,41,0.3)} 50%{box-shadow:0 0 35px rgba(240,180,41,0.6)} }
 #idle-card:not(.hidden){ animation: idlePulse 2s ease-in-out infinite }
 
+/* ===== 品质边框系统 — 三国色彩体系 ===== */
+.hero-card[data-rarity="N"],
+.hero-card[data-rarity="1"] {
+  border: 2px solid #6b7280;
+  background: linear-gradient(135deg, #1f2937, #111827);
+}
+
+.hero-card[data-rarity="R"],
+.hero-card[data-rarity="2"] {
+  border: 2px solid #3b82f6;
+  background: linear-gradient(135deg, #1e3a5f, #1e293b);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+}
+
+.hero-card[data-rarity="SR"],
+.hero-card[data-rarity="3"] {
+  border: 2px solid #8b5cf6;
+  background: linear-gradient(135deg, #3b1f6b, #1e1b4b);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.5);
+}
+
+.hero-card[data-rarity="SSR"],
+.hero-card[data-rarity="4"] {
+  border: 2px solid #f59e0b;
+  background: linear-gradient(135deg, #78350f, #1c1007);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.6);
+  animation: ssr-glow 3s ease-in-out infinite;
+}
+
+.hero-card[data-rarity="UR"],
+.hero-card[data-rarity="5"] {
+  border: 2px solid #ef4444;
+  background: linear-gradient(135deg, #7f1d1d, #1c0707);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.7), 0 0 40px rgba(245, 158, 11, 0.3);
+  animation: ur-glow 2s ease-in-out infinite;
+}
+
+@keyframes ssr-glow {
+  0%, 100% { box-shadow: 0 0 16px rgba(245, 158, 11, 0.6); }
+  50% { box-shadow: 0 0 24px rgba(245, 158, 11, 0.9), 0 0 40px rgba(245, 158, 11, 0.4); }
+}
+
+@keyframes ur-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.7), 0 0 40px rgba(245, 158, 11, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(239, 68, 68, 1.0), 0 0 60px rgba(245, 158, 11, 0.5); }
+}
+
+/* 品质角标 */
+.hero-rarity-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  z-index: 2;
+}
+
+.hero-rarity-badge.rarity-N,
+.hero-rarity-badge.rarity-1 { background: #4b5563; color: #d1d5db; }
+.hero-rarity-badge.rarity-R,
+.hero-rarity-badge.rarity-2 { background: #1d4ed8; color: #bfdbfe; }
+.hero-rarity-badge.rarity-SR,
+.hero-rarity-badge.rarity-3 { background: #6d28d9; color: #ddd6fe; }
+.hero-rarity-badge.rarity-SSR,
+.hero-rarity-badge.rarity-4 { background: linear-gradient(135deg, #d97706, #f59e0b); color: #fff; }
+.hero-rarity-badge.rarity-UR,
+.hero-rarity-badge.rarity-5 { background: linear-gradient(135deg, #b91c1c, #ef4444); color: #fff; }
+
+/* ===== 离线收益弹窗 ===== */
+.offline-modal-content {
+  background: linear-gradient(135deg, #1a0a00, #3d1a00);
+  border: 2px solid #f59e0b;
+  border-radius: 16px;
+  padding: 32px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  max-width: 320px;
+  margin: auto;
+  animation: slide-in-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.offline-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #f59e0b;
+  margin-bottom: 8px;
+  text-shadow: 0 0 20px rgba(245, 158, 11, 0.8);
+}
+
+.offline-subtitle {
+  color: #d1d5db;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.offline-rewards {
+  background: rgba(0,0,0,0.4);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.offline-reward-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.offline-reward-item:last-child { border-bottom: none; }
+
+.reward-icon { font-size: 24px; }
+.reward-label { flex: 1; color: #9ca3af; font-size: 14px; text-align: left; }
+.reward-value {
+  font-size: 22px;
+  font-weight: bold;
+  color: #f59e0b;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 金币计数动画 */
+@keyframes count-up {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.reward-counting { animation: count-up 0.3s ease-out; }
+
+/* 金币粒子 */
+.coin-particle {
+  position: absolute;
+  font-size: 20px;
+  pointer-events: none;
+  animation: coin-fall 1.2s ease-in forwards;
+}
+
+@keyframes coin-fall {
+  0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(200px) rotate(360deg); opacity: 0; }
+}
+
+.btn-collect {
+  background: linear-gradient(135deg, #d97706, #f59e0b);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 14px 40px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+  transition: transform 0.1s;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+
+.btn-collect:active { transform: scale(0.97); }
+
+@keyframes slide-in-up {
+  from { transform: translateY(60px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ===== 伤害数字飘出 (DOM overlay) ===== */
+.damage-number {
+  position: absolute;
+  font-size: 24px;
+  font-weight: bold;
+  color: #ffffff;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 8px rgba(255,255,255,0.5);
+  pointer-events: none;
+  z-index: 100;
+  animation: damage-float 1.4s ease-out forwards;
+  font-variant-numeric: tabular-nums;
+}
+
+.damage-number.crit {
+  font-size: 36px;
+  color: #ef4444;
+  text-shadow: -1px -1px 0 #7f1d1d, 1px -1px 0 #7f1d1d, -1px 1px 0 #7f1d1d, 1px 1px 0 #7f1d1d, 0 0 16px rgba(239, 68, 68, 0.8);
+  animation: damage-float-crit 1.4s ease-out forwards;
+}
+
+.damage-number.heal {
+  color: #4ade80;
+  text-shadow: 0 0 10px rgba(74, 222, 128, 0.8);
+}
+
+@keyframes damage-float {
+  0%   { transform: translateY(0) scale(1); opacity: 1; }
+  20%  { transform: translateY(-20px) scale(1.1); opacity: 1; }
+  100% { transform: translateY(-60px) scale(0.8); opacity: 0; }
+}
+
+@keyframes damage-float-crit {
+  0%   { transform: translateY(0) scale(0.5); opacity: 0; }
+  10%  { transform: translateY(-10px) scale(1.3); opacity: 1; }
+  100% { transform: translateY(-70px) scale(0.8); opacity: 0; }
+}
+
+/* ===== 资源获取金币飘出 ===== */
+.gold-gain-float {
+  position: fixed;
+  font-size: 18px;
+  font-weight: bold;
+  color: #f59e0b;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  pointer-events: none;
+  z-index: 9999;
+  animation: gold-float 1.5s ease-out forwards;
+  white-space: nowrap;
+}
+
+@keyframes gold-float {
+  0%   { transform: translateY(0) scale(0.8); opacity: 0; }
+  20%  { transform: translateY(-10px) scale(1.1); opacity: 1; }
+  100% { transform: translateY(-60px) scale(0.9); opacity: 0; }
+}
+
+/* ===== iPhone 安全区域适配 ===== */
+.bottom-nav, .tab-bar, nav.bottom {
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+}
+
+/* 弹窗不超出屏幕 */
+.modal-content, .popup-content, .destiny-content, .offline-modal-content {
+  max-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 40px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 修复 iOS Safari 的 100vh 问题 */
+.page, .screen {
+  min-height: 100svh;
+}
+
+/* ===== 编队界面改进 ===== */
+.team-slot {
+  position: relative;
+  border-radius: 12px;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  transition: all 0.2s;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.team-slot.front-row {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.team-slot.back-row {
+  border-color: rgba(59, 130, 246, 0.4);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.team-slot.has-hero {
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.team-slot:active { transform: scale(0.97); }
+
+/* 前排/后排标签 */
+.row-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.row-label.front { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+.row-label.back { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+
+/* ===== 天命抉择额外"重量感" ===== */
+.destiny-modal .destiny-content {
+  background: linear-gradient(180deg, #0a0500 0%, #1a0800 50%, #0a0500 100%);
+  border: 2px solid #b45309;
+  border-radius: 0;
+  clip-path: polygon(8px 0%, calc(100% - 8px) 0%, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0% calc(100% - 8px), 0% 8px);
+  animation: destiny-appear 0.6s ease-out;
+  position: relative;
+}
+
+.destiny-modal .destiny-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at top, rgba(180, 83, 9, 0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+@keyframes destiny-appear {
+  from { transform: scale(0.9) translateY(-20px); opacity: 0; filter: brightness(3); }
+  to { transform: scale(1) translateY(0); opacity: 1; filter: brightness(1); }
+}
+
+/* Override destiny option hover for cut-corner modal */
+.destiny-modal .destiny-option:hover {
+  background: rgba(180, 83, 9, 0.25);
+  border-color: #f59e0b;
+  transform: translateX(4px);
+  box-shadow: -4px 0 12px rgba(245, 158, 11, 0.3);
+}
+
+.destiny-modal .destiny-option:active { transform: translateX(2px) scale(0.99); }
+
+/* Hero card needs position:relative for rarity badge */
+.hero-card { position: relative; }
+
