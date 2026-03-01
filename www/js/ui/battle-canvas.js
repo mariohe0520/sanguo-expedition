@@ -1663,15 +1663,15 @@ const BattleCanvas = {
       ? DynamicBattlefield.getVisualState() : null;
 
     const terrainGrads = {
-      plains:   ['#081428', '#0d2040', '#1a3a15'],   // deep blue sky → dark green ground
-      mountain: ['#0c1220', '#1a2535', '#2a2a30'],   // slate dusk sky
-      river:    ['#060e1e', '#0f2440', '#082838'],   // dark blue water at dusk
-      water:    ['#060e1e', '#0f2440', '#082838'],
-      forest:   ['#060f08', '#0c1f0e', '#142a0a'],   // dark dense forest
-      castle:   ['#0c0818', '#1a1030', '#2a1828'],   // purple-tinted citadel night
-      desert:   ['#1a1008', '#2a1c0a', '#180c04'],   // scorched orange dusk
-      swamp:    ['#060c06', '#0a180a', '#081208'],   // murky swamp
-      charred:  ['#080404', '#180e0a', '#1a0e08'],   // ash and embers
+      plains:   ['#1a3a6a', '#2a5090', '#1e6632'],   // vibrant blue sky → green ground
+      mountain: ['#1e2a40', '#2e4060', '#3a3a44'],   // slate dusk sky
+      river:    ['#0e2040', '#1a3a60', '#0e4858'],   // blue water at dusk
+      water:    ['#0e2040', '#1a3a60', '#0e4858'],
+      forest:   ['#0c2010', '#163a18', '#204412'],   // dense green forest
+      castle:   ['#180c28', '#2a1848', '#3c2440'],   // purple-tinted citadel night
+      desert:   ['#3a2210', '#503018', '#381808'],   // scorched orange dusk
+      swamp:    ['#0c1e0c', '#163016', '#102410'],   // murky swamp
+      charred:  ['#1a0808', '#2e1810', '#321810'],   // ash and embers
     };
     // Use DynamicBattlefield terrain if available
     const effectiveTerrain = bfVisual ? bfVisual.terrainKey : terrain;

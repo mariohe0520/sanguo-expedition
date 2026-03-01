@@ -1102,7 +1102,7 @@ const App = {
         setTimeout(() => {
           BattleCanvas.resize();
           BattleCanvas.initFighters(Battle.state);
-        }, 150);
+        }, 300);
       }
     } catch(e) { console.error('[BattleCanvas init]', e); }
 
@@ -2243,8 +2243,8 @@ const App = {
       _dungeonFloor: true,
       _scaleMult: floorData.isBossFloor ? floorData.boss.scaleMult : floorData.scaleMult,
     };
-    this.prepareBattle(this.currentStage);
     this.switchPage('battle');
+    requestAnimationFrame(() => this.prepareBattle(this.currentStage));
   },
 
   processDungeonEvent(floor) {
@@ -2316,8 +2316,8 @@ const App = {
       _dailyDungeon: type,
       _scaleMult: data.scaleMult,
     };
-    this.prepareBattle(this.currentStage);
     this.switchPage('battle');
+    requestAnimationFrame(() => this.prepareBattle(this.currentStage));
   },
 
   _renderWeeklyRaid() {
@@ -2392,8 +2392,8 @@ const App = {
       _raidBoss: true,
       _scaleMult: 3.0,
     };
-    this.prepareBattle(this.currentStage);
     this.switchPage('battle');
+    requestAnimationFrame(() => this.prepareBattle(this.currentStage));
   },
 
   _renderSeasonalContent() {
@@ -2588,8 +2588,8 @@ const App = {
       _arenaOpponent: opp,
       _scaleMult: opp.scaleMult || 1,
     };
-    this.prepareBattle(this.currentStage);
     this.switchPage('battle');
+    requestAnimationFrame(() => this.prepareBattle(this.currentStage));
   },
 
   claimArenaWeekly() {
