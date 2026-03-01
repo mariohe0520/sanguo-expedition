@@ -81,7 +81,10 @@ const BattleCanvas = {
   resize() {
     const parent = this.canvas.parentElement;
     const dpr = window.devicePixelRatio || 1;
-    this.width = parent.clientWidth;
+    let w = parent ? parent.clientWidth : 0;
+    // Defensive minimum: if parent has no width yet (page not laid out), use fallback
+    if (w < 10) w = Math.max(320, window.innerWidth || 320);
+    this.width = w;
     this.height = Math.min(380, Math.floor(this.width * 0.85));
     this.canvas.width = this.width * dpr;
     this.canvas.height = this.height * dpr;
@@ -1659,8 +1662,12 @@ const BattleCanvas = {
     const h = this.height;
 
     // Get visual state from DynamicBattlefield if available
-    const bfVisual = (typeof DynamicBattlefield !== 'undefined' && DynamicBattlefield.state)
-      ? DynamicBattlefield.getVisualState() : null;
+    let bfVisual = null;
+    try {
+      if (typeof DynamicBattlefield !== 'undefined' && DynamicBattlefield.state) {
+        bfVisual = DynamicBattlefield.getVisualState();
+      }
+    } catch(e) { /* safe: fall back to basic terrain rendering */ }
 
     const terrainGrads = {
       plains:   ['#1a3a6a', '#2a5090', '#1e6632'],   // vibrant blue sky → green ground
@@ -2152,7 +2159,21 @@ const BattleCanvas = {
   // ═══════════════════════════════════════════
 
   render() {
+    // CRITICAL: Always schedule the next frame FIRST, so exceptions can never kill the loop
+    if (this.running) {
+      this.animFrame = requestAnimationFrame(() => this.render());
+    }
     if (!this.ctx || !this.canvas) return;
+
+    // Self-healing: if fighters are empty but Battle.state exists, re-init them
+    if (Object.keys(this.fighters).length === 0 && typeof Battle !== 'undefined' && Battle.state) {
+      try {
+        if (this.width < 10) this.resize();
+        this.initFighters(Battle.state);
+      } catch(e) { /* safe */ }
+    }
+
+    try {
     const ctx = this.ctx;
     const now = performance.now();
 
@@ -2225,7 +2246,7 @@ const BattleCanvas = {
           s.scale = 0.5;
         }
       }
-      
+
       // Skip fully-dead fighters (death anim finished): alpha is 0, no need to render
       if (!s.f.alive && !s._deathAnim) {
         s.alpha = 0;
@@ -2328,7 +2349,11 @@ const BattleCanvas = {
     }
 
     this.lastFrameTime = now;
-    this.animFrame = requestAnimationFrame(() => this.render());
+    } catch(e) {
+      // NEVER let a render error kill the animation loop
+      console.error('[BattleCanvas render]', e);
+      try { this.ctx.restore(); } catch(e2) { /* safe */ }
+    }
   },
 
   // Chromatic aberration: overlay shifted red/blue copies
@@ -2358,6 +2383,12 @@ const BattleCanvas = {
   // Sync fighter state from battle engine
   syncState(battleState) {
     if (!battleState) return;
+    // If fighters dict is empty but battle state has fighters, re-init
+    if (Object.keys(this.fighters).length === 0) {
+      if (this.width < 10) this.resize();
+      this.initFighters(battleState);
+      return;
+    }
     const all = [...(battleState.player || []), ...(battleState.enemy || [])];
     for (const f of all) {
       if (!f) continue;
@@ -2402,7 +2433,9 @@ const BattleCanvas = {
     this.screenShake = { x: 0, y: 0, intensity: 0, decay: 0.82 };
     this.flashAlpha = 0;
     this.running = true;
-    if (battleState) this.initFighters(battleState);
+    // Always try to init fighters: use explicit arg or fall back to current Battle.state
+    const bs = battleState || (typeof Battle !== 'undefined' ? Battle.state : null);
+    if (bs) this.initFighters(bs);
     if (this.animFrame) cancelAnimationFrame(this.animFrame);
     this.render();
   },
@@ -2418,6 +2451,8 @@ const BattleCanvas = {
       window.removeEventListener('resize', this._resizeHandler);
       this._resizeHandler = null;
     }
+    // Clear portrait image cache to free memory
+    this._portraitImages = {};
   },
 
   // ═══ VICTORY / DEFEAT SCENE ═══

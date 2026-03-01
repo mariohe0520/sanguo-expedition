@@ -1077,6 +1077,10 @@ const App = {
     try {
       const canvasEl = document.getElementById('battle-canvas');
       if (canvasEl && typeof BattleCanvas !== 'undefined') {
+        // Ensure bui-active class is removed so canvas wrap is visible
+        const battlePage = document.getElementById('page-battle');
+        if (battlePage) battlePage.classList.remove('bui-active');
+
         BattleCanvas.init(canvasEl);
         BattleCanvas.setupFighters(Battle.state);
         BattleCanvas.start();
@@ -1084,9 +1088,20 @@ const App = {
         if (typeof BattleSVGVFX !== 'undefined') try { BattleSVGVFX.init(); } catch(e2) {}
         // Safety re-resize after layout settles (mobile Safari can be slow)
         setTimeout(() => {
-          BattleCanvas.resize();
-          BattleCanvas.initFighters(Battle.state);
+          try {
+            BattleCanvas.resize();
+            BattleCanvas.initFighters(Battle.state);
+          } catch(e2) { console.error('[BattleCanvas 300ms re-init]', e2); }
         }, 300);
+        // Second safety net: re-init at 800ms if fighters still empty
+        setTimeout(() => {
+          try {
+            if (typeof BattleCanvas !== 'undefined' && Object.keys(BattleCanvas.fighters).length === 0 && Battle.state) {
+              BattleCanvas.resize();
+              BattleCanvas.initFighters(Battle.state);
+            }
+          } catch(e2) { /* safe */ }
+        }, 800);
       }
     } catch(e) { console.error('[BattleCanvas init]', e); }
 
